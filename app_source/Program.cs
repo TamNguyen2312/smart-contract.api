@@ -35,8 +35,8 @@ namespace App.API
 
             //<=====Add Database=====>
             var connectionString = builder.Configuration.GetConnectionString("SmartContract");
-            builder.Services.AddEntityFrameworkSqlServer().AddDbContext<FSDbContext>(options => options.UseSqlServer(connectionString));
-            
+            builder.Services.AddEntityFrameworkSqlServer().AddDbContext<FSDbContext>(opts => opts.UseSqlServer(connectionString, options => options.MigrationsAssembly("App.API")));
+
             //<=====Add Identity=====>
             builder.Services.AddAuthorization();
             builder.Services.AddIdentity<ApplicationUser, Role>().AddEntityFrameworkStores<FSDbContext>().AddDefaultTokenProviders();
@@ -51,7 +51,7 @@ namespace App.API
                 options.Password.RequiredUniqueChars = 0;
 
             });
-            
+
             //<=====Add config for Required Email=====>
             builder.Services.Configure<IdentityOptions>(opts =>
             {
@@ -60,7 +60,7 @@ namespace App.API
                 opts.Lockout.MaxFailedAccessAttempts = 5;
                 opts.Lockout.AllowedForNewUsers = true;
             });
-            
+
             //<=====Add config for verify token=====>
             builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromHours(1));
 
@@ -72,16 +72,18 @@ namespace App.API
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
             });
-            
+
             //<=====Add HttpClient=====>
             builder.Services.AddHttpClient();
-            
+
             //<=====Add JWT Authentication=====>
-            builder.Services.AddAuthentication(options => {
+            builder.Services.AddAuthentication(options =>
+            {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options => {
+            }).AddJwtBearer(options =>
+            {
                 options.SaveToken = true;
                 options.RequireHttpsMetadata = false;
                 options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
@@ -94,7 +96,7 @@ namespace App.API
                     ClockSkew = TimeSpan.Zero,
                     ValidateLifetime = true,
                 };
-                
+
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
@@ -111,7 +113,7 @@ namespace App.API
                     }
                 };
             });
-            
+
             //<=====Add Dependency Injection=====>
             DependencyConfig.Register(builder.Services);
 
