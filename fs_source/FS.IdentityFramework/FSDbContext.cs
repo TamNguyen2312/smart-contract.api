@@ -1,3 +1,4 @@
+using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +11,14 @@ public partial class FSDbContext : IdentityDbContext<ApplicationUser, Role, long
     public FSDbContext(DbContextOptions<FSDbContext> options) : base(options)
     {
     }
+    #region DbSet
+    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+    #endregion
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("dbo");
-        
+
         modelBuilder.Entity<ApplicationUser>(b =>
         {
             b.ToTable("FS_Users");
@@ -83,9 +87,19 @@ public partial class FSDbContext : IdentityDbContext<ApplicationUser, Role, long
         {
             b.ToTable("FS_UserRoles");
         });
-        
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.ToTable(name: "RefreshTokens");
+                entity.HasOne(r => r.User)
+                      .WithOne()
+                      .HasForeignKey<RefreshToken>(r => r.UserId)
+                      .OnDelete(DeleteBehavior.ClientSetNull)
+                      .HasConstraintName("FK_RefreshToken_ApplicationUser");
+            });
+
         OnModelCreatingPartial(modelBuilder);
     }
-    
+
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

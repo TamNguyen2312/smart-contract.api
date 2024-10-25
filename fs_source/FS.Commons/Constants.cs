@@ -3,45 +3,47 @@ namespace FS.Commons;
 public class Constants
 {
     #region Common
-        public const string GetDataSuccess = "Get data succeeded.";
-        public const string GetDataFailed = "Get data failed.";
-        public const string SaveDataSuccess = "Lưu thành công.";
-        public const string SaveDataFailed = "Lưu thất bại.";
-        public const string Required = "Dữ liệu không được để trống.";
-        public const string EmailAddressFormatError = "Email không đúng định dạng.";
-        public const string PasswordStringLengthError = "{0} phải có tối thiểu {2} và tối đa {1} kí tự";
-        public const string ConfirmPasswordError = "Mật khẩu nhập lại không đúng.";
-        public const string FormatDate = "dd/MM/yyyy";
-        public const string MaxlengthError = "{0} độ dài tối đa {1} ký tự.";
-        public const string APIURL = "http://localhost:5000/";
-        public const string POLICY_VERIFY_EMAIL = "VerifyEmail";
-        public const string CLAIM_USER_TYPE = "user_type";
-        public const string CLAIM_FULL_NAME = "full_name";
-        public const string CLAIM_EMAIL = "email";
-        public const string CLAIM_ID = "id";
-        public const string IS_SELLER = "is_seller";
-        public const string IS_ADMIN = "is_admin";
-        public const string AVATAR = "avatar";
-        public const string USERNAME = "username";
-        public const string IS_CREATOR = "is_creator";
-        public const string IS_ARTIST = "is_artist";
-        public const string FormatDateTime = "dd/MM/yyyy HH:mm";
-        public const string FormatFullDateTime = "dd/MM/yyyy HH:mm:ss";
-        public const string UserNameAdminSeller = "seller";
-        public const string UserRole = "user";
-        public const string SellerRole = "seller";
-        public const string PlacementBuyNow = "buy_now";
-        public const string PlacementProceedCheckout = "proceed_to_checkout";
-        public const int PAYMENT_COD = 1;
-        public const int PAYMENT_MOMO = 2;
-        public const string PhoneNumberVietNam = "+84";
-        public const string SomeThingWentWrong = "Có lỗi xảy ra trong quá trình thực hiện, vui lòng thử lại sau ít phút!";
-        public const string UserNotSame = "Người dùng không giống nhau.";
-        #endregion
+    public const string GetDataSuccess = "Get data succeeded.";
+    public const string GetDataFailed = "Get data failed.";
+    public const string SaveDataSuccess = "Lưu thành công.";
+    public const string SaveDataFailed = "Lưu thất bại.";
+    public const string Required = "Dữ liệu không được để trống.";
+    public const string EmailAddressFormatError = "Email không đúng định dạng.";
+    public const string PasswordStringLengthError = "{0} phải có tối thiểu {2} và tối đa {1} kí tự";
+    public const string ConfirmPasswordError = "Mật khẩu nhập lại không đúng.";
+    public const string FormatDate = "dd/MM/yyyy";
+    public const string MaxlengthError = "{0} độ dài tối đa {1} ký tự.";
+    public const string APIURL = "http://localhost:5269s/";
+    public const string POLICY_VERIFY_EMAIL = "VerifyEmail";
+    public const string CLAIM_USER_TYPE = "user_type";
+    public const string CLAIM_FULL_NAME = "full_name";
+    public const string CLAIM_EMAIL = "email";
+    public const string CLAIM_ID = "id";
+    public const string IS_SELLER = "is_seller";
+    public const string IS_ADMIN = "is_admin";
+    public const string AVATAR = "avatar";
+    public const string USERNAME = "username";
+    public const string IS_CREATOR = "is_creator";
+    public const string IS_ARTIST = "is_artist";
+    public const string IS_MANAGER = "is_manager";
+    public const string IS_EMPLOYEE = "is_employee";
+    public const string FormatDateTime = "dd/MM/yyyy HH:mm";
+    public const string FormatFullDateTime = "dd/MM/yyyy HH:mm:ss";
+    public const string UserNameAdminSeller = "seller";
+    public const string UserRole = "user";
+    public const string SellerRole = "seller";
+    public const string PlacementBuyNow = "buy_now";
+    public const string PlacementProceedCheckout = "proceed_to_checkout";
+    public const int PAYMENT_COD = 1;
+    public const int PAYMENT_MOMO = 2;
+    public const string PhoneNumberVietNam = "+84";
+    public const string SomeThingWentWrong = "Có lỗi xảy ra trong quá trình thực hiện, vui lòng thử lại sau ít phút!";
+    public const string UserNotSame = "Người dùng không giống nhau.";
+    #endregion
 
-        #region Password
-        public const string REGEX_PASSWORD = @"^[A-Za-z0-9!@#?$%^&*()_[\]{}|:"",.<>+=-]*$";
-        public const string PasswordInvalidFormat = "Mật khẩu chỉ được chứa ký tự chữ cái, chữ số, ký tự đặc biệt.";
-        public const string PasswordIsInCorrect = "Tài khoản hoặc mật khẩu không đúng";
-        #endregion
+    #region Password
+    public const string REGEX_PASSWORD = @"^[A-Za-z0-9!@#?$%^&*()_[\]{}|:"",.<>+=-]*$";
+    public const string PasswordInvalidFormat = "Mật khẩu chỉ được chứa ký tự chữ cái, chữ số, ký tự đặc biệt.";
+    public const string PasswordIsInCorrect = "Tài khoản hoặc mật khẩu không đúng";
+    #endregion
 }

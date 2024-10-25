@@ -35,7 +35,8 @@ namespace App.API
 
             //<=====Add Database=====>
             var connectionString = builder.Configuration.GetConnectionString("SmartContract");
-            builder.Services.AddEntityFrameworkSqlServer().AddDbContext<FSDbContext>(opts => opts.UseSqlServer(connectionString, options => options.MigrationsAssembly("App.API")));
+            builder.Services.AddEntityFrameworkSqlServer().AddDbContext<FSDbContext>(opts => opts.UseSqlServer(connectionString,
+                                                                                                options => options.MigrationsAssembly("App.API")));
 
             //<=====Add Identity=====>
             builder.Services.AddAuthorization();
