@@ -81,6 +81,13 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    /// <summary>
+    /// This is used to Generate a refresh token and save it to database
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="jwtToken"></param>
+    /// <param name="isRemember"></param>
+    /// <returns></returns>
     public async Task<string> GenerateRefreshToken(ApplicationUser user, JwtSecurityToken jwtToken, bool isRemember)
     {
         try
