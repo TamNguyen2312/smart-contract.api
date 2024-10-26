@@ -1,9 +1,11 @@
 using System;
+using System.Data.Common;
 using FS.DAL.Queries;
+using Microsoft.EntityFrameworkCore;
 
 namespace FS.DAL.Interfaces;
 
-public interface IGenericRepository<T> where T : class
+public interface IGenericRepository<T, TContext> where T : class where TContext : DbContext
 {
     public Task<T> CreateAsync(T entity);
     public Task CreateAllAsync(List<T> entities);

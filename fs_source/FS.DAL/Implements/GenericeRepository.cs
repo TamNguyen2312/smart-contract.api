@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FS.DAL.Implements;
 
-public class GenericeRepository<T, TContext> : IGenericRepository<T> where T : class where TContext : DbContext
+public class GenericeRepository<T, TContext> : IGenericRepository<T, TContext> where T : class where TContext : DbContext
 {
     private readonly TContext _context;
     protected readonly DbSet<T> _dbSet;

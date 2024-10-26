@@ -15,5 +15,7 @@ public class DependencyConfig
 
         //FS.DAL
         services.AddTransient<IIdentityRepository, IdentityRepository>();
+        services.AddTransient(typeof(IGenericRepository<,>), typeof(GenericeRepository<,>));
+        services.AddScoped(typeof(IFSUnitOfWork<>), typeof(FSUnitOfWork<>));
     }
 }
