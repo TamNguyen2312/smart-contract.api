@@ -35,4 +35,12 @@
       <ProjectReference Include="..\fs_source\FS.WebBase\FS.WebBase.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="wwwroot\" />
+      <Folder Include="wwwroot\Email\" />
+      <Folder Include="wwwroot\Email\Customer\" />
+      <Folder Include="wwwroot\Email\Employee\" />
+      <Folder Include="wwwroot\Email\Manager\" />
+    </ItemGroup>
+
 </Project>

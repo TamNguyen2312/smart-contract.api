@@ -1,5 +1,7 @@
 using FS.BLL.Services.Implementations;
 using FS.BLL.Services.Interfaces;
+using FS.DAL.Implements;
+using FS.DAL.Interfaces;
 
 namespace App.API.Configs;
 
@@ -9,5 +11,9 @@ public class DependencyConfig
     {
         //FS.BLL
         services.AddTransient<IEmailService, EmailService>();
+        services.AddTransient<IIdentityBizLogic, IdentityBizLogic>();
+
+        //FS.DAL
+        services.AddTransient<IIdentityRepository, IdentityRepository>();
     }
 }

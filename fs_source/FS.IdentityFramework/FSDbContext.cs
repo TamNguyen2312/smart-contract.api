@@ -22,6 +22,8 @@ public partial class FSDbContext : IdentityDbContext<ApplicationUser, Role, long
         modelBuilder.Entity<ApplicationUser>(b =>
         {
             b.ToTable("FS_Users");
+            b.Property(p => p.FirstName).IsRequired();
+            b.Property(p => p.LastName).IsRequired();
             // Each User can have many UserClaims
             b.HasMany(e => e.Claims)
                 .WithOne(e => e.User)

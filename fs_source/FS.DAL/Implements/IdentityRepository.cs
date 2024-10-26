@@ -60,7 +60,7 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
                 new Claim(Constants.CLAIM_EMAIL, user.Email ?? String.Empty),
                 new Claim(Constants.POLICY_VERIFY_EMAIL, user.EmailConfirmed.ToString()),
                 new Claim(Constants.CLAIM_ID, user.Id.ToString()),
-                new Claim(Constants.AVATAR, user.Avatar ?? "https://static.vecteezy.com/system/resources/previews/009/734/564/non_2x/default-avatar-profile-icon-of-social-media-user-vector.jpg"),
+                new Claim(Constants.AVATAR, user.Avatar ?? Constants.DefaultAvatar),
                 new Claim(Constants.IS_ADMIN, isAdmin.ToString()),
                 new Claim(Constants.IS_MANAGER, isManager.ToString()),
                 new Claim(Constants.IS_EMPLOYEE, isEmployee.ToString())

@@ -13,7 +13,7 @@ public class Constants
     public const string ConfirmPasswordError = "Mật khẩu nhập lại không đúng.";
     public const string FormatDate = "dd/MM/yyyy";
     public const string MaxlengthError = "{0} độ dài tối đa {1} ký tự.";
-    public const string APIURL = "http://localhost:5269s/";
+    public const string APIURL = "http://localhost:7012/";
     public const string POLICY_VERIFY_EMAIL = "VerifyEmail";
     public const string CLAIM_USER_TYPE = "user_type";
     public const string CLAIM_FULL_NAME = "full_name";
@@ -39,6 +39,7 @@ public class Constants
     public const string PhoneNumberVietNam = "+84";
     public const string SomeThingWentWrong = "Có lỗi xảy ra trong quá trình thực hiện, vui lòng thử lại sau ít phút!";
     public const string UserNotSame = "Người dùng không giống nhau.";
+    public const string DefaultAvatar = "https://static.vecteezy.com/system/resources/previews/009/734/564/non_2x/default-avatar-profile-icon-of-social-media-user-vector.jpg";
     #endregion
 
     #region Password
