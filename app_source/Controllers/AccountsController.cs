@@ -4,6 +4,7 @@ using FS.BaseAPI;
 using FS.BaseModels.IdentityModels;
 using FS.BLL.Services.Interfaces;
 using FS.Commons;
+using FS.Commons.Models;
 using FS.Commons.Models.DTOs;
 using FS.Utility;
 using Microsoft.AspNetCore.Http;
@@ -33,14 +34,17 @@ namespace App.API.Controllers
             this._userManager = userManager;
         }
 
-
         [HttpPost]
-        [Route("register-account")]
-        public async Task<IActionResult> Register(RegisterDTO dto)
+        [Route("sign-up-account")]
+        public async Task<IActionResult> SignUpAsync(RegisterDTO dto)
         {
             try
             {
-                if (!ModelState.IsValid) return ModelInvalid();
+                if (!ModelState.IsValid)
+                {
+                    return ModelInvalid();
+                }
+
                 if (!Helpers.IsValidEmail(dto.Email.Trim()))
                 {
                     ModelState.AddModelError("Email", Constants.EmailAddressFormatError);
@@ -68,70 +72,83 @@ namespace App.API.Controllers
                     FirstName = dto.FirstName,
                     LastName = dto.LastName,
                     PhoneNumber = dto.PhoneNumber,
+                    Avatar = Constants.DefaultAvatar
                 };
 
                 var result = await _identityBizLogic.AddUserAsync(user, dto.Password);
-                if (result > 0)
+                if (result < 0) return Error(Constants.SomeThingWentWrong);
+
+                var addRole = await _identityBizLogic.AddRoleByNameAsync(user.Id.ToString(), UserType.Customer.ToString());
+                if (!addRole) return Error(Constants.SomeThingWentWrong);
+
+                var sendMail = await SendEmailConfirm(user);
+                if (!sendMail) return Error("Đã xảy ra lỗi trong quá trình gửi mail xác thực. Vui lòng đăng nhập lại để nhận một mail mới");
+                var userData = new UserViewDTO()
                 {
-                    // Gửi email xác nhận tài khoản
-                    await SendEmailConfirm(user, dto.Email);
-
-                    //trả về thông tin
-                    var userData = new UserViewDTO()
-                    {
-                        Id = user.Id,
-                        Email = user.Email,
-                        PhoneNumber = user.PhoneNumber,
-                        Username = user.UserName
-                    };
-                    return SaveSuccess(userData);
-                }
-                return Error("Có lỗi xảy ra trong quá trình thực hiện. Vui lòng thử lại sau ít phút!");
-            }
-            catch (System.Exception ex)
-            {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
-                return Error("Có lỗi xảy ra trong quá trình thực hiện. Vui lòng thử lại sau ít phút!");
-            }
-        }
-
-
-        [HttpPost]
-        [Route("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDTO dto)
-        {
-            try
-            {
-                var result = await _identityBizLogic.ConfirmEmailAsync(dto.UserId.ToString(), dto.Token);
-                if (result) return SaveSuccess(result);
-                return SaveError("Link hiện tại đã hết thời gian. Xin vui lòng đăng ký lại");
+                    Id = user.Id,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Username = user.UserName,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    FullName = $"{user.FirstName} {user.LastName}",
+                    Avatar = user.Avatar,
+                };
+                return SaveSuccess(userData);
             }
             catch (Exception ex)
             {
                 ConsoleLog.WriteExceptionToConsoleLog(ex);
-                return SaveError();
+                return Error(Constants.SomeThingWentWrong);
             }
         }
 
-        #region PRIVATE
-        private async Task<bool> SendEmailConfirm(ApplicationUser user, string email)
+
+        [HttpGet]
+        [Route("verify-email")]
+        public async Task<IActionResult> VeryfiEmailAsync(string token, string email)
         {
-            var code = await _identityBizLogic.GenerateEmailConfirmationTokenAsync(user);
-            var homeUrl = _configuration.GetSection("AppSettings:HomeUrl").Value;
-            var callbackUrl = string.Format("{0}/confirm-email?userId={1}&token={2}", homeUrl, user.Id.ToString(), HttpUtility.UrlEncode(code));
-            var htmlPath = PathConstant.GetFilePath(PathConstant.CustomerRegister);
-            var html = System.IO.File.ReadAllText(htmlPath);
-            var contentBuilder = new ContentBuilder(html);
-            contentBuilder.BuildCallback(new System.Collections.Generic.List<ObjectReplace>() { new ObjectReplace() { Name = "__calback_url__", Value = callbackUrl } });
-            var content = contentBuilder.GetContent() ?? $"Vui lòng xác nhận tài khoản đăng ký bằng cách nhấn vào: <a href='{callbackUrl}'>Xác nhận</a>";
-            var emailDto = new EmailDTO
-            (
-                new string[] { email! },
-                "Email xác thực tài khoản.",
-                content
-            );
-            await _emailService.SendEmailAsync(emailDto);
-            return true;
+            var user = await _identityBizLogic.GetByEmailAsync(email);
+            if (user == null)
+            {
+                return GetError("Không tìm thấy Email người dùng trong hệ thống.");
+            }
+            var response = await _identityBizLogic.VerifyEmailAsync(user, token);
+
+            if (!response)
+            {
+                return Error("Xác thực KHÔNG thành công.");
+            }
+
+            return Success(response, "Xác thực tài khoản thành công.");
+        }
+
+        #region PRIVATE
+        private async Task<bool> SendEmailConfirm(ApplicationUser user)
+        {
+            try
+            {
+                var emailToken = await _identityBizLogic.GenerateEmailConfirmationTokenAsync(user);
+                var encodedToken = HttpUtility.UrlEncode(emailToken);
+                var configVerifyUrl = _configuration.GetSection("Authentication").GetValue<string>("VerifyEmail");
+                var confirmationLink = $"{configVerifyUrl}token={encodedToken}&email={user.Email}";
+                var message = new EmailDTO
+                (
+                    new string[] { user.Email! },
+                    "Confirmation Email Link!",
+                    $@"
+<p>- Hệ thống nhận thấy bạn vừa đăng kí với Email: {user.Email}.</p>
+<p>- Vui lòng truy cập vào link này để xác thực tài khoản: {confirmationLink!}</p>"
+                );
+                var sendMail = await _emailService.SendEmailAsync(message);
+                if (!sendMail) return false;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                throw;
+            }
         }
 
         #endregion

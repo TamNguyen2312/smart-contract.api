@@ -26,6 +26,13 @@ public interface IIdentityBizLogic
 	/// <returns></returns>
 	Task<bool> ConfirmEmailAsync(string userId, string code);
 	/// <summary>
+	/// Verify email with Get http method
+	/// </summary>
+	/// <param name="user"></param>
+	/// <param name="token"></param>
+	/// <returns></returns>
+	Task<bool> VerifyEmailAsync(ApplicationUser user, string token);
+	/// <summary>
 	/// thay đổi mật khẩu
 	/// </summary>
 	/// <param name="userId">id user cần thay đổi mật khẩu</param>
@@ -88,5 +95,6 @@ public interface IIdentityBizLogic
 	/// <returns></returns>
 	Task<List<Role>> GetRolesAdmin();
 	Task<string> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false);
-    Task<string> GenerateRefreshToken(ApplicationUser user, JwtSecurityToken jwtToken, bool isRemember);
+	Task<string> GenerateRefreshToken(ApplicationUser user, JwtSecurityToken jwtToken, bool isRemember);
+	Task<bool> CreateRoleAsync(Role role);
 }

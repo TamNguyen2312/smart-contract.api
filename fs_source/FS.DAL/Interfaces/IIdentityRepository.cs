@@ -29,6 +29,13 @@ public interface IIdentityRepository
     /// <returns></returns>
     Task<bool> ConfirmEmailAsync(string userId, string code);
     /// <summary>
+    /// Verify Email with Get http method
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    Task<bool> VerifyEmailAsycn(ApplicationUser user, string token);
+    /// <summary>
     /// thay đổi mật khẩu
     /// </summary>
     /// <param name="userId">id user cần thay đổi mật khẩu</param>
@@ -97,5 +104,5 @@ public interface IIdentityRepository
     Task<List<Role>> GetRolesAdmin();
     Task<string> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false);
     Task<string> GenerateRefreshToken(ApplicationUser user, JwtSecurityToken jwtToken, bool isRemeber);
-
+    Task<bool> CreateRoleAsync(Role role);
 }

@@ -9,6 +9,7 @@ using FS.BaseModels.IdentityModels;
 using FS.Commons;
 using FS.DAL.Base;
 using FS.DAL.Interfaces;
+using FS.DAL.Queries;
 using FS.IdentityFramework;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -21,11 +22,15 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<Role> _roleManager;
+    private readonly IFSUnitOfWork<FSDbContext> _unitOfWork;
     private readonly IConfiguration _configuration;
-    public IdentityRepository(IConfiguration config, UserManager<ApplicationUser> userManager, RoleManager<Role> roleManager, FSDbContext dbContext) : base(config, dbContext)
+    public IdentityRepository(IConfiguration config, UserManager<ApplicationUser> userManager,
+                             RoleManager<Role> roleManager, FSDbContext dbContext,
+                             IFSUnitOfWork<FSDbContext> unitOfWork) : base(config, dbContext)
     {
         _userManager = userManager;
         _roleManager = roleManager;
+        this._unitOfWork = unitOfWork;
         _configuration = config;
     }
 
@@ -102,18 +107,21 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
                 IssuedAt = DateTime.Now,
                 ExpiredAt = isRemember ? DateTime.Now.AddDays(28) : DateTime.Now.AddDays(1),
             };
-            var refreshTokenByUserIds = _dbContext.RefreshTokens.Where(x => x.UserId == user.Id).AsNoTracking();
-            _dbContext.RefreshTokens.RemoveRange(refreshTokenByUserIds);
-            var saver_1 = await _dbContext.SaveChangesAsync();
-            if (saver_1 < 0)
+            await _unitOfWork.BeginTransactionAsync();
+            var refreshtokenRepo = _unitOfWork.GetRepository<RefreshToken>();
+            var refreshTokenByUserIds = await refreshtokenRepo.GetAllAsync(new QueryBuilder<RefreshToken>()
+                                                                                .WithPredicate(x => x.UserId == user.Id)
+                                                                                .WithTracking(false)
+                                                                                .Build());
+            if (refreshTokenByUserIds.Any())
             {
-                return null;
+                await refreshtokenRepo.DeleteAllAsync(refreshTokenByUserIds.ToList());
             }
-            await _dbContext.RefreshTokens.AddAsync(refreshTokenInDb);
-            var saver_2 = await _dbContext.SaveChangesAsync();
-            if (saver_2 < 0)
+            await refreshtokenRepo.CreateAsync(refreshTokenInDb);
+            var saver = await _unitOfWork.SaveAsync();
+            if (!saver)
             {
-                return null;
+                throw new Exception("Đã xảy ra lỗi trong quá trình tạo và lưu refresh token");
             }
             return refreshtoken;
         }
@@ -190,13 +198,27 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
         var user = await _userManager.FindByIdAsync(userId);
         if (user != null)
         {
-            var decodeToken = HttpUtility.UrlDecode(token);
-            var result = await _userManager.ConfirmEmailAsync(user, decodeToken);
+            var decodedToken = HttpUtility.UrlDecode(token);
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken.Replace(" ", "+"));
             if (result.Succeeded)
             {
                 return true;
             }
         }
+        return false;
+    }
+
+    /// <summary>
+    /// Verify email with Get http method
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    public async Task<bool> VerifyEmailAsycn(ApplicationUser user, string token)
+    {
+        var decodedToken = HttpUtility.UrlDecode(token);
+        var result = await _userManager.ConfirmEmailAsync(user, decodedToken.Replace(" ", "+"));
+        if (result.Succeeded) return true;
         return false;
     }
 
@@ -413,6 +435,18 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
         {
             throw;
         }
+    }
+
+    /// <summary>
+    /// thêm role cho hệ thống
+    /// </summary>
+    /// <param name="role"></param>
+    /// <returns></returns>
+    public async Task<bool> CreateRoleAsync(Role role)
+    {
+        var result = await _roleManager.CreateAsync(role);
+        if (!result.Succeeded) return false;
+        return true;
     }
 
 

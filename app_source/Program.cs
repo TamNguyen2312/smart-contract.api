@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using App.API.Configs;
 using Microsoft.EntityFrameworkCore.Migrations;
+using FS.Commons;
 
 namespace App.API
 {
@@ -125,6 +126,20 @@ namespace App.API
 			DependencyConfig.Register(builder.Services);
 
 			var app = builder.Build();
+
+			//<=====Seed Base data system=====>
+			using (var scope = app.Services.CreateScope())
+			{
+				var services = scope.ServiceProvider;
+				try
+				{
+					services.SeedData().Wait();
+				}
+				catch (Exception ex)
+				{
+					ConsoleLog.WriteExceptionToConsoleLog(ex);
+				}
+			}
 
 			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())

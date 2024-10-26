@@ -1,4 +1,5 @@
 using System;
+using FS.Common.Models.Models.Interfaces;
 
 namespace FS.Commons.Models.DTOs;
 

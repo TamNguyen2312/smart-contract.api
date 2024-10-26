@@ -14,6 +14,7 @@ public class EmailDTO
         To.AddRange(to.Select(x => new MailboxAddress("email", x)));
         Subject = subject;
         BodyPlainText = body;
+        BodyHtml = body;
     }
 
 }

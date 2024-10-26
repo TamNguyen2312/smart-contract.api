@@ -27,10 +27,10 @@ public class IdentityBizLogic : IIdentityBizLogic
 		return await _identityRepository.GenerateJwtToken(user, isRemember, isAdmin, isManager, isEmployee);
 	}
 
-    public async Task<string> GenerateRefreshToken(ApplicationUser user, JwtSecurityToken jwtToken, bool isRemember) 
-    {
-        return await _identityRepository.GenerateRefreshToken(user, jwtToken, isRemember);
-    }
+	public async Task<string> GenerateRefreshToken(ApplicationUser user, JwtSecurityToken jwtToken, bool isRemember)
+	{
+		return await _identityRepository.GenerateRefreshToken(user, jwtToken, isRemember);
+	}
 
 	public async Task<ApplicationUser> GetByEmailAsync(string email)
 	{
@@ -63,6 +63,11 @@ public class IdentityBizLogic : IIdentityBizLogic
 	public async Task<bool> ConfirmEmailAsync(string userId, string token)
 	{
 		return await _identityRepository.ConfirmEmailAsync(userId, token);
+	}
+
+	public async Task<bool> VerifyEmailAsync(ApplicationUser user, string token)
+	{
+		return await _identityRepository.VerifyEmailAsycn(user, token);
 	}
 	public async Task<bool> ChangePassword(string userId, string passwordNew)
 	{
@@ -126,5 +131,8 @@ public class IdentityBizLogic : IIdentityBizLogic
 		return await _identityRepository.GetRolesAdmin();
 	}
 
-
+	public async Task<bool> CreateRoleAsync(Role role)
+	{
+		return await _identityRepository.CreateRoleAsync(role);
+	}
 }
