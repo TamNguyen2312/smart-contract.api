@@ -4,23 +4,20 @@ using FS.IdentityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace App.API.Migrations
+namespace App.API.Migrations.FS
 {
     [DbContext(typeof(FSDbContext))]
-    [Migration("20241025173211_addProfileForUser")]
-    partial class addProfileForUser
+    partial class FSDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasDefaultSchema("dbo")
+                .HasDefaultSchema("fs")
                 .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -103,7 +100,7 @@ namespace App.API.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.ToTable("FS_Users", "dbo");
+                    b.ToTable("FS_Users", "fs");
                 });
 
             modelBuilder.Entity("FS.BaseModels.IdentityModels.Role", b =>
@@ -136,7 +133,7 @@ namespace App.API.Migrations
                         .HasDatabaseName("RoleNameIndex")
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
-                    b.ToTable("FS_Roles", "dbo");
+                    b.ToTable("FS_Roles", "fs");
                 });
 
             modelBuilder.Entity("FS.BaseModels.IdentityModels.RoleClaim", b =>
@@ -160,7 +157,7 @@ namespace App.API.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("FS_RoleClaims", "dbo");
+                    b.ToTable("FS_RoleClaims", "fs");
                 });
 
             modelBuilder.Entity("FS.BaseModels.IdentityModels.UserClaim", b =>
@@ -184,7 +181,7 @@ namespace App.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("FS_UserClaims", "dbo");
+                    b.ToTable("FS_UserClaims", "fs");
                 });
 
             modelBuilder.Entity("FS.BaseModels.IdentityModels.UserLogin", b =>
@@ -205,7 +202,7 @@ namespace App.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("FS_UserLogins", "dbo");
+                    b.ToTable("FS_UserLogins", "fs");
                 });
 
             modelBuilder.Entity("FS.BaseModels.IdentityModels.UserRole", b =>
@@ -220,7 +217,7 @@ namespace App.API.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("FS_UserRoles", "dbo");
+                    b.ToTable("FS_UserRoles", "fs");
                 });
 
             modelBuilder.Entity("FS.BaseModels.IdentityModels.UserToken", b =>
@@ -239,7 +236,46 @@ namespace App.API.Migrations
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("FS_UserTokens", "dbo");
+                    b.ToTable("FS_UserTokens", "fs");
+                });
+
+            modelBuilder.Entity("FS.BaseModels.RefreshToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("ExpiredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("JwtId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("RefreshTokens", "fs");
                 });
 
             modelBuilder.Entity("FS.BaseModels.IdentityModels.RoleClaim", b =>
@@ -301,6 +337,17 @@ namespace App.API.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FS.BaseModels.RefreshToken", b =>
+                {
+                    b.HasOne("FS.BaseModels.IdentityModels.ApplicationUser", "User")
+                        .WithOne()
+                        .HasForeignKey("FS.BaseModels.RefreshToken", "UserId")
+                        .IsRequired()
+                        .HasConstraintName("FK_RefreshToken_ApplicationUser");
 
                     b.Navigation("User");
                 });

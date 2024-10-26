@@ -17,7 +17,7 @@ public partial class FSDbContext : IdentityDbContext<ApplicationUser, Role, long
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.HasDefaultSchema("dbo");
+        modelBuilder.HasDefaultSchema("fs");
 
         modelBuilder.Entity<ApplicationUser>(b =>
         {

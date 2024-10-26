@@ -3,20 +3,20 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace App.API.Migrations
+namespace App.API.Migrations.FS
 {
     /// <inheritdoc />
-    public partial class initDb : Migration
+    public partial class InitFSDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.EnsureSchema(
-                name: "dbo");
+                name: "fs");
 
             migrationBuilder.CreateTable(
                 name: "FS_Roles",
-                schema: "dbo",
+                schema: "fs",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
@@ -33,11 +33,14 @@ namespace App.API.Migrations
 
             migrationBuilder.CreateTable(
                 name: "FS_Users",
-                schema: "dbo",
+                schema: "fs",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Avatar = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -60,7 +63,7 @@ namespace App.API.Migrations
 
             migrationBuilder.CreateTable(
                 name: "FS_RoleClaims",
-                schema: "dbo",
+                schema: "fs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -75,7 +78,7 @@ namespace App.API.Migrations
                     table.ForeignKey(
                         name: "FK_FS_RoleClaims_FS_Roles_RoleId",
                         column: x => x.RoleId,
-                        principalSchema: "dbo",
+                        principalSchema: "fs",
                         principalTable: "FS_Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -83,7 +86,7 @@ namespace App.API.Migrations
 
             migrationBuilder.CreateTable(
                 name: "FS_UserClaims",
-                schema: "dbo",
+                schema: "fs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -98,7 +101,7 @@ namespace App.API.Migrations
                     table.ForeignKey(
                         name: "FK_FS_UserClaims_FS_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "dbo",
+                        principalSchema: "fs",
                         principalTable: "FS_Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -106,7 +109,7 @@ namespace App.API.Migrations
 
             migrationBuilder.CreateTable(
                 name: "FS_UserLogins",
-                schema: "dbo",
+                schema: "fs",
                 columns: table => new
                 {
                     LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -120,7 +123,7 @@ namespace App.API.Migrations
                     table.ForeignKey(
                         name: "FK_FS_UserLogins_FS_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "dbo",
+                        principalSchema: "fs",
                         principalTable: "FS_Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -128,7 +131,7 @@ namespace App.API.Migrations
 
             migrationBuilder.CreateTable(
                 name: "FS_UserRoles",
-                schema: "dbo",
+                schema: "fs",
                 columns: table => new
                 {
                     UserId = table.Column<long>(type: "bigint", nullable: false),
@@ -140,14 +143,14 @@ namespace App.API.Migrations
                     table.ForeignKey(
                         name: "FK_FS_UserRoles_FS_Roles_RoleId",
                         column: x => x.RoleId,
-                        principalSchema: "dbo",
+                        principalSchema: "fs",
                         principalTable: "FS_Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_FS_UserRoles_FS_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "dbo",
+                        principalSchema: "fs",
                         principalTable: "FS_Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -155,7 +158,7 @@ namespace App.API.Migrations
 
             migrationBuilder.CreateTable(
                 name: "FS_UserTokens",
-                schema: "dbo",
+                schema: "fs",
                 columns: table => new
                 {
                     UserId = table.Column<long>(type: "bigint", nullable: false),
@@ -169,21 +172,47 @@ namespace App.API.Migrations
                     table.ForeignKey(
                         name: "FK_FS_UserTokens_FS_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "dbo",
+                        principalSchema: "fs",
                         principalTable: "FS_Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "RefreshTokens",
+                schema: "fs",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    JwtId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    IsRevoked = table.Column<bool>(type: "bit", nullable: false),
+                    IssuedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiredAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefreshToken_ApplicationUser",
+                        column: x => x.UserId,
+                        principalSchema: "fs",
+                        principalTable: "FS_Users",
+                        principalColumn: "Id");
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_FS_RoleClaims_RoleId",
-                schema: "dbo",
+                schema: "fs",
                 table: "FS_RoleClaims",
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
-                schema: "dbo",
+                schema: "fs",
                 table: "FS_Roles",
                 column: "NormalizedName",
                 unique: true,
@@ -191,35 +220,42 @@ namespace App.API.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_FS_UserClaims_UserId",
-                schema: "dbo",
+                schema: "fs",
                 table: "FS_UserClaims",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FS_UserLogins_UserId",
-                schema: "dbo",
+                schema: "fs",
                 table: "FS_UserLogins",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FS_UserRoles_RoleId",
-                schema: "dbo",
+                schema: "fs",
                 table: "FS_UserRoles",
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",
-                schema: "dbo",
+                schema: "fs",
                 table: "FS_Users",
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
-                schema: "dbo",
+                schema: "fs",
                 table: "FS_Users",
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_UserId",
+                schema: "fs",
+                table: "RefreshTokens",
+                column: "UserId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -227,31 +263,35 @@ namespace App.API.Migrations
         {
             migrationBuilder.DropTable(
                 name: "FS_RoleClaims",
-                schema: "dbo");
+                schema: "fs");
 
             migrationBuilder.DropTable(
                 name: "FS_UserClaims",
-                schema: "dbo");
+                schema: "fs");
 
             migrationBuilder.DropTable(
                 name: "FS_UserLogins",
-                schema: "dbo");
+                schema: "fs");
 
             migrationBuilder.DropTable(
                 name: "FS_UserRoles",
-                schema: "dbo");
+                schema: "fs");
 
             migrationBuilder.DropTable(
                 name: "FS_UserTokens",
-                schema: "dbo");
+                schema: "fs");
+
+            migrationBuilder.DropTable(
+                name: "RefreshTokens",
+                schema: "fs");
 
             migrationBuilder.DropTable(
                 name: "FS_Roles",
-                schema: "dbo");
+                schema: "fs");
 
             migrationBuilder.DropTable(
                 name: "FS_Users",
-                schema: "dbo");
+                schema: "fs");
         }
     }
 }
