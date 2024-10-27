@@ -27,6 +27,7 @@ public class Constants
     public const string IS_ARTIST = "is_artist";
     public const string IS_MANAGER = "is_manager";
     public const string IS_EMPLOYEE = "is_employee";
+    public const string IS_REMEMBER = "is_remember";
     public const string FormatDateTime = "dd/MM/yyyy HH:mm";
     public const string FormatFullDateTime = "dd/MM/yyyy HH:mm:ss";
     public const string UserNameAdminSeller = "seller";

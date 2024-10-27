@@ -2,6 +2,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using FS.BaseModels.IdentityModels;
 using FS.BLL.Services.Interfaces;
+using FS.Commons;
 using FS.Commons.Models.DTOs;
 using FS.DAL.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -33,6 +34,10 @@ public class IdentityBizLogic : IIdentityBizLogic
 		return await _identityRepository.GenerateRefreshToken(user, jwtToken, isRemember);
 	}
 
+	public async Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO)
+	{
+		return await _identityRepository.CheckToRenewToken(renewTokenDTO);
+	}
 	public async Task<ApplicationUser> GetByEmailAsync(string email)
 	{
 		return await _identityRepository.GetByEmailAsync(email);

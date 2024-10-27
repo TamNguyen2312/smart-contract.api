@@ -71,7 +71,8 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
                 new Claim(Constants.AVATAR, user.Avatar ?? Constants.DefaultAvatar),
                 new Claim(Constants.IS_ADMIN, isAdmin.ToString()),
                 new Claim(Constants.IS_MANAGER, isManager.ToString()),
-                new Claim(Constants.IS_EMPLOYEE, isEmployee.ToString())
+                new Claim(Constants.IS_EMPLOYEE, isEmployee.ToString()),
+                new Claim(Constants.IS_REMEMBER, isRemember.ToString())
 
             };
 
@@ -113,12 +114,16 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
             await _unitOfWork.BeginTransactionAsync();
             var refreshtokenRepo = _unitOfWork.GetRepository<RefreshToken>();
             var refreshTokenByUserIds = await refreshtokenRepo.GetAllAsync(new QueryBuilder<RefreshToken>()
-                                                                                .WithPredicate(x => x.UserId == user.Id)
-                                                                                .WithTracking(false)
-                                                                                .Build());
-            if (refreshTokenByUserIds.Any())
+                                                                        .WithPredicate(x => x.UserId == user.Id)
+                                                                        .WithTracking(false)
+                                                                        .Build());
+            if (refreshTokenByUserIds != null || refreshTokenByUserIds.Any())
             {
-                await refreshtokenRepo.DeleteAllAsync(refreshTokenByUserIds.ToList());
+                foreach (var token in refreshTokenByUserIds)
+                {
+                    token.IsRevoked = true;
+                    await refreshtokenRepo.UpdateAsync(token);
+                }
             }
             await refreshtokenRepo.CreateAsync(refreshTokenInDb);
             var saver = await _unitOfWork.SaveAsync();
@@ -129,10 +134,177 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
             }
             return refreshtoken;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ConsoleLog.WriteExceptionToConsoleLog(ex);
             await _unitOfWork.RollBackAsync();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// This is used to check valid the token to renew
+    /// </summary>
+    /// <param name="renewTokenDTO"></param>
+    /// <returns></returns>
+    public async Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO)
+    {
+        var jwtTokenHandler = new JwtSecurityTokenHandler();
+        var secretKeyBytes = Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]);
+        var tokenValidateParam = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidAudience = _configuration["JWT:ValidAudience"],
+            ValidIssuer = _configuration["JWT:ValidIssuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(secretKeyBytes),
+            ClockSkew = TimeSpan.Zero,
+
+            ValidateLifetime = false
+        };
+
+        try
+        {
+            var tokenInVerification = jwtTokenHandler.ValidateToken(renewTokenDTO.AccessToken, tokenValidateParam, out var validatedToken);
+
+            if (validatedToken is JwtSecurityToken jwtSecurityToken)
+            {
+                Console.WriteLine("Algorithm: " + jwtSecurityToken.Header.Alg);
+                Console.WriteLine(SecurityAlgorithms.HmacSha512);
+                var result = jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512, StringComparison.InvariantCultureIgnoreCase);
+                if (!result)
+                {
+                    return new FSResponse
+                    {
+                        Success = false,
+                        Message = "Access token không hợp lệ"
+                    };
+                }
+            }
+
+            var utcExpireDate = long.Parse(tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+
+            var expireDate = ConvertUnixTimeToDateTime(utcExpireDate);
+            if (expireDate > DateTime.UtcNow)
+            {
+                return new FSResponse
+                {
+                    Success = false,
+                    Message = "Access token chưa hết hạn."
+                };
+            }
+            var refreshTokenRepo = _unitOfWork.GetRepository<RefreshToken>();
+            var storedToken = await refreshTokenRepo.GetSingleAsync(new QueryBuilder<RefreshToken>()
+                                                                    .WithPredicate(x => x.Token.Equals(renewTokenDTO.RefreshToken))
+                                                                    .WithTracking(false)
+                                                                    .Build());
+            if (storedToken == null)
+            {
+                return new FSResponse
+                {
+                    Success = false,
+                    Message = "Refresh Token không tồn tại."
+                };
+            }
+
+            if (storedToken.IsUsed)
+            {
+                return new FSResponse
+                {
+                    Success = false,
+                    Message = "Refresh token đã được sử dụng."
+                };
+            }
+            if (storedToken.IsRevoked)
+            {
+                return new FSResponse
+                {
+                    Success = false,
+                    Message = "Refresh token đã bị thu hồi."
+                };
+            }
+
+            var jti = tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+            if (storedToken.JwtId != jti)
+            {
+                return new FSResponse
+                {
+                    Success = false,
+                    Message = "Token không khớp."
+                };
+            }
+            return new FSResponse
+            {
+                Success = true,
+                Message = "Token hợp lệ."
+            };
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// This is used to log out an account
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
+    public async Task<FSResponse> LogOutAsycn(LogOutDTO dto)
+    {
+        var jwtTokenHandler = new JwtSecurityTokenHandler();
+        var secretKeyBytes = Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]);
+        var tokenValidateParam = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidAudience = _configuration["JWT:ValidAudience"],
+            ValidIssuer = _configuration["JWT:ValidIssuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(secretKeyBytes),
+            ClockSkew = TimeSpan.Zero,
+
+            ValidateLifetime = false
+        };
+
+        try
+        {
+            var tokenInVerification = jwtTokenHandler.ValidateToken(dto.AccessToken, tokenValidateParam, out var validatedToken);
+            var jti = tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+
+            await _unitOfWork.BeginTransactionAsync();
+            var refreshTokenRepo = _unitOfWork.GetRepository<RefreshToken>();
+            var refreshToken = await refreshTokenRepo.GetSingleAsync(new QueryBuilder<RefreshToken>()
+                                                                        .WithPredicate(x => x.Token.Equals(dto.RefreshToken)
+                                                                                    && x.JwtId.Equals(jti)
+                                                                                    && x.)
+                                                                        .WithTracking(true)
+                                                                        .WithInclude(x => x.User)
+                                                                        .Build());
+
+            if (refreshToken == null)
+            {
+                return new BaseResponse
+                {
+                    IsSuccess = false,
+                    Message = "Refresh Token không hợp lệ."
+                };
+            }
+
+            if (refreshToken.IsUsed || refreshToken.IsRevoked)
+            {
+                return new BaseResponse
+                {
+                    IsSuccess = false,
+                    Message = "Refresh token đã được sử dụng hoặc thu hồi."
+                };
+            }
+
+            refreshToken.IsRevoked = true;
+            await refreshTokenRepo.UpdateAsync(refreshToken);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch (Exception)
+        {
             throw;
         }
     }

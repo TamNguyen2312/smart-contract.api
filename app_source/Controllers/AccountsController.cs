@@ -7,6 +7,7 @@ using FS.Commons;
 using FS.Commons.Models;
 using FS.Commons.Models.DTOs;
 using FS.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,6 +33,8 @@ namespace App.API.Controllers
             this._signInManager = signInManager;
             this._userManager = userManager;
         }
+
+        #region COMMON
 
         [HttpPost]
         [Route("sign-up-account")]
@@ -190,6 +193,59 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+
+        #endregion
+
+        #region USER
+
+        [Authorize]
+        [HttpPost]
+        [Route("renew-token")]
+        public async Task<IActionResult> RenewTokenAsync(RenewTokenDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                var checkToken = await _identityBizLogic.CheckToRenewToken(dto);
+                if (!checkToken.Success)
+                {
+                    return Error(checkToken.Message);
+                }
+                var user = await _identityBizLogic.GetByIdAsync(UserId);
+                if (user == null)
+                {
+                    return GetNotFound("Không tìm thấy người dùng.");
+                }
+                var newToken = await _identityBizLogic.GenerateJwtToken
+                (
+                    user: user,
+                    isRemember: IsRemember,
+                    isAdmin: IsAdmin,
+                    isEmployee: IsEmployee,
+                    isManager: IsManager
+                );
+                var newRefreshToken = await _identityBizLogic.GenerateRefreshToken
+                (
+                    user: user,
+                    jwtToken: newToken.JwtToken,
+                    isRemember: IsRemember
+                );
+                if (newToken == null || newRefreshToken == null)
+                {
+                    return Error("Tạo mã đăng nhập mới không thành công. Vui lòng thử lại sau ít phút.");
+                }
+
+                return SaveSuccess(new LoginResponseDTO { AccessToken = newToken.AccessToken, RefreshToken = newRefreshToken });
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+        #endregion
 
         #region PRIVATE
         private async Task<bool> SendEmailConfirm(ApplicationUser user)

@@ -171,6 +171,36 @@ public class BaseAPIController : ControllerBase
         }
     }
 
+    protected bool IsManager
+    {
+        get
+        {
+            var isManager = User.FindFirst(Constants.IS_MANAGER)?.Value;
+            bool.TryParse(isManager, out bool isManagerReal);
+            return isManagerReal;
+        }
+    }
+
+    protected bool IsEmployee
+    {
+        get
+        {
+            var isEmployee = User.FindFirst(Constants.IS_EMPLOYEE)?.Value;
+            bool.TryParse(isEmployee, out bool is_employee);
+            return is_employee;
+        }
+    }
+
+    protected bool IsRemember
+    {
+        get
+        {
+            var isRemeber = User.FindFirst(Constants.IS_REMEMBER)?.Value;
+            bool.TryParse(isRemeber, out bool is_remember);
+            return is_remember;
+        }
+    }
+
     protected bool IsCreator
     {
         get
