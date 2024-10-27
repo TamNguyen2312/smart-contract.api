@@ -4,6 +4,7 @@ using FS.BaseModels.IdentityModels;
 using FS.BLL.Services.Interfaces;
 using FS.Commons;
 using FS.Commons.Models;
+using FS.Commons.Models.DTOs;
 using Microsoft.AspNetCore.Identity;
 
 namespace App.API.Configs;
@@ -38,7 +39,8 @@ public static class DataSeeder
                 EmailConfirmed = true,
                 Avatar = Constants.DefaultAvatar,
                 FirstName = adminFirstName,
-                LastName = adminLastName
+                LastName = adminLastName,
+                Gender = Gender.None.ToString()
             };
 
             var result = await identityBizLogic.AddUserAsync(adminUser, adminPassword);

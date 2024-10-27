@@ -21,6 +21,18 @@ public class RegisterDTO : ITrimmable, IValidatableObject
 	public string LastName { get; set; }
 
 	/// <summary>
+	/// Giới tính user
+	/// </summary>
+	[Display(Name = "Giới tính")]
+	public Gender? Gender { get; set; }
+	public bool IsValidGender()
+	{
+		if (Gender.HasValue)
+			return Enum.IsDefined(typeof(Gender), Gender);
+		return true;
+	}
+
+	/// <summary>
 	/// PhoneNumber
 	/// </summary>
 	[Required(ErrorMessage = Constants.Required)]

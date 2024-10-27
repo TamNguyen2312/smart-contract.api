@@ -57,6 +57,12 @@ namespace App.API.Controllers
                     return ModelInvalid();
                 }
 
+                if (!dto.IsValidGender())
+                {
+                    ModelState.AddModelError("Gender", "Giới tính không hợp lệ");
+                    return ModelInvalid();
+                }
+
                 var userEmail = await _identityBizLogic.GetByEmailAsync(dto.Email);
                 if (userEmail != null)
                 {
@@ -72,7 +78,8 @@ namespace App.API.Controllers
                     FirstName = dto.FirstName,
                     LastName = dto.LastName,
                     PhoneNumber = dto.PhoneNumber,
-                    Avatar = Constants.DefaultAvatar
+                    Avatar = Constants.DefaultAvatar,
+                    Gender = dto.Gender.ToString() ?? Gender.None.ToString()
                 };
 
                 var result = await _identityBizLogic.AddUserAsync(user, dto.Password);
@@ -83,17 +90,7 @@ namespace App.API.Controllers
 
                 var sendMail = await SendEmailConfirm(user);
                 if (!sendMail) return Error("Đã xảy ra lỗi trong quá trình gửi mail xác thực. Vui lòng đăng nhập lại để nhận một mail mới");
-                var userData = new UserViewDTO()
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber,
-                    Username = user.UserName,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    FullName = $"{user.FirstName} {user.LastName}",
-                    Avatar = user.Avatar,
-                };
+                var userData = await GetUserView(user);
                 return SaveSuccess(userData);
             }
             catch (Exception ex)
@@ -150,7 +147,21 @@ namespace App.API.Controllers
                 throw;
             }
         }
-
+        private async Task<UserViewDTO> GetUserView(ApplicationUser user)
+        {
+            return new UserViewDTO
+            {
+                Id = user.Id,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Username = user.UserName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                FullName = $"{user.FirstName} {user.LastName}",
+                Avatar = user.Avatar,
+                Gender = Enum.TryParse<Gender>(user.Gender, out var gender) ? gender : default
+            };
+        }
         #endregion
     }
 }
