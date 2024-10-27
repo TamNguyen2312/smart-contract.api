@@ -1,7 +1,9 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
+using FS.Commons.Models;
 using FS.Commons.Models.DTOs;
 using Microsoft.AspNetCore.Identity;
 
@@ -96,13 +98,29 @@ public interface IIdentityBizLogic
 	/// </summary>
 	/// <returns></returns>
 	Task<List<Role>> GetRolesAdmin();
+
 	Task<JwtSecurityTokenDTO> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false);
 	Task<string> GenerateRefreshToken(ApplicationUser user, JwtSecurityToken jwtToken, bool isRemember);
+
 	/// <summary>
-	/// This is used to check valid token to renew
+	/// This is used to check valid of access and refresh token
 	/// </summary>
-	/// <param name="renewTokenDTO"></param>
+	/// <param name="baseTokenModel"></param>
 	/// <returns></returns>
-	Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO, ApplicationUser user);
-	Task<bool> CreateRoleAsync(Role role);
+	Task<BaseResponse<RefreshToken>> ValidateAndVerifyToken(BaseTokenModel baseTokenModel);
+
+	/// <summary>
+	/// This is used to update an refresh token
+	/// </summary>
+	/// <param name="token"></param>
+	/// <returns></returns>
+	Task<bool> UpdateTokenAsync(RefreshToken token);
+
+	/// <summary>
+	/// This is used to log out an account
+	/// </summary>
+	/// <param name="dto"></param>
+	/// <param name="user"></param>
+	/// <returns></returns>
+	Task<FSResponse> LogOutAsync(LogOutDTO dto, ApplicationUser user);
 }

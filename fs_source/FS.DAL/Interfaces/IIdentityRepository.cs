@@ -1,7 +1,9 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
+using FS.Commons.Models;
 using FS.Commons.Models.DTOs;
 using Microsoft.AspNetCore.Identity;
 
@@ -106,12 +108,13 @@ public interface IIdentityRepository
     Task<List<Role>> GetRolesAdmin();
     Task<JwtSecurityTokenDTO> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false);
     Task<string> GenerateRefreshToken(ApplicationUser user, JwtSecurityToken jwtToken, bool isRemeber);
-    Task<bool> CreateRoleAsync(Role role);
     /// <summary>
-    /// This is used to check a valid token to renew
+    /// This is used to authen and check valiation of access and refresh token
     /// </summary>
-    /// <param name="renewTokenDTO"></param>
+    /// <param name="tokenModel"></param>
     /// <returns></returns>
-    Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO, ApplicationUser user);
-    Task<FSResponse> LogOutAsycn(LogOutDTO dto);
+    Task<BaseResponse<RefreshToken>> ValidateAndVerifyToken(BaseTokenModel tokenModel);
+    Task<bool> UpdateTokenAsync(RefreshToken refreshToken);
+    Task<FSResponse> LogOutAsycn(LogOutDTO dto, ApplicationUser user);
+    Task<bool> RevokeToken();
 }

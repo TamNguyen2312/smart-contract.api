@@ -1,8 +1,10 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
 using FS.BLL.Services.Interfaces;
 using FS.Commons;
+using FS.Commons.Models;
 using FS.Commons.Models.DTOs;
 using FS.DAL.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -34,9 +36,35 @@ public class IdentityBizLogic : IIdentityBizLogic
 		return await _identityRepository.GenerateRefreshToken(user, jwtToken, isRemember);
 	}
 
-	public async Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO, ApplicationUser user)
+	/// <summary>
+	/// This is used to authen and check validation of access and refresh token
+	/// </summary>
+	/// <param name="baseTokenModel"></param>
+	/// <returns></returns>
+	public async Task<BaseResponse<RefreshToken>> ValidateAndVerifyToken(BaseTokenModel baseTokenModel)
 	{
-		return await _identityRepository.CheckToRenewToken(renewTokenDTO, user);
+		return await _identityRepository.ValidateAndVerifyToken(baseTokenModel);
+	}
+
+	/// <summary>
+	/// This is used to update an refresh token
+	/// </summary>
+	/// <param name="token"></param>
+	/// <returns></returns>
+	public async Task<bool> UpdateTokenAsync(RefreshToken token)
+	{
+		return await _identityRepository.UpdateTokenAsync(token);
+	}
+
+	/// <summary>
+	/// This is used to log out an account
+	/// </summary>
+	/// <param name="dto"></param>
+	/// <param name="user"></param>
+	/// <returns></returns>
+	public async Task<FSResponse> LogOutAsync(LogOutDTO dto, ApplicationUser user)
+	{
+		return await _identityRepository.LogOutAsycn(dto, user);
 	}
 	public async Task<ApplicationUser> GetByEmailAsync(string email)
 	{
@@ -135,10 +163,5 @@ public class IdentityBizLogic : IIdentityBizLogic
 	public async Task<List<Role>> GetRolesAdmin()
 	{
 		return await _identityRepository.GetRolesAdmin();
-	}
-
-	public async Task<bool> CreateRoleAsync(Role role)
-	{
-		return await _identityRepository.CreateRoleAsync(role);
 	}
 }

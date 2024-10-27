@@ -213,11 +213,16 @@ namespace App.API.Controllers
                     return GetNotFound("Không tìm thấy người dùng.");
                 }
 
-                var checkToken = await _identityBizLogic.CheckToRenewToken(dto, user);
-                if (!checkToken.Success)
+                var checkToken = await _identityBizLogic.ValidateAndVerifyToken(dto);
+                if (!checkToken.IsSuccess)
                 {
                     return Error(checkToken.Message);
                 }
+
+                //use token
+                if (checkToken.Data == null) return Error(Constants.SomeThingWentWrong);
+                checkToken.Data.IsUsed = true;
+                var useToken = await _identityBizLogic.UpdateTokenAsync(checkToken.Data);
 
                 var newToken = await _identityBizLogic.GenerateJwtToken
                 (
@@ -246,6 +251,8 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+
+
 
         #endregion
 
