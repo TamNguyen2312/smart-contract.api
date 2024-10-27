@@ -103,6 +103,6 @@ public interface IIdentityBizLogic
 	/// </summary>
 	/// <param name="renewTokenDTO"></param>
 	/// <returns></returns>
-	Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO);
+	Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO, ApplicationUser user);
 	Task<bool> CreateRoleAsync(Role role);
 }

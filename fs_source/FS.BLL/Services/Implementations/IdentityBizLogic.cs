@@ -34,9 +34,9 @@ public class IdentityBizLogic : IIdentityBizLogic
 		return await _identityRepository.GenerateRefreshToken(user, jwtToken, isRemember);
 	}
 
-	public async Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO)
+	public async Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO, ApplicationUser user)
 	{
-		return await _identityRepository.CheckToRenewToken(renewTokenDTO);
+		return await _identityRepository.CheckToRenewToken(renewTokenDTO, user);
 	}
 	public async Task<ApplicationUser> GetByEmailAsync(string email)
 	{

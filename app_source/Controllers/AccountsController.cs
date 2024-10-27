@@ -207,16 +207,18 @@ namespace App.API.Controllers
             {
                 if (!ModelState.IsValid) return ModelInvalid();
 
-                var checkToken = await _identityBizLogic.CheckToRenewToken(dto);
-                if (!checkToken.Success)
-                {
-                    return Error(checkToken.Message);
-                }
                 var user = await _identityBizLogic.GetByIdAsync(UserId);
                 if (user == null)
                 {
                     return GetNotFound("Không tìm thấy người dùng.");
                 }
+
+                var checkToken = await _identityBizLogic.CheckToRenewToken(dto, user);
+                if (!checkToken.Success)
+                {
+                    return Error(checkToken.Message);
+                }
+
                 var newToken = await _identityBizLogic.GenerateJwtToken
                 (
                     user: user,

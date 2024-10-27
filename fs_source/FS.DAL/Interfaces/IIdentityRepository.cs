@@ -112,6 +112,6 @@ public interface IIdentityRepository
     /// </summary>
     /// <param name="renewTokenDTO"></param>
     /// <returns></returns>
-    Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO);
+    Task<FSResponse> CheckToRenewToken(RenewTokenDTO renewTokenDTO, ApplicationUser user);
     Task<FSResponse> LogOutAsycn(LogOutDTO dto);
 }
