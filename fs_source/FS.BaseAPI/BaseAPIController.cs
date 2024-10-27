@@ -23,6 +23,26 @@ public class BaseAPIController : ControllerBase
         });
     }
 
+    protected ActionResult GetNotFound(string message, object data = null)
+    {
+        return new NotFoundObjectResult(new FSResponse
+        {
+            Data = data,
+            Message = message,
+            StatusCode = System.Net.HttpStatusCode.NotFound
+        });
+    }
+
+    protected ActionResult GetUnAuthorized(string message, object data = null)
+    {
+        return new UnauthorizedObjectResult(new FSResponse
+        {
+            Data = data,
+            Message = message,
+            StatusCode = System.Net.HttpStatusCode.Unauthorized
+        });
+    }
+
     /// <summary>
     /// Gets the data failed.
     /// </summary>

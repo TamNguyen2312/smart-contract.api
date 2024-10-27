@@ -2,6 +2,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using FS.BaseModels.IdentityModels;
 using FS.BLL.Services.Interfaces;
+using FS.Commons.Models.DTOs;
 using FS.DAL.Interfaces;
 using Microsoft.AspNetCore.Identity;
 
@@ -22,7 +23,7 @@ public class IdentityBizLogic : IIdentityBizLogic
 	{
 		return await _identityRepository.UpdateAsync(dto);
 	}
-	public async Task<string> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false)
+	public async Task<JwtSecurityTokenDTO> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false)
 	{
 		return await _identityRepository.GenerateJwtToken(user, isRemember, isAdmin, isManager, isEmployee);
 	}

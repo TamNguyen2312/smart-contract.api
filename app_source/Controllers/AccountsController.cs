@@ -1,13 +1,12 @@
 using System.Web;
-using App.API.Email;
 using FS.BaseAPI;
+using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
 using FS.BLL.Services.Interfaces;
 using FS.Commons;
 using FS.Commons.Models;
 using FS.Commons.Models.DTOs;
 using FS.Utility;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -53,7 +52,7 @@ namespace App.API.Controllers
 
                 if (dto.Password != dto.ConfirmPassword)
                 {
-                    ModelState.AddModelError("Password", "Mật khẩu xác thực không đúng!");
+                    ModelState.AddModelError("Password", Constants.ConfirmPasswordError);
                     return ModelInvalid();
                 }
 
@@ -100,7 +99,6 @@ namespace App.API.Controllers
             }
         }
 
-
         [HttpGet]
         [Route("verify-email")]
         public async Task<IActionResult> VeryfiEmailAsync(string token, string email)
@@ -108,7 +106,7 @@ namespace App.API.Controllers
             var user = await _identityBizLogic.GetByEmailAsync(email);
             if (user == null)
             {
-                return GetError("Không tìm thấy Email người dùng trong hệ thống.");
+                return GetNotFound("Không tìm thấy Email người dùng trong hệ thống.");
             }
             var response = await _identityBizLogic.VerifyEmailAsync(user, token);
 
@@ -118,6 +116,79 @@ namespace App.API.Controllers
             }
 
             return Success(response, "Xác thực tài khoản thành công.");
+        }
+
+        [HttpPost]
+        [Route("login")]
+        public async Task<IActionResult> Login(LoginDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!Helpers.IsValidEmail(dto.Email.Trim()))
+                {
+                    ModelState.AddModelError("Email", Constants.EmailAddressFormatError);
+                    return ModelInvalid();
+                }
+
+                var user = await _identityBizLogic.GetByEmailAsync(dto.Email);
+                if (user == null)
+                {
+                    ModelState.AddModelError("Email", "Email không tồn tại.");
+                    return ModelInvalid();
+                }
+
+                var rightPassword = await _identityBizLogic.CheckPasswordAsync(user, dto.Password);
+                if (!rightPassword)
+                {
+                    ModelState.AddModelError("Password", Constants.PasswordIsInCorrect);
+                    return ModelInvalid();
+                }
+
+                //check email confirm
+                if (!user.EmailConfirmed)
+                {
+                    var sendMail = await SendEmailConfirm(user);
+                    if (!sendMail)
+                    {
+                        return Error($"Email quý khách chưa đưọc xác thực. {Constants.SomeThingWentWrong}");
+                    }
+                    else
+                    {
+                        return GetUnAuthorized("Chúng tôi đã gửi email xác thực đến tài khoản của bạn. Hãy kiểm tra và thực hiện xác thực");
+                    }
+                }
+
+                //check 2fa otp
+                //....
+
+                //check account is locked
+                var signedInAccount = await _signInManager.PasswordSignInAsync(user, dto.Password, true, true);
+                if (signedInAccount.IsLockedOut)
+                {
+                    return GetUnAuthorized($"Tài khoản của bạn đã bị khóa vì đăng nhập sai nhiều lần. Khóa đến: {user.LockoutEnd.Value.LocalDateTime}.");
+                }
+                await _userManager.ResetAccessFailedCountAsync(user);
+
+                //gen token
+                var roles = await _userManager.GetRolesAsync(user);
+                var genAccesToken = await _identityBizLogic.GenerateJwtToken(user, dto.IsRemember, roles.Contains(SystemRoleConstants.ADMIN));
+                string refreshToken = await _identityBizLogic.GenerateRefreshToken(user, genAccesToken.JwtToken, dto.IsRemember);
+
+                var response = new LoginResponseDTO
+                {
+                    AccessToken = genAccesToken.AccessToken,
+                    RefreshToken = refreshToken,
+                    Redirect = string.IsNullOrEmpty(dto.Redirect) ? "/" : dto.Redirect
+                };
+                return response != null ? SaveSuccess(response) : Error(Constants.SomeThingWentWrong);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
         }
 
         #region PRIVATE

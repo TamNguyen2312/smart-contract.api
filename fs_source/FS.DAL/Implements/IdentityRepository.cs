@@ -4,9 +4,11 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using Azure.Core;
 using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
+using FS.Commons.Models.DTOs;
 using FS.DAL.Base;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
@@ -55,9 +57,10 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
         return result.Succeeded;
     }
 
-    public async Task<string> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false)
+    public async Task<JwtSecurityTokenDTO> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false)
     {
         var claims = new[] {
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
@@ -73,7 +76,7 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
             };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
         var token = new JwtSecurityToken(
              _configuration["JWT:ValidAudience"],
@@ -82,8 +85,8 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
              expires: isRemember ? DateTime.Now.AddDays(28) : DateTime.Now.AddDays(1),
              signingCredentials: creds
         );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+        return new JwtSecurityTokenDTO { AccessToken = accessToken, JwtToken = token };
     }
 
     /// <summary>
@@ -119,6 +122,7 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
             }
             await refreshtokenRepo.CreateAsync(refreshTokenInDb);
             var saver = await _unitOfWork.SaveAsync();
+            await _unitOfWork.CommitTransactionAsync();
             if (!saver)
             {
                 throw new Exception("Đã xảy ra lỗi trong quá trình tạo và lưu refresh token");
@@ -128,6 +132,7 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
         catch (Exception ex)
         {
             ConsoleLog.WriteExceptionToConsoleLog(ex);
+            await _unitOfWork.RollBackAsync();
             throw;
         }
     }

@@ -1,5 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+#
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.API", "App.API.csproj", "{17842E60-2E9B-42BB-8ED2-9556D5898EB3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FS.BaseAPI", "..\fs_source\FS.BaseAPI\FS.BaseAPI.csproj", "{B8EBCC36-E8D2-41AE-A4C7-94612829CDC4}"

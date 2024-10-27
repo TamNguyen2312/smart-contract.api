@@ -35,4 +35,12 @@
       <ProjectReference Include="..\fs_source\FS.WebBase\FS.WebBase.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="App.Utility\bin\Debug\net8.0\App.Utility.deps.json" />
+      <_ContentIncludedByDefault Remove="App.Utility\obj\App.Utility.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="App.Utility\obj\Debug\net8.0\App.Utility.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="App.Utility\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="App.Utility\obj\project.packagespec.json" />
+    </ItemGroup>
+
 </Project>

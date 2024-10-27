@@ -1,6 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using FS.BaseModels.IdentityModels;
+using FS.Commons.Models.DTOs;
 using Microsoft.AspNetCore.Identity;
 
 namespace FS.DAL.Interfaces;
@@ -102,7 +103,7 @@ public interface IIdentityRepository
     /// </summary>
     /// <returns></returns>
     Task<List<Role>> GetRolesAdmin();
-    Task<string> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false);
+    Task<JwtSecurityTokenDTO> GenerateJwtToken(ApplicationUser user, bool isRemember, bool isAdmin, bool isManager = false, bool isEmployee = false);
     Task<string> GenerateRefreshToken(ApplicationUser user, JwtSecurityToken jwtToken, bool isRemeber);
     Task<bool> CreateRoleAsync(Role role);
 }
