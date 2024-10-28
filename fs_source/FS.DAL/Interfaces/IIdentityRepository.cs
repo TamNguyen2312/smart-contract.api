@@ -115,6 +115,5 @@ public interface IIdentityRepository
     /// <returns></returns>
     Task<BaseResponse<RefreshToken>> ValidateAndVerifyToken(BaseTokenModel tokenModel);
     Task<bool> UpdateTokenAsync(RefreshToken refreshToken);
-    Task<FSResponse> LogOutAsycn(LogOutDTO dto, ApplicationUser user);
-    Task<bool> RevokeToken();
+    Task<bool> IsTokenInvoked(string jti, long userId);
 }

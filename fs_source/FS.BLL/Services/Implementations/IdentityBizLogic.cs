@@ -57,15 +57,16 @@ public class IdentityBizLogic : IIdentityBizLogic
 	}
 
 	/// <summary>
-	/// This is used to log out an account
+	/// It is used to check whether the token has been used or not.
 	/// </summary>
-	/// <param name="dto"></param>
-	/// <param name="user"></param>
+	/// <param name="jti"></param>
+	/// <param name="userId"></param>
 	/// <returns></returns>
-	public async Task<FSResponse> LogOutAsync(LogOutDTO dto, ApplicationUser user)
+	public async Task<bool> IsTokenInvoked(string jti, long userId)
 	{
-		return await _identityRepository.LogOutAsycn(dto, user);
+		return await _identityRepository.IsTokenInvoked(jti, userId);
 	}
+
 	public async Task<ApplicationUser> GetByEmailAsync(string email)
 	{
 		return await _identityRepository.GetByEmailAsync(email);

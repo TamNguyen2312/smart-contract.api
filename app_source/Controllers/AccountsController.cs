@@ -206,13 +206,16 @@ namespace App.API.Controllers
             try
             {
                 if (!ModelState.IsValid) return ModelInvalid();
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
 
                 var user = await _identityBizLogic.GetByIdAsync(UserId);
                 if (user == null)
                 {
-                    return GetNotFound("Không tìm thấy người dùng.");
+                    return GetNotFound(Constants.GetNotFound);
                 }
 
+                dto.userId = UserId;
                 var checkToken = await _identityBizLogic.ValidateAndVerifyToken(dto);
                 if (!checkToken.IsSuccess)
                 {
@@ -223,6 +226,7 @@ namespace App.API.Controllers
                 if (checkToken.Data == null) return Error(Constants.SomeThingWentWrong);
                 checkToken.Data.IsUsed = true;
                 var useToken = await _identityBizLogic.UpdateTokenAsync(checkToken.Data);
+                if (!useToken) return SaveError("Sử dụng refresh token không thành công.");
 
                 var newToken = await _identityBizLogic.GenerateJwtToken
                 (
@@ -253,6 +257,40 @@ namespace App.API.Controllers
         }
 
 
+        [Authorize]
+        [HttpPost]
+        [Route("logout")]
+        public async Task<IActionResult> LogOutAsync(LogOutDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return ModelInvalid();
+                var user = await _identityBizLogic.GetByIdAsync(UserId);
+                if (user == null)
+                {
+                    return GetNotFound(Constants.GetNotFound);
+                }
+
+                dto.userId = UserId;
+                var checkToken = await _identityBizLogic.ValidateAndVerifyToken(dto);
+                if (!checkToken.IsSuccess)
+                {
+                    return Error(checkToken.Message);
+                }
+
+                if (checkToken.Data == null) return Error(Constants.SomeThingWentWrong);
+                checkToken.Data.IsRevoked = true;
+                var useToken = await _identityBizLogic.UpdateTokenAsync(checkToken.Data);
+                if (!useToken) return SaveError("Thu hồi refresh token không thành công.");
+                await _signInManager.SignOutAsync();
+                return SaveSuccess("Đăng xuất thành công.");
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
 
         #endregion
 

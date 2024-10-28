@@ -1,7 +1,10 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using FS.BLL.Services.Interfaces;
 using FS.Commons;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FS.BaseAPI;
 
@@ -149,6 +152,11 @@ public class BaseAPIController : ControllerBase
     }
 
     /// <summary>
+    /// Get jti of logged in user
+    /// </summary>
+    protected string Jti => User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+
+    /// <summary>
     /// The boolean value that determined whether current user is a Seller
     /// </summary>
     protected bool IsSeller
@@ -199,6 +207,22 @@ public class BaseAPIController : ControllerBase
             bool.TryParse(isRemeber, out bool is_remember);
             return is_remember;
         }
+    }
+
+    /// <summary>
+    /// It is used to check whether the token has been used or not.
+    /// </summary>
+    protected async Task<bool> IsTokenInvoked()
+    {
+        var serviceProvider = HttpContext.RequestServices;
+        var identityBizLogic = serviceProvider.GetRequiredService<IIdentityBizLogic>();
+        if (identityBizLogic != null)
+        {
+            var isInvoked = await identityBizLogic.IsTokenInvoked(Jti, UserId);
+            if (isInvoked) return true;
+            else return false;
+        }
+        return true;
     }
 
     protected bool IsCreator

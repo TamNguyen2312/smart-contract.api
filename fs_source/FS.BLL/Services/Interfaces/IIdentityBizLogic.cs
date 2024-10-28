@@ -117,10 +117,10 @@ public interface IIdentityBizLogic
 	Task<bool> UpdateTokenAsync(RefreshToken token);
 
 	/// <summary>
-	/// This is used to log out an account
+	/// It is used to check whether the token has been used or not.
 	/// </summary>
-	/// <param name="dto"></param>
-	/// <param name="user"></param>
+	/// <param name="jti"></param>
+	/// <param name="userId"></param>
 	/// <returns></returns>
-	Task<FSResponse> LogOutAsync(LogOutDTO dto, ApplicationUser user);
+	Task<bool> IsTokenInvoked(string jti, long userId);
 }

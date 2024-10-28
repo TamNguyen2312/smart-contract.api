@@ -84,7 +84,7 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
              _configuration["JWT:ValidAudience"],
              _configuration["JWT:ValidIssuer"],
              claims,
-             expires: isRemember ? DateTime.Now.AddDays(28) : DateTime.Now.AddDays(1),
+             expires: isRemember ? DateTime.Now.AddDays(28) : DateTime.Now.AddMinutes(1),
              signingCredentials: creds
         );
         var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
@@ -102,19 +102,41 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
     {
         try
         {
-            var refreshtoken = GenerateRandomStringAsToken();
-            var refreshTokenInDb = new RefreshToken
-            {
-                JwtId = jwtToken.Id,
-                UserId = user.Id,
-                Token = refreshtoken,
-                IsUsed = false,
-                IssuedAt = DateTime.Now,
-                ExpiredAt = isRemember ? DateTime.Now.AddDays(28) : DateTime.Now.AddDays(1),
-            };
             await _unitOfWork.BeginTransactionAsync();
-            var refreshtokenRepo = _unitOfWork.GetRepository<RefreshToken>();
-            await refreshtokenRepo.CreateAsync(refreshTokenInDb);
+            var refreshTokenRepo = _unitOfWork.GetRepository<RefreshToken>();
+            var any = await refreshTokenRepo.AnyAsync(new QueryBuilder<RefreshToken>()
+                                                    .WithPredicate(x => x.UserId == user.Id)
+                                                    .WithTracking(false)
+                                                    .Build());
+            var refreshtoken = GenerateRandomStringAsToken();
+            if (any)
+            {
+                var storedToken = await refreshTokenRepo.GetSingleAsync(new QueryBuilder<RefreshToken>()
+                                                                        .WithPredicate(x => x.UserId == user.Id)
+                                                                        .WithTracking(false)
+                                                                        .Build());
+                storedToken.JwtId = jwtToken.Id;
+                storedToken.Token = refreshtoken;
+                storedToken.IsUsed = false;
+                storedToken.IsRevoked = false;
+                storedToken.IssuedAt = DateTime.Now;
+                storedToken.ExpiredAt = isRemember ? DateTime.Now.AddDays(28) : DateTime.Now.AddMinutes(5);
+                await refreshTokenRepo.UpdateAsync(storedToken);
+            }
+            else
+            {
+                var refreshTokenInDb = new RefreshToken
+                {
+                    JwtId = jwtToken.Id,
+                    UserId = user.Id,
+                    Token = refreshtoken,
+                    IsUsed = false,
+                    IsRevoked = false,
+                    IssuedAt = DateTime.Now,
+                    ExpiredAt = isRemember ? DateTime.Now.AddDays(28) : DateTime.Now.AddMinutes(5),
+                };
+                await refreshTokenRepo.CreateAsync(refreshTokenInDb);
+            }
             var saver = await _unitOfWork.SaveAsync();
             await _unitOfWork.CommitTransactionAsync();
             if (!saver)
@@ -197,6 +219,8 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
             throw;
         }
     }
+
+
     /// <summary>
     /// This is used to update refresh token status
     /// </summary>
@@ -206,6 +230,7 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
     {
         try
         {
+            await _unitOfWork.BeginTransactionAsync();
             var refreshTokenRepo = _unitOfWork.GetRepository<RefreshToken>();
             await refreshTokenRepo.UpdateAsync(refreshToken);
             var saver = await _unitOfWork.SaveAsync();
@@ -219,84 +244,24 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
         }
     }
 
+
     /// <summary>
-    /// This is used to log out an account
+    /// This is used to check token in use ?
     /// </summary>
-    /// <param name="dto"></param>
+    /// <param name="jti"></param>
+    /// <param name="userId"></param>
     /// <returns></returns>
-    public async Task<FSResponse> LogOutAsycn(LogOutDTO dto, ApplicationUser user)
+    public async Task<bool> IsTokenInvoked(string jti, long userId)
     {
-        var jwtTokenHandler = new JwtSecurityTokenHandler();
-        var secretKeyBytes = Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]);
-        var tokenValidateParam = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidAudience = _configuration["JWT:ValidAudience"],
-            ValidIssuer = _configuration["JWT:ValidIssuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(secretKeyBytes),
-            ClockSkew = TimeSpan.Zero,
-
-            ValidateLifetime = false
-        };
-
-        try
-        {
-            var tokenInVerification = jwtTokenHandler.ValidateToken(dto.AccessToken, tokenValidateParam, out var validatedToken);
-            var jti = tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
-
-            await _unitOfWork.BeginTransactionAsync();
-            var refreshTokenRepo = _unitOfWork.GetRepository<RefreshToken>();
-            var refreshToken = await refreshTokenRepo.GetSingleAsync(new QueryBuilder<RefreshToken>()
-                                                                        .WithPredicate(x => x.Token.Equals(dto.RefreshToken)
-                                                                                    && x.JwtId.Equals(jti)
-                                                                                    && x.UserId == user.Id)
-                                                                        .WithTracking(true)
-                                                                        .WithInclude(x => x.User)
+        var refreshTokenRepo = _unitOfWork.GetRepository<RefreshToken>();
+        var storedToken = await refreshTokenRepo.GetSingleAsync(new QueryBuilder<RefreshToken>()
+                                                                        .WithPredicate(x => x.UserId == userId
+                                                                                        && x.JwtId.Equals(jti))
+                                                                        .WithTracking(false)
                                                                         .Build());
-
-            if (refreshToken == null)
-            {
-                return new FSResponse
-                {
-                    Success = false,
-                    Message = "AccessToken và Refresh Token không hợp lệ."
-                };
-            }
-
-            if (refreshToken.IsUsed || refreshToken.IsRevoked)
-            {
-                return new FSResponse
-                {
-                    Success = false,
-                    Message = "Refresh token đã được sử dụng hoặc thu hồi."
-                };
-            }
-
-            refreshToken.IsRevoked = true;
-            await refreshTokenRepo.UpdateAsync(refreshToken);
-            var saver = await _unitOfWork.SaveAsync();
-            await _unitOfWork.CommitTransactionAsync();
-            if (!saver)
-            {
-                return new FSResponse
-                {
-                    Success = false,
-                    Message = Constants.SomeThingWentWrong
-                };
-            }
-
-            return new FSResponse
-            {
-                Success = true,
-                Message = "Đăng xuất thành công."
-            };
-        }
-        catch (Exception)
-        {
-            await _unitOfWork.RollBackAsync();
-            throw;
-        }
+        if (storedToken == null) return true;
+        if (storedToken.IsRevoked || storedToken.IsUsed) return true;
+        return false;
     }
 
     public async Task<ApplicationUser> GetByEmailAsync(string email)
