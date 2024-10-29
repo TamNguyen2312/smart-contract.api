@@ -1,5 +1,6 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -417,8 +418,12 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
         var user = await _userManager.FindByIdAsync(userId);
         if (user != null)
         {
-            var decodeToken = HttpUtility.UrlDecode(token);
-            var result = await _userManager.ResetPasswordAsync(user, decodeToken, newPassword);
+            var decodedToken = WebUtility.UrlDecode(token);
+            if (decodedToken.Contains(' '))
+            {
+                decodedToken = decodedToken.Replace(" ", "+");
+            }
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, newPassword);
 
             if (!user.EmailConfirmed && result.Succeeded)
             {

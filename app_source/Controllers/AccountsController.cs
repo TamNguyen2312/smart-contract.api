@@ -1,3 +1,5 @@
+using System.Net;
+using System.Reflection.Metadata;
 using System.Web;
 using FS.BaseAPI;
 using FS.BaseModels;
@@ -194,6 +196,78 @@ namespace App.API.Controllers
             }
         }
 
+
+        [HttpPost]
+        [Route("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPassDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return ModelInvalid();
+                if (!Helpers.IsValidEmail(dto.Email.Trim()))
+                {
+                    ModelState.AddModelError("Email", Constants.EmailAddressFormatError);
+                    return ModelInvalid();
+                }
+                var user = await _identityBizLogic.GetByEmailAsync(dto.Email);
+                if (user == null)
+                    return GetNotFound(Constants.GetNotFound);
+                var resetPassToken = await _identityBizLogic.GeneratePasswordResetTokenAsync(user);
+                if (resetPassToken == null) return Error("Không thể xác thực mã để làm mới mật khẩu. Vui lòng thử lại sau ít phút.");
+                var encodedToken = WebUtility.UrlEncode(resetPassToken);
+                var forgotUrl = Url.Action(
+                                            action: "ResetPasswordView",
+                                            controller: "Accounts",
+                                            values: new { token = encodedToken, userId = user.Id },
+                                            protocol: Request.Scheme,
+                                            host: _configuration["AppSettings:HomeUrl"].TrimEnd('/')
+                                            );
+                var message = new EmailDTO
+                (
+                    new string[] { user.Email! },
+                    "Confirmation Email Link!",
+                    $@"
+<p>- Hệ thống nhận thấy bạn vừa gửi yêu cầu đổi mật khẩu với Email: <b>{user.Email}<b>.</p>
+<p>- Vui lòng truy cập vào link này để tiếp tục quá trình thay đổi mật khẩu: <b>{forgotUrl!}<b></p>"
+                );
+                var sendMail = await _emailService.SendEmailAsync(message);
+                if (!sendMail) return Error("Đã xảy ra lỗi trong quá trình gửi mail xác thực. Vui lòng gửi lại 1 yêu cầu khác.");
+                return Success(sendMail, $"Chúng tôi đã gửi một yêu cầu thay đổi mật khẩu đến {dto.Email}");
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+        [HttpGet]
+        [Route("reset-password-view")]
+        public IActionResult ResetPasswordView(long userId, string token)
+        {
+            if (userId <= 0 || string.IsNullOrEmpty(token)) return GetError("Nhận token xác thực thất bại.");
+            var model = new ResetPasswordDTO { UserId = userId, Token = token };
+            return GetSuccess(model);
+        }
+
+
+        [HttpPost]
+        [Route("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return ModelInvalid();
+                var result = await _identityBizLogic.ResetPasswordAsync(dto.UserId.ToString(), dto.Token, dto.NewPassword);
+                if (!result) return Error("Thay đổi mật khẩu không thành công.");
+                return Success(result, "Thay đổi mật khẩu thành công. Hãy đăng nhập bằng mật khẩu mới của bạn để trải nghiệm dịch vụ.");
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
         #endregion
 
         #region USER
