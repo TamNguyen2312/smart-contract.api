@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace App.API.Controllers
 {
-    [Route("api/[controller]")]
+    // [Route("api/[controller]")]
     [ApiController]
     public class AccountsController : BaseAPIController
     {
@@ -279,9 +279,9 @@ namespace App.API.Controllers
         {
             try
             {
-                if (!ModelState.IsValid) return ModelInvalid();
                 var isInvoked = await IsTokenInvoked();
                 if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+                if (!ModelState.IsValid) return ModelInvalid();
 
                 var user = await _identityBizLogic.GetByIdAsync(UserId);
                 if (user == null)
@@ -338,11 +338,13 @@ namespace App.API.Controllers
         {
             try
             {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
                 if (!ModelState.IsValid) return ModelInvalid();
                 var user = await _identityBizLogic.GetByIdAsync(UserId);
                 if (user == null)
                 {
-                    return GetNotFound(Constants.GetNotFound);
+                    return GetUnAuthorized(Constants.GetUnAuthorized);
                 }
 
                 dto.userId = UserId;
@@ -358,6 +360,62 @@ namespace App.API.Controllers
                 if (!useToken) return SaveError("Thu hồi refresh token không thành công.");
                 await _signInManager.SignOutAsync();
                 return SaveSuccess("Đăng xuất thành công.");
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("change-password")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+                var user = await _identityBizLogic.GetByIdAsync(UserId);
+                if (user == null) return GetUnAuthorized(Constants.GetUnAuthorized);
+                var rightPassword = await _identityBizLogic.CheckPasswordAsync(user, dto.Password);
+                if (!rightPassword)
+                {
+                    ModelState.AddModelError("Password", "Mật khẩu hiện tại không đúng!");
+                    return ModelInvalid();
+                }
+
+                var token = await _identityBizLogic.GeneratePasswordResetTokenAsync(user);
+                if (string.IsNullOrEmpty(token)) return Error("Lỗi tạo mã thay đổi mật khẩu.");
+                var tryResetPasss = await _identityBizLogic.ResetPasswordAsync(UserId.ToString(), token, dto.NewPassword);
+                if (!tryResetPasss) return Error("Thay đổi mật khẩu không thành công.");
+
+                //Generate new token:
+                var newToken = await _identityBizLogic.GenerateJwtToken
+                (
+                    user: user,
+                    isRemember: IsRemember,
+                    isAdmin: IsAdmin,
+                    isEmployee: IsEmployee,
+                    isManager: IsManager
+                );
+                var newRefreshToken = await _identityBizLogic.GenerateRefreshToken
+                (
+                    user: user,
+                    jwtToken: newToken.JwtToken,
+                    isRemember: IsRemember
+                );
+                if (newToken == null || newRefreshToken == null) return Error("Lỗi phát sinh mã đăng nhập.");
+                var response = new LoginResponseDTO
+                {
+                    AccessToken = newToken.AccessToken,
+                    RefreshToken = newRefreshToken,
+                    Redirect = _configuration["AppSettings:HomeUrl"]
+                };
+                return Success(response, "Thay dổi mật khẩu thành công.");
             }
             catch (Exception ex)
             {
