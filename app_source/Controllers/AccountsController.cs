@@ -433,8 +433,15 @@ namespace App.API.Controllers
             {
                 var emailToken = await _identityBizLogic.GenerateEmailConfirmationTokenAsync(user);
                 var encodedToken = HttpUtility.UrlEncode(emailToken);
-                var configVerifyUrl = _configuration.GetSection("Authentication").GetValue<string>("VerifyEmail");
-                var confirmationLink = $"{configVerifyUrl}token={encodedToken}&email={user.Email}";
+                var configVerifyUrl = _configuration.GetSection("AppSettings").GetValue<string>("HomeUrl");
+                var confirmationLink = $"{configVerifyUrl}verify-email?token={encodedToken}&email={user.Email}";
+                // var confirmationLink = Url.Action(
+                //                             action: "VeryfiEmailAsync",
+                //                             controller: "Accounts",
+                //                             values: new { token = encodedToken, userId = user.Id },
+                //                             protocol: Request.Scheme,
+                //                             host: _configuration["AppSettings:HomeUrl"].TrimEnd('/')
+                //                             );
                 var message = new EmailDTO
                 (
                     new string[] { user.Email! },
