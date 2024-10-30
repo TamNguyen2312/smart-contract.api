@@ -169,10 +169,20 @@ namespace App.API
 
 			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())
-			{
-				app.UseSwagger();
-				app.UseSwaggerUI();
-			}
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API");
+        c.RoutePrefix = "";
+        c.EnableTryItOutByDefault();
+    });
+}
 
 			app.UseCors("corspolicy");
 			app.UseHttpsRedirection();
