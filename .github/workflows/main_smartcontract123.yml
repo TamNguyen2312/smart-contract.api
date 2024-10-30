@@ -54,4 +54,4 @@ jobs:
           app-name: 'smartcontract123'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DFDF9497412946568936900E061EE278 }}
-          package: .
+          package: ./myapp
