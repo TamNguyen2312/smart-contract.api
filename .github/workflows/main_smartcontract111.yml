@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP.Net Core app to Azure Web App - smartcontract123
+name: Build and deploy ASP.Net Core app to Azure Web App - smartcontract111
 
 on:
   push:
@@ -53,5 +53,5 @@ jobs:
         with:
           app-name: 'smartcontract123'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DFDF9497412946568936900E061EE278 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_5C591AC33A374C02B56C69FD8F24626C }}
           package: .
