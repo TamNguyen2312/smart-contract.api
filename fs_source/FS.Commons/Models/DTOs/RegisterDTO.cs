@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 using FS.Common.Models.Models.Interfaces;
 
 namespace FS.Commons.Models.DTOs;
@@ -64,14 +65,55 @@ public class RegisterDTO : ITrimmable, IValidatableObject
 	[Compare("Password", ErrorMessage = Constants.ConfirmPasswordError)]
 	[Display(Name = "Nhập lại mật khẩu"), StringLength(255, ErrorMessage = Constants.MaxlengthError)]
 	public string ConfirmPassword { get; set; }
+
+
 	/// <summary>
 	/// loại user
 	/// </summary>
+	[Required(ErrorMessage = Constants.Required)]
 	public UserType UserType { get; set; }
+	public bool IsValidUserType()
+	{
+		return Enum.IsDefined(typeof(UserType), UserType);
+	}
+
+
 	public void Trim()
 	{
 		FirstName = FirstName.Trim();
 		LastName = LastName.Trim();
+	}
+
+	/// <summary>
+	/// Ngày tháng năm sinh
+	/// </summary>
+	[Required(ErrorMessage = Constants.Required)]
+	[DataType(DataType.Date)]
+	public DateTime DateOfBirth { get; set; }
+	public string CheckValidDateOfBirth()
+	{
+		var age = DateTime.Now.Year - DateOfBirth.Year;
+		if (age <= 18)
+		{
+			return "Người dùng phải trên 18 tuổi.";
+		}
+		else if (age >= 65)
+		{
+			return "Người phải dưới 65 tuổi.";
+		}
+		return "VALID";
+	}
+
+	[Required(ErrorMessage = Constants.Required)]
+	public string IdentityCard { get; set; } = null!;
+	public string CheckValidIdentityCard()
+	{
+		string pattern = @"^0(0[1-9]|[1-8][0-9]|9[0-6])[0-3]([0-9][0-9])[0-9]{6}$";
+		if (!Regex.IsMatch(IdentityCard, pattern))
+		{
+			return "Giấy tờ tuỳ thân không đúng định dạng.";
+		}
+		return "VALID";
 	}
 
 	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

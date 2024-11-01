@@ -70,6 +70,23 @@ namespace App.API.Controllers
                     return ModelInvalid();
                 }
 
+                if (!dto.IsValidUserType())
+                {
+                    ModelState.AddModelError("UserType", "Loại người dùng không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                if (!dto.CheckValidDateOfBirth().Equals("VALID"))
+                {
+                    ModelState.AddModelError("DateOfBirth", dto.CheckValidDateOfBirth());
+                    return ModelInvalid();
+                }
+
+                if (!dto.CheckValidIdentityCard().Equals("VALID"))
+                {
+                    ModelState.AddModelError("IdentityCard", dto.CheckValidIdentityCard());
+                }
+
                 var userEmail = await _identityBizLogic.GetByEmailAsync(dto.Email);
                 if (userEmail != null)
                 {
@@ -86,7 +103,9 @@ namespace App.API.Controllers
                     LastName = dto.LastName,
                     PhoneNumber = dto.PhoneNumber,
                     Avatar = Constants.DefaultAvatar,
-                    Gender = dto.Gender.ToString() ?? Gender.None.ToString()
+                    Gender = dto.Gender.ToString() ?? Gender.None.ToString(),
+                    DateOfBirth = dto.DateOfBirth,
+                    IdentityCard = dto.IdentityCard
                 };
 
                 var result = await _identityBizLogic.AddUserAsync(user, dto.Password);
