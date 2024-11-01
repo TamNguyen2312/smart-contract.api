@@ -46,6 +46,43 @@
       <_ContentIncludedByDefault Remove="App.Utility\obj\Debug\net8.0\App.Utility.sourcelink.json" />
       <_ContentIncludedByDefault Remove="App.Utility\obj\project.assets.json" />
       <_ContentIncludedByDefault Remove="App.Utility\obj\project.packagespec.json" />
+      <_ContentIncludedByDefault Remove="App.DAL\obj\App.DAL.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="App.DAL\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="App.DAL\obj\project.packagespec.json" />
+      <_ContentIncludedByDefault Remove="App.BLL\obj\App.BLL.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="App.BLL\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="App.BLL\obj\project.packagespec.json" />
+      <_ContentIncludedByDefault Remove="App.Entity\obj\App.Entity.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="App.Entity\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="App.Entity\obj\project.packagespec.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="App.DAL\**" />
+      <Compile Remove="App.BLL\**" />
+      <Compile Remove="App.Entity\**" />
+      <Compile Remove="App.Utility\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="App.DAL\**" />
+      <EmbeddedResource Remove="App.BLL\**" />
+      <EmbeddedResource Remove="App.Entity\**" />
+      <EmbeddedResource Remove="App.Utility\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Remove="App.DAL\**" />
+      <Content Remove="App.BLL\**" />
+      <Content Remove="App.Entity\**" />
+      <Content Remove="App.Utility\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="App.DAL\**" />
+      <None Remove="App.BLL\**" />
+      <None Remove="App.Entity\**" />
+      <None Remove="App.Utility\**" />
     </ItemGroup>
 
 </Project>

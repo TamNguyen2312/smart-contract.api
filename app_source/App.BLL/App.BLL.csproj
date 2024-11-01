@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\fs_source\FS.BaseModels\FS.BaseModels.csproj" />
+      <ProjectReference Include="..\..\fs_source\FS.Commons\FS.Commons.csproj" />
+      <ProjectReference Include="..\..\fs_source\FS.DAL\FS.DAL.csproj" />
+      <ProjectReference Include="..\..\fs_source\FS.IdentityFramework\FS.IdentityFramework.csproj" />
+      <ProjectReference Include="..\App.DAL\App.DAL.csproj" />
+      <ProjectReference Include="..\App.Entity\App.Entity.csproj" />
+    </ItemGroup>
+
+</Project>
