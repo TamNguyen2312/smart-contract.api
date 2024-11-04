@@ -38,6 +38,7 @@
       <ProjectReference Include="..\fs_source\FS.DAL\FS.DAL.csproj" />
       <ProjectReference Include="..\fs_source\FS.Utility\FS.Utility.csproj" />
       <ProjectReference Include="..\fs_source\FS.WebBase\FS.WebBase.csproj" />
+      <ProjectReference Include="App.DAL\App.DAL.csproj" />
     </ItemGroup>
 
     <ItemGroup>
