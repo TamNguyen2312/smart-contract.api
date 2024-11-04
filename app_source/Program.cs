@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using App.API.Configs;
+using App.DAL;
 using FS.BaseModels.IdentityModels;
 using FS.IdentityFramework;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -73,6 +74,12 @@ namespace App.API
                     options.MigrationsAssembly("App.API");
                     options.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "fs");
                 }));
+
+            builder.Services.AddDbContext<AppDbContext>(opts => opts.UseSqlServer(connectionString, options =>
+            {
+                options.MigrationsAssembly("App.API");
+                options.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "app");
+            }));
 
 
             //<=====Add Identity=====>
