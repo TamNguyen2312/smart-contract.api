@@ -398,3 +398,4 @@ FodyWeavers.xsd
 *.sln.iml
 .vscode/launch.json
 .vscode/tasks.json
+.DS_Store
