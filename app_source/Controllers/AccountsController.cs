@@ -145,7 +145,7 @@ namespace App.API.Controllers
 
         [HttpGet]
         [Route("verify-email")]
-        public async Task<IActionResult> VeryfiEmailAsync(string token, string email)
+        public async Task<IActionResult> VerifyEmail(string token, string email)
         {
             var user = await _identityBizLogic.GetByEmailAsync(email);
             if (user == null)
@@ -472,21 +472,22 @@ namespace App.API.Controllers
             {
                 var emailToken = await _identityBizLogic.GenerateEmailConfirmationTokenAsync(user);
                 var encodedToken = HttpUtility.UrlEncode(emailToken);
-                var configVerifyUrl = _configuration.GetSection("AppSettings").GetValue<string>("HomeUrl");
-                var confirmationLink = $"{configVerifyUrl}verify-email?token={encodedToken}&email={user.Email}";
-                // var confirmationLink = Url.Action(
-                //                             action: "VeryfiEmailAsync",
-                //                             controller: "Accounts",
-                //                             values: new { token = encodedToken, userId = user.Id },
-                //                             protocol: Request.Scheme,
-                //                             host: _configuration["AppSettings:HomeUrl"].TrimEnd('/')
-                //                             );
+                var confirmationLink = Url.Action(
+                                            action: "VerifyEmail",
+                                            controller: "Accounts",
+                                            values: new { token = encodedToken, email = user.Email },
+                                            protocol: Request.Scheme,
+                                            host: _configuration["AppSettings:HomeUrl"].TrimEnd('/')
+                                            );
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Url: {confirmationLink}");
+                Console.ResetColor();
                 var message = new EmailDTO
                 (
                     new string[] { user.Email! },
                     "Confirmation Email Link!",
                     $@"
-<p>- Hệ thống nhận thấy bạn vừa đăng kí với Email: {user.Email}.</p>
+<p>- Hệ thống nhận thấy bạn đã đăng kí với Email: {user.Email}.</p>
 <p>- Vui lòng truy cập vào link này để xác thực tài khoản: {confirmationLink!}</p>"
                 );
                 var sendMail = await _emailService.SendEmailAsync(message);
