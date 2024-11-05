@@ -3,6 +3,8 @@ using System.Net;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using System.Web;
+using App.BLL.Interfaces;
+using App.Entity.DTOs.Employee;
 using FS.BaseAPI;
 using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
@@ -27,16 +29,19 @@ namespace App.API.Controllers
         private readonly IEmailService _emailService;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEmployeeBizLogic _employeeBizLogic;
 
         public AccountsController(IIdentityBizLogic identityBizLogic, IConfiguration configuration,
                                     IEmailService emailService, SignInManager<ApplicationUser> signInManager,
-                                    UserManager<ApplicationUser> userManager)
+                                    UserManager<ApplicationUser> userManager,
+                                    IEmployeeBizLogic employeeBizLogic)
         {
             this._identityBizLogic = identityBizLogic;
             this._configuration = configuration;
             this._emailService = emailService;
             this._signInManager = signInManager;
             this._userManager = userManager;
+            _employeeBizLogic = employeeBizLogic;
         }
 
         #region COMMON
@@ -111,12 +116,24 @@ namespace App.API.Controllers
                 var result = await _identityBizLogic.AddUserAsync(user, dto.Password);
                 if (result < 0) return Error(Constants.SomeThingWentWrong);
 
-                var addRole = await _identityBizLogic.AddRoleByNameAsync(user.Id.ToString(), UserType.Customer.ToString());
+                var addRole = await _identityBizLogic.AddRoleByNameAsync(user.Id.ToString(), dto.UserType.ToString());
                 if (!addRole) return Error(Constants.SomeThingWentWrong);
+                
+                //<===Add to employee===>
+                if (dto.UserType == UserType.Employee)
+                {
+                    var empRequestDTO = new EmployeeRequestDTO
+                    {
+                        DepartmentName = dto.DepartmentName
+                    };
+                    var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO);
+                    if (!tryAddEmp.IsSuccess) return SaveError(tryAddEmp);
+                }
 
                 var sendMail = await SendEmailConfirm(user);
                 if (!sendMail) return Error("Đã xảy ra lỗi trong quá trình gửi mail xác thực. Vui lòng đăng nhập lại để nhận một mail mới");
-                var userData = await GetUserView(user);
+                var userRoles = await _identityBizLogic.GetRolesAsync(user.Id);
+                var userData = new UserViewDTO(user, userRoles.ToList());
                 return SaveSuccess(userData);
             }
             catch (Exception ex)
@@ -481,21 +498,6 @@ namespace App.API.Controllers
                 ConsoleLog.WriteExceptionToConsoleLog(ex);
                 throw;
             }
-        }
-        private async Task<UserViewDTO> GetUserView(ApplicationUser user)
-        {
-            return new UserViewDTO
-            {
-                Id = user.Id,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
-                Username = user.UserName,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                FullName = $"{user.FirstName} {user.LastName}",
-                Avatar = user.Avatar,
-                Gender = Enum.TryParse<Gender>(user.Gender, out var gender) ? gender : default
-            };
         }
         #endregion
     }
