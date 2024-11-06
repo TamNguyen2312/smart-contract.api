@@ -24,13 +24,15 @@ public class DependencyConfig
         services.AddTransient(typeof(IGenericRepository<,>), typeof(GenericeRepository<,>));
         services.AddScoped(typeof(IFSUnitOfWork<>), typeof(FSUnitOfWork<>));
         
-        //App.BLL
-        services.AddTransient<IEmployeeRepository, EmployeeRepository>();
-
-
-
         //App.DAL
+        services.AddTransient<IEmployeeRepository, EmployeeRepository>();
+        services.AddTransient<ICustomerRepository, CustomerRepository>();
+
+
+
+        //App.BLL
         services.AddTransient<IEmployeeBizLogic, EmployeeBizLogic>();
+        services.AddTransient<ICustomerBizLogic, CustomerBizLogic>();
         
         
         //AutoMapper

@@ -1,6 +1,8 @@
+using FS.Commons.Models;
+
 namespace App.Entity.Entities;
 
-public partial class Customer
+public partial class Customer : CommonDataModel
 {
     public long Id { get; set; } 
     public string CompanyName { get; set; } = null!;
