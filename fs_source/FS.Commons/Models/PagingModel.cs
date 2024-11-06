@@ -1,8 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FS.Commons.Models;
 
 public class PagingModel
 {
+    [Required(ErrorMessage = Constants.Required)]
     public int PageIndex { get; set; }
+    [Required(ErrorMessage = Constants.Required)]
     public int  PageSize { get; set; }
     public string? Keyword { get; set; }
     [OutputParam]

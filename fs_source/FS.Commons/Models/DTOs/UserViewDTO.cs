@@ -13,7 +13,7 @@ public class UserViewDTO
     public string? Avatar { get; set; }
     public string? Username { get; set; }
     public string? Email { get; set; }
-    public List<string>? roles { get; set; }
+    public List<string>? Roles { get; set; }
     public string? PhoneNumber { get; set; }
     public Gender Gender { get; set; }
 
@@ -28,6 +28,7 @@ public class UserViewDTO
         FullName = $"{user.FirstName} {user.LastName}";
         Avatar = user.Avatar;
         Gender = Enum.TryParse<Gender>(user.Gender, out var gender) ? gender : default;
+        Roles = roles;
     }
 }
 

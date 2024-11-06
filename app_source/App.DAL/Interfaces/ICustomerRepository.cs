@@ -7,4 +7,5 @@ namespace App.DAL.Interfaces;
 public interface ICustomerRepository
 {
     Task<BaseResponse> CreateUpdateCustomer(Customer customer, long userId);
+    Task<List<Customer>> GetAllCustomers(CustomerGetListDTO dto);
 }
