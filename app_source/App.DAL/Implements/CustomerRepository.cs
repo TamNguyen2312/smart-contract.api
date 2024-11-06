@@ -1,10 +1,13 @@
 using App.DAL.Interfaces;
+using App.Entity.DTOs.Customer;
 using App.Entity.Entities;
 using FS.Commons;
+using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.Implements;
 
@@ -61,5 +64,16 @@ public class CustomerRepository : ICustomerRepository
         if (!saver) return new BaseResponse { IsSuccess = false, Message = "Thêm khách hàng không thành công." };
         
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
+    }
+
+    public async Task<List<Customer>> GetAllCustomers(CustomerGetListDTO dto)
+    {
+        var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
+        var loadedRecord = baseCustomerRepo.Get(new QueryBuilder<Customer>()
+            .WithPredicate(x => x.IsDelete == false)
+            .Build());
+        dto.TotalRecord = await loadedRecord.CountAsync();
+        var response = await loadedRecord.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return response;
     }
 }

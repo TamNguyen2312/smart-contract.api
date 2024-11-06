@@ -1,7 +1,9 @@
 using App.BLL.Interfaces;
 using App.Entity.DTOs.Customer;
+using App.Entity.Entities;
 using FS.BaseAPI;
 using FS.Commons;
+using FS.Commons.Models.DTOs;
 using FS.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -47,6 +49,28 @@ namespace App.API.Controllers
                 ConsoleLog.WriteExceptionToConsoleLog(e);
                 return Error(Constants.SomeThingWentWrong);
             }   
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("get-list-customers")]
+        public async Task<IActionResult> GetAllCustomers([FromBody]CustomerGetListDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+                
+                if (!ModelState.IsValid) return ModelInvalid();
+                var data = await _customerBizLogic.GetAllCustomers(dto);
+                var response = new PagingDataModel<CustomerViewDTO>(data, dto);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
         }
     }
 }

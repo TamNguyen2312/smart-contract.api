@@ -6,4 +6,5 @@ namespace App.BLL.Interfaces;
 public interface ICustomerBizLogic
 {
     Task<BaseResponse> CreateUpdateCustomer(CustomerRequestDTO dto, long userId);
+    Task<List<CustomerViewDTO>> GetAllCustomers(CustomerGetListDTO dto);
 }
