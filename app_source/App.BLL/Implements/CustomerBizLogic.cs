@@ -40,6 +40,12 @@ public class CustomerBizLogic : ICustomerBizLogic
         return response;
     }
 
+    public async Task<BaseResponse> DeleteCustomer(long customerId, long userId)
+    {
+        var response = await _customerRepository.DeleteCustomer(customerId, userId);
+        return response;
+    }
+
     #region PRIVATE
 
     /// <summary>

@@ -76,7 +76,7 @@ namespace App.API.Controllers
         [Authorize]
         [HttpPost]
         [Route("get-customer/{customerId}")]
-        public async Task<IActionResult> GetAllCustomers([FromRoute]long customerId)
+        public async Task<IActionResult> GetCustomer([FromRoute]long customerId)
 
         {
             try
@@ -87,6 +87,29 @@ namespace App.API.Controllers
                 var data = await _customerBizLogic.GetCustomer(customerId, UserId);
                 if (data == null) return GetNotFound(Constants.GetNotFound);
                 return GetSuccess(data);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        
+        [Authorize]
+        [HttpPost]
+        [Route("delete-customer/{customerId}")]
+        public async Task<IActionResult> DeleteCustomer([FromRoute]long customerId)
+
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+                
+                var response = await _customerBizLogic.DeleteCustomer(customerId, UserId);
+                if (!response.IsSuccess) return SaveError(response.Message);
+                return GetSuccess(response);
             }
             catch (Exception ex)
             {

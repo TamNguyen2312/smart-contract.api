@@ -9,4 +9,5 @@ public interface ICustomerRepository
     Task<BaseResponse> CreateUpdateCustomer(Customer customer, long userId);
     Task<List<Customer>> GetAllCustomers(CustomerGetListDTO dto, long userId);
     Task<Customer> GetCustomer(long customerId, long userId);
+    Task<BaseResponse> DeleteCustomer(long customerId, long userId);
 }
