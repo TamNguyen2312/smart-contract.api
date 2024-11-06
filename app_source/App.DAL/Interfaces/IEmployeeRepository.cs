@@ -6,5 +6,5 @@ namespace App.DAL.Interfaces;
 
 public interface IEmployeeRepository
 {
-    Task<BaseResponse> CreateUpdateEmployee(Employee emp);
+    Task<BaseResponse> CreateUpdateEmployee(Employee emp, long userId);
 }

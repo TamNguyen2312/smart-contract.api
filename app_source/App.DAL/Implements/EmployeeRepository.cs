@@ -22,7 +22,7 @@ public class EmployeeRepository : IEmployeeRepository
         _mapper = mapper;
     }
     
-    public async Task<BaseResponse> CreateUpdateEmployee(Employee emp)
+    public async Task<BaseResponse> CreateUpdateEmployee(Employee emp, long userId)
     {
         try
         {
@@ -39,13 +39,17 @@ public class EmployeeRepository : IEmployeeRepository
                 if (existedEmp == null) return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy nhân viên." };
                 if (!string.IsNullOrEmpty(emp.DepartmentName))
                     existedEmp.DepartmentName = emp.DepartmentName;
+                existedEmp.ModifiedDate = DateTime.Now;
+                existedEmp.ModifiedBy = userId.ToString();
                 await empRepoBase.UpdateAsync(existedEmp);
             }
             else
             {
                 var empCreate = new Employee
                 {
-                    DepartmentName = emp.DepartmentName
+                    DepartmentName = emp.DepartmentName,
+                    CreatedDate = DateTime.Now,
+                    CreatedBy = userId.ToString()
                 };
                 await empRepoBase.CreateAsync(empCreate);
             }
