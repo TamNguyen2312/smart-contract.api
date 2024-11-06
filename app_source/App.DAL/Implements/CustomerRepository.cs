@@ -95,4 +95,22 @@ public class CustomerRepository : ICustomerRepository
         if (customer == null) return null;
         return customer;
     }
+
+    public async Task<BaseResponse> DeleteCustomer(long customerId, long userId)
+    {
+        var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
+        var customer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
+            .WithPredicate(x => x.Id == customerId &&
+                                x.CreatedBy.Equals(userId.ToString())
+                                && x.IsDelete == false)
+            .Build());
+        if (customer == null) return new BaseResponse { IsSuccess = false, Message = Constants.GetNotFound };
+        
+        //nên check thêm các ràng buộc sau này
+        customer.IsDelete = true;
+        await baseCustomerRepo.UpdateAsync(customer);
+        var saver = await _unitOfWork.SaveAsync();
+        if (!saver) return new BaseResponse { IsSuccess = false, Message = "Xoá khách hàng không thành công." };
+        return new BaseResponse { IsSuccess = true, Message = "Xoá khách hàng thành công." };
+    }
 }
