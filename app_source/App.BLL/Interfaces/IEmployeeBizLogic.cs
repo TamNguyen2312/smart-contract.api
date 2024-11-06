@@ -5,5 +5,5 @@ namespace App.BLL.Interfaces;
 
 public interface IEmployeeBizLogic
 {
-    Task<BaseResponse> CreateUpdateEmployee(EmployeeRequestDTO dto);
+    Task<BaseResponse> CreateUpdateEmployee(EmployeeRequestDTO dto, long userId);
 }

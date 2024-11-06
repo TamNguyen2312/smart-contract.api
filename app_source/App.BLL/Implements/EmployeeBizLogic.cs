@@ -14,10 +14,10 @@ public class EmployeeBizLogic : IEmployeeBizLogic
         _repository = repository;
     }
 
-    public async Task<BaseResponse> CreateUpdateEmployee(EmployeeRequestDTO dto)
+    public async Task<BaseResponse> CreateUpdateEmployee(EmployeeRequestDTO dto, long userId)
     {
         var entity = dto.GetEntity();
-        var response = await _repository.CreateUpdateEmployee(entity);
+        var response = await _repository.CreateUpdateEmployee(entity, userId);
         return response;
     }
 }

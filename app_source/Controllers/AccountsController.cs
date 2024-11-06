@@ -126,7 +126,7 @@ namespace App.API.Controllers
                     {
                         DepartmentName = dto.DepartmentName
                     };
-                    var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO);
+                    var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, UserId);
                     if (!tryAddEmp.IsSuccess) return SaveError(tryAddEmp);
                 }
 
@@ -217,7 +217,9 @@ namespace App.API.Controllers
 
                 //gen token
                 var roles = await _userManager.GetRolesAsync(user);
-                var genAccesToken = await _identityBizLogic.GenerateJwtToken(user, dto.IsRemember, roles.Contains(SystemRoleConstants.ADMIN));
+                var genAccesToken = await _identityBizLogic.GenerateJwtToken(user, dto.IsRemember, roles.Contains(SystemRoleConstants.ADMIN),
+                                                                                                            roles.Contains(SystemRoleConstants.MANAGER),
+                                                                                                                    roles.Contains(SystemRoleConstants.EMPLOYEE));
                 string refreshToken = await _identityBizLogic.GenerateRefreshToken(user, genAccesToken.JwtToken, dto.IsRemember);
 
                 var response = new LoginResponseDTO
