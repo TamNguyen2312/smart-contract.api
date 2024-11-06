@@ -30,7 +30,9 @@ public class CustomerRepository : ICustomerRepository
         if (any)
         {
             var existedCustomer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
-                .WithPredicate(x => x.Id == customer.Id && customer.IsDelete == false)
+                .WithPredicate(x => x.Id == customer.Id && 
+                                    customer.IsDelete == false && 
+                                    customer.CreatedBy.Equals(userId.ToString()))
                 .Build());
             if (existedCustomer == null)
                 return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy thông tin khách hàng" };
@@ -66,14 +68,31 @@ public class CustomerRepository : ICustomerRepository
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
     }
 
-    public async Task<List<Customer>> GetAllCustomers(CustomerGetListDTO dto)
+    public async Task<List<Customer>> GetAllCustomers(CustomerGetListDTO dto, long userId)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
         var loadedRecord = baseCustomerRepo.Get(new QueryBuilder<Customer>()
-            .WithPredicate(x => x.IsDelete == false)
+            .WithPredicate(x => x.IsDelete == false && x.CreatedBy.Equals(userId.ToString()))
             .Build());
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            loadedRecord = loadedRecord.Where(x =>
+                x.PhoneNumber.Contains(dto.Keyword) || x.CompanyName.Contains(dto.Keyword));
+        }
         dto.TotalRecord = await loadedRecord.CountAsync();
         var response = await loadedRecord.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return response;
+    }
+
+    public async Task<Customer> GetCustomer(long customerId, long userId)
+    {
+        var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
+        var customer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
+            .WithPredicate(x => x.Id == customerId &&
+                                x.CreatedBy.Equals(userId.ToString())
+                                && x.IsDelete == false)
+            .Build());
+        if (customer == null) return null;
+        return customer;
     }
 }

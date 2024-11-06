@@ -21,15 +21,23 @@ public class CustomerBizLogic : ICustomerBizLogic
     }
     public async Task<BaseResponse> CreateUpdateCustomer(CustomerRequestDTO dto, long userId)
     {
-        var enity = dto.GetEntity();
-        var response = await _customerRepository.CreateUpdateCustomer(enity, userId);
+        var entity = dto.GetEntity();
+        var response = await _customerRepository.CreateUpdateCustomer(entity, userId);
         return response;
     }
 
-    public async Task<List<CustomerViewDTO>> GetAllCustomers(CustomerGetListDTO dto)
+    public async Task<List<CustomerViewDTO>> GetAllCustomers(CustomerGetListDTO dto, long userId)
     {
-        var response = await _customerRepository.GetAllCustomers(dto);
+        var response = await _customerRepository.GetAllCustomers(dto, userId);
         return await GetCustomerViews(response);
+    }
+
+    public async Task<CustomerViewDTO> GetCustomer(long customerId, long userId)
+    {
+        var data = await _customerRepository.GetCustomer(customerId, userId);
+        if (data == null) return null;
+        var response = await GetCustomerView(data);
+        return response;
     }
 
     #region PRIVATE
