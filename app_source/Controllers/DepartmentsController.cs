@@ -40,5 +40,22 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [Route("get-dropdown-department")]
+        public async Task<IActionResult> GetDropdownDepartment()
+        {
+            try
+            {
+                var data = await _departmentBizLogic.GetDropDownDepartment();
+                return GetSuccess(data);
+            }
+            catch (Exception e)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(e);
+                return Error(Constants.SomeThingWentWrong);
+            }   
+        }
     }
 }

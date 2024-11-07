@@ -6,4 +6,5 @@ namespace App.BLL.Interfaces;
 public interface IDepartmentBizLogic
 {
     Task<BaseResponse> CreateUpdateDepartment(DepartmentRequestDTO dto, long userId);
+    Task<List<DepartmentViewDTO>> GetDropDownDepartment();
 }

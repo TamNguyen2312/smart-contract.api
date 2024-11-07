@@ -11,7 +11,7 @@ public class EmployeeViewDTO : UserViewDTO
     public DateTime? CreatedDate { get; set; }
     public string ModifiedBy { get; set; }
     public DateTime? ModifiedDate { get; set; }
-    public EmployeeViewDTO(ApplicationUser user, List<string> roles, Entities.Employee employee, Department department) : base(user, roles)
+    public EmployeeViewDTO(ApplicationUser user, List<string> roles, Entities.Employee employee, Entities.Department department) : base(user, roles)
     {
         DepartmentName = department.Name;
         CreatedBy = employee.CreatedBy;
