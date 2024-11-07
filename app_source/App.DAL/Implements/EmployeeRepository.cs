@@ -65,4 +65,19 @@ public class EmployeeRepository : IEmployeeRepository
             throw;
         }
     }
+
+    public async Task<Employee> GetEmployee(long userId)
+    {
+        var baseEmpRepo = _unitOfWork.GetRepository<Employee>();
+        var emp = await baseEmpRepo.GetSingleAsync(new QueryBuilder<Employee>()
+            .WithPredicate(x => x.Id == userId && x.IsDelete == false)
+            .Build());
+        if (emp == null) return null;
+        return emp;
+    }
+
+    public Task<Employee> GetEmployeeForAdmin(long empId)
+    {
+        throw new NotImplementedException();
+    }
 }
