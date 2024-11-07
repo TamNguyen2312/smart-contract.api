@@ -7,4 +7,5 @@ namespace App.DAL.Interfaces;
 public interface IDepartmentRepository
 {
     Task<BaseResponse> CreateUpdateDepartment(Department department, long userId);
+    Task<List<Department>> GetDropDownDepartment();
 }

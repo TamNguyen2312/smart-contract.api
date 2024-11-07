@@ -1,17 +1,22 @@
 using App.BLL.Interfaces;
 using App.DAL.Interfaces;
 using App.Entity.DTOs.Department;
+using App.Entity.Entities;
 using FS.Commons.Models;
+using FS.DAL.Interfaces;
+using Microsoft.IdentityModel.Abstractions;
 
 namespace App.BLL.Implements;
 
 public class DepartmentBizLogic : IDepartmentBizLogic
 {
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly IIdentityRepository _identityRepository;
 
-    public DepartmentBizLogic(IDepartmentRepository departmentRepository)
+    public DepartmentBizLogic(IDepartmentRepository departmentRepository, IIdentityRepository identityRepository)
     {
         _departmentRepository = departmentRepository;
+        _identityRepository = identityRepository;
     }
     
     
@@ -21,4 +26,41 @@ public class DepartmentBizLogic : IDepartmentBizLogic
         var response = await _departmentRepository.CreateUpdateDepartment(entity, userId);
         return response;
     }
+
+    public async Task<List<DepartmentViewDTO>> GetDropDownDepartment()
+    {
+        var data = await _departmentRepository.GetDropDownDepartment();
+        var response = await GetDepartmentViews(data);
+        return response;
+    }
+
+
+    #region PRIVATE
+
+    /// <summary>
+    /// This is used to convert a department to a department view
+    /// </summary>
+    /// <param name="department"></param>
+    /// <returns></returns>
+    private async Task<DepartmentViewDTO> GetDepartmentView(Department department)
+    {
+        var user = await _identityRepository.GetByIdAsync(Convert.ToInt64(department.CreatedBy));
+        if (user == null) return null;
+        var view = new DepartmentViewDTO(department, user);
+        return view;
+    }
+
+    private async Task<List<DepartmentViewDTO>> GetDepartmentViews(List<Department> departments)
+    {
+        var views = new List<DepartmentViewDTO>();
+        foreach (var department in departments)
+        {
+            var view = await GetDepartmentView(department);
+            views.Add(view);
+        }
+
+        return views;
+    }
+
+    #endregion
 }
