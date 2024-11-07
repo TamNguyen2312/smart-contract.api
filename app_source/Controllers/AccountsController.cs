@@ -126,6 +126,7 @@ namespace App.API.Controllers
                 {
                     var empRequestDTO = new EmployeeRequestDTO
                     {
+                        Id = user.Id,
                         DepartmentName = dto.DepartmentName
                     };
                     var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, UserId);
