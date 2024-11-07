@@ -18,4 +18,6 @@ public partial class ApplicationUser : IdentityUser<long>
     public DateTime? DateOfBirth { get; set; }
     [AllowNull]
     public string? IdentityCard { get; set; }
+
+    public string Status { get; set; }
 }

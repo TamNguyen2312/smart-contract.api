@@ -7,6 +7,7 @@ using App.BLL.Interfaces;
 using App.Entity.DTOs.Employee;
 using FS.BaseAPI;
 using FS.BaseModels;
+using FS.BaseModels.Enums;
 using FS.BaseModels.IdentityModels;
 using FS.BLL.Services.Interfaces;
 using FS.Commons;
@@ -110,7 +111,8 @@ namespace App.API.Controllers
                     Avatar = Constants.DefaultAvatar,
                     Gender = dto.Gender.ToString() ?? Gender.None.ToString(),
                     DateOfBirth = dto.DateOfBirth,
-                    IdentityCard = dto.IdentityCard
+                    IdentityCard = dto.IdentityCard,
+                    Status = Status.Online.ToString()
                 };
 
                 var result = await _identityBizLogic.AddUserAsync(user, dto.Password);
