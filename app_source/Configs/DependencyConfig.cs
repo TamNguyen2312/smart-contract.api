@@ -27,12 +27,14 @@ public class DependencyConfig
         //App.DAL
         services.AddTransient<IEmployeeRepository, EmployeeRepository>();
         services.AddTransient<ICustomerRepository, CustomerRepository>();
+        services.AddTransient<IDepartmentRepository, DepartmentRepository>();
 
 
 
         //App.BLL
         services.AddTransient<IEmployeeBizLogic, EmployeeBizLogic>();
         services.AddTransient<ICustomerBizLogic, CustomerBizLogic>();
+        services.AddTransient<IDepartmentBizLogic, DepartmentBizLogic>();
         
         
         //AutoMapper

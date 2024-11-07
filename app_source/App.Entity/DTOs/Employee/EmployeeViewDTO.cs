@@ -1,3 +1,4 @@
+using App.Entity.Entities;
 using FS.BaseModels.IdentityModels;
 using FS.Commons.Models.DTOs;
 
@@ -10,9 +11,9 @@ public class EmployeeViewDTO : UserViewDTO
     public DateTime? CreatedDate { get; set; }
     public string ModifiedBy { get; set; }
     public DateTime? ModifiedDate { get; set; }
-    public EmployeeViewDTO(ApplicationUser user, List<string> roles, Entities.Employee employee) : base(user, roles)
+    public EmployeeViewDTO(ApplicationUser user, List<string> roles, Entities.Employee employee, Department department) : base(user, roles)
     {
-        DepartmentName = employee.DepartmentName;
+        DepartmentName = department.Name;
         CreatedBy = employee.CreatedBy;
         CreatedDate = employee.CreatedDate;
         ModifiedBy = employee.ModifiedBy;
