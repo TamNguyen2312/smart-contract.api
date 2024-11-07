@@ -5,14 +5,14 @@ namespace App.Entity.DTOs.Employee;
 public class EmployeeRequestDTO : IEntity<Entities.Employee>
 {
     public long Id { get; set; }
-    public string DepartmentName { get; set; } = null!;
+    public long DepartmentId { get; set; }
 
     public Entities.Employee GetEntity()
     {
         return new Entities.Employee
         {
             Id = Id,
-            DepartmentName = DepartmentName
+            DepartmentId = DepartmentId
         };
     }
 }

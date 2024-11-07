@@ -130,7 +130,7 @@ public class RegisterDTO : ITrimmable, IValidatableObject
     /// Phòng ban
     /// </summary>
     [Required(ErrorMessage = Constants.Required)]
-    public string DepartmentName { get; set; } = null!;
+    public long DepartmentId { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

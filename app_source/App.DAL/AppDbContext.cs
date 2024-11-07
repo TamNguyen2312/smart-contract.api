@@ -14,6 +14,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Customer> Customers { get; set; }
     public virtual DbSet<Employee> Employees { get; set; }
+    public virtual DbSet<Manager> Managers { get; set; }
+    public virtual DbSet<Department> Departments { get; set; }
 
     #endregion
 
@@ -21,6 +23,18 @@ public partial class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("app");
+        
+        modelBuilder.Entity<Department>(c =>
+        {
+            c.ToTable("App_Departments");
+            c.HasKey(m => m.Id);
+        });
+        
+        modelBuilder.Entity<Manager>(c =>
+        {
+            c.ToTable("App_Managers");
+            c.HasKey(m => m.Id);
+        });
 
         modelBuilder.Entity<Customer>(c =>
         {
