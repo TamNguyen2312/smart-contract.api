@@ -127,7 +127,7 @@ namespace App.API.Controllers
                     var empRequestDTO = new EmployeeRequestDTO
                     {
                         Id = user.Id,
-                        DepartmentName = dto.DepartmentName
+                        DepartmentId = dto.DepartmentId
                     };
                     var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, UserId);
                     if (!tryAddEmp.IsSuccess) return SaveError(tryAddEmp);

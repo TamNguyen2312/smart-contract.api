@@ -40,6 +40,9 @@ namespace App.API.Controllers
                     if (employee == null) return GetNotFound(Constants.GetNotFound);
                     return GetSuccess(employee);
                 }
+                
+                //tương lai có thể mở rộng thêm bảng Manager nữa...Làm tương tự.
+                
                 var user = await _identityBizLogic.GetByIdAsync(UserId);
                 if (user == null) return GetNotFound(Constants.GetNotFound);
                 var userRoles = await _identityBizLogic.GetRolesAsync(UserId);
