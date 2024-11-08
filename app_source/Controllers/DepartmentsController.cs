@@ -1,3 +1,4 @@
+using App.API.Filter;
 using App.BLL.Interfaces;
 using App.Entity.DTOs.Department;
 using FS.BaseAPI;
@@ -18,7 +19,7 @@ namespace App.API.Controllers
             _departmentBizLogic = departmentBizLogic;
         }
 
-        [Authorize(Roles = "Admin")]
+        [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPost]
         [Route("create-update-department")]
         public async Task<IActionResult> CreateUpdateDepartment(DepartmentRequestDTO dto)

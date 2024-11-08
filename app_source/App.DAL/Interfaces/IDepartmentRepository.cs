@@ -8,4 +8,5 @@ public interface IDepartmentRepository
 {
     Task<BaseResponse> CreateUpdateDepartment(Department department, long userId);
     Task<List<Department>> GetDropDownDepartment();
+    Task<Department> GetDepartment(long id, long userId);
 }

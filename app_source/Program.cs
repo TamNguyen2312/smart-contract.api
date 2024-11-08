@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore.Migrations;
 using FS.Commons;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -83,7 +84,12 @@ namespace App.API
 
 
             //<=====Add Identity=====>
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("AdminRolePolicy", policy =>
+                    policy.Requirements.Add(new RolesAuthorizationRequirement(new[] { "Admin" })));
+            });
+            
             builder.Services.AddIdentity<ApplicationUser, Role>().AddEntityFrameworkStores<FSDbContext>()
                 .AddDefaultTokenProviders();
             builder.Services.Configure<IdentityOptions>(options =>

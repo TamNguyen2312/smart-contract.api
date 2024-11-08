@@ -11,11 +11,13 @@ public class EmployeeBizLogic : IEmployeeBizLogic
 {
     private readonly IEmployeeRepository _repository;
     private readonly IIdentityRepository _identityRepository;
+    private readonly IDepartmentRepository _departmentRepository;
 
-    public EmployeeBizLogic(IEmployeeRepository repository, IIdentityRepository identityRepository)
+    public EmployeeBizLogic(IEmployeeRepository repository, IIdentityRepository identityRepository, IDepartmentRepository departmentRepository)
     {
         _repository = repository;
         _identityRepository = identityRepository;
+        _departmentRepository = departmentRepository;
     }
 
     public async Task<BaseResponse> CreateUpdateEmployee(EmployeeRequestDTO dto, long userId)
@@ -28,9 +30,7 @@ public class EmployeeBizLogic : IEmployeeBizLogic
     public async Task<EmployeeViewDTO> GetEmployee(long userId)
     {
         var emp = await _repository.GetEmployee(userId);
-        if (emp == null) return null;
         var empView = await GetEmpView(emp);
-        if (empView == null) return null;
         return empView;
     }
 
@@ -39,9 +39,9 @@ public class EmployeeBizLogic : IEmployeeBizLogic
     private async Task<EmployeeViewDTO> GetEmpView(Employee emp)
     {
         var user = await _identityRepository.GetByIdAsync(emp.Id);
-        if (user == null) return null;
         var userRoles = await _identityRepository.GetRolesAsync(emp.Id);
-        var empView = new EmployeeViewDTO(user, userRoles.ToList(), emp);
+        var department = await _departmentRepository.GetDepartment(emp.DepartmentId, emp.Id);
+        var empView = new EmployeeViewDTO(user, userRoles.ToList(), emp, department);
         return empView;
     }
 
