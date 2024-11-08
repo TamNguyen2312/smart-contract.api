@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Web;
 using App.BLL.Interfaces;
 using App.Entity.DTOs.Employee;
+using App.Entity.DTOs.Manager;
 using FS.BaseAPI;
 using FS.BaseModels;
 using FS.BaseModels.Enums;
@@ -31,11 +32,13 @@ namespace App.API.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmployeeBizLogic _employeeBizLogic;
+        private readonly IManagerBizLogic _managerBizLogic;
 
         public AccountsController(IIdentityBizLogic identityBizLogic, IConfiguration configuration,
                                     IEmailService emailService, SignInManager<ApplicationUser> signInManager,
                                     UserManager<ApplicationUser> userManager,
-                                    IEmployeeBizLogic employeeBizLogic)
+                                    IEmployeeBizLogic employeeBizLogic,
+                                    IManagerBizLogic managerBizLogic)
         {
             this._identityBizLogic = identityBizLogic;
             this._configuration = configuration;
@@ -43,6 +46,7 @@ namespace App.API.Controllers
             this._signInManager = signInManager;
             this._userManager = userManager;
             _employeeBizLogic = employeeBizLogic;
+            _managerBizLogic = managerBizLogic;
         }
 
         #region COMMON
@@ -131,6 +135,18 @@ namespace App.API.Controllers
                     };
                     var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, UserId);
                     if (!tryAddEmp.IsSuccess) return SaveError(tryAddEmp);
+                }
+                
+                //<===Add to Manager===>
+                if (dto.UserType == UserType.Manager)
+                {
+                    var managerRequestDTO = new ManagerRequestDTO
+                    {
+                        Id = user.Id.ToString(),
+                        DepartmentId = dto.DepartmentId
+                    };
+                    var tryAddManager = await _managerBizLogic.CreateUpdateManager(managerRequestDTO, UserId);
+                    if (!tryAddManager.IsSuccess) return SaveError(tryAddManager);
                 }
 
                 var sendMail = await SendEmailConfirm(user);
