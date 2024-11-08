@@ -1,5 +1,6 @@
 using System;
 using System.Reflection.Metadata;
+using FS.BaseModels.Enums;
 using FS.BaseModels.IdentityModels;
 using FS.BLL.Services.Interfaces;
 using FS.Commons;
@@ -26,7 +27,7 @@ public static class DataSeeder
         var addRoleAdmin = await identityBizLogic.CreateUpdateRoleAsync(UserType.Admin.ToString(), true);
         var addRoleManger = await identityBizLogic.CreateUpdateRoleAsync(UserType.Manager.ToString(), false);
         var addRoleEmployee = await identityBizLogic.CreateUpdateRoleAsync(UserType.Employee.ToString(), false);
-        var addRoleCustomer = await identityBizLogic.CreateUpdateRoleAsync(UserType.Customer.ToString(), false);
+        // var addRoleCustomer = await identityBizLogic.CreateUpdateRoleAsync(UserType.Customer.ToString(), false);
 
         // Seed Admin User
         if (await identityBizLogic.GetByEmailAsync(adminEmail) == null)
@@ -40,7 +41,8 @@ public static class DataSeeder
                 Avatar = Constants.DefaultAvatar,
                 FirstName = adminFirstName,
                 LastName = adminLastName,
-                Gender = Gender.None.ToString()
+                Gender = Gender.None.ToString(),
+                Status = Status.Online.ToString()
             };
 
             var result = await identityBizLogic.AddUserAsync(adminUser, adminPassword);

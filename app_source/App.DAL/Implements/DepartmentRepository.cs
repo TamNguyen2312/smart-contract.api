@@ -30,7 +30,7 @@ public class DepartmentRepository : IDepartmentRepository
                 .WithPredicate(x => x.Id == department.Id && x.IsDelete == false)
                 .Build());
             if (existed == null) return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy phòng ban." };
-            if (!existed.CreatedBy.Equals(userId))
+            if (!existed.CreatedBy.Equals(userId.ToString()))
                 return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
             existed.Name = department.Name;
             existed.Description = department.Description;
@@ -47,7 +47,9 @@ public class DepartmentRepository : IDepartmentRepository
                 Description = department.Description,
                 CreatedDate = DateTime.Now,
                 CreatedBy = userId.ToString(),
-                IsDelete = false
+                IsDelete = false,
+                ModifiedDate = default,
+                ModifiedBy = default
             };
             await baseRepo.CreateAsync(newDepartment);
         }
@@ -70,7 +72,7 @@ public class DepartmentRepository : IDepartmentRepository
     {
         var baseRepo = _unitOfWork.GetRepository<Department>();
         var response = await baseRepo.GetSingleAsync(new QueryBuilder<Department>()
-            .WithPredicate(x => x.IsDelete == false && x.Id == id && x.CreatedBy == userId.ToString())
+            .WithPredicate(x => x.IsDelete == false && x.Id == id)
             .Build());
         return response;
     }

@@ -51,6 +51,7 @@ public class EmployeeRepository : IEmployeeRepository
             {
                 var empCreate = new Employee
                 {
+                    Id = emp.Id,
                     DepartmentId = emp.DepartmentId,
                     CreatedDate = DateTime.Now,
                     CreatedBy = userId.ToString()
@@ -74,7 +75,7 @@ public class EmployeeRepository : IEmployeeRepository
     {
         var baseEmpRepo = _unitOfWork.GetRepository<Employee>();
         var emp = await baseEmpRepo.GetSingleAsync(new QueryBuilder<Employee>()
-            .WithPredicate(x => x.Id == userId && x.IsDelete == false)
+            .WithPredicate(x => x.Id.Equals(userId.ToString()) && x.IsDelete == false)
             .Build());
         if (emp == null) return null;
         return emp;

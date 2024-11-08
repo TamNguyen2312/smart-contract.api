@@ -4,7 +4,7 @@ namespace App.Entity.DTOs.Employee;
 
 public class EmployeeRequestDTO : IEntity<Entities.Employee>
 {
-    public long Id { get; set; }
+    public string Id { get; set; } = null!;
     public long DepartmentId { get; set; }
 
     public Entities.Employee GetEntity()
