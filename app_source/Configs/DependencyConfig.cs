@@ -30,6 +30,7 @@ public class DependencyConfig
         services.AddTransient<IEmployeeRepository, EmployeeRepository>();
         services.AddTransient<ICustomerRepository, CustomerRepository>();
         services.AddTransient<IDepartmentRepository, DepartmentRepository>();
+        services.AddTransient<IManagerRepository, ManagerRepository>();
 
 
 
@@ -37,6 +38,7 @@ public class DependencyConfig
         services.AddTransient<IEmployeeBizLogic, EmployeeBizLogic>();
         services.AddTransient<ICustomerBizLogic, CustomerBizLogic>();
         services.AddTransient<IDepartmentBizLogic, DepartmentBizLogic>();
+        services.AddTransient<IManagerBizLogic, ManagerBizLogic>();
         
         
         //AutoMapper
