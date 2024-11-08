@@ -1,3 +1,4 @@
+using App.API.Filter;
 using App.BLL.Implements;
 using App.BLL.Interfaces;
 using App.DAL.Implements;
@@ -7,6 +8,7 @@ using FS.BLL.Services.Implementations;
 using FS.BLL.Services.Interfaces;
 using FS.DAL.Implements;
 using FS.DAL.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.CodeAnalysis.Operations;
 
 namespace App.API.Configs;
@@ -39,5 +41,11 @@ public class DependencyConfig
         
         //AutoMapper
         services.AddAutoMapper(typeof(MapperProfile));
+        
+        //Authorization
+        services.AddSingleton<IAuthorizationPolicyProvider, FSAuthorizationPolicyProvider>();
+        services.AddSingleton<IAuthorizationHandler, FSRolesHandler>();
+        services.AddSingleton<IAuthorizationHandler, FSEmailConfirmHandler>();
+        services.AddSingleton<IAuthorizationHandler, FSPermissionHandler>();
     }
 }

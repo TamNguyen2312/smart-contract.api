@@ -65,4 +65,13 @@ public class DepartmentRepository : IDepartmentRepository
             .Build());
         return response.ToList();
     }
+
+    public async Task<Department> GetDepartment(long id, long userId)
+    {
+        var baseRepo = _unitOfWork.GetRepository<Department>();
+        var response = await baseRepo.GetSingleAsync(new QueryBuilder<Department>()
+            .WithPredicate(x => x.IsDelete == false && x.Id == id && x.CreatedBy == userId.ToString())
+            .Build());
+        return response;
+    }
 }

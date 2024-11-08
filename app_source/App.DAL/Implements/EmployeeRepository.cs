@@ -29,25 +29,29 @@ public class EmployeeRepository : IEmployeeRepository
             var empRepoBase = _unitOfWork.GetRepository<Employee>();
             await _unitOfWork.BeginTransactionAsync();
             var any = await empRepoBase.AnyAsync(new QueryBuilder<Employee>()
-                .WithPredicate(x => x.Id == emp.Id)
+                .WithPredicate(x => x.Id == emp.Id && x.DepartmentId == emp.DepartmentId)
                 .Build());
             if (any)
             {
                 var existedEmp = await empRepoBase.GetSingleAsync(new QueryBuilder<Employee>()
-                    .WithPredicate(x => x.Id == emp.Id)
+                    .WithPredicate(x => x.Id == emp.Id 
+                                        && x.DepartmentId == emp.DepartmentId 
+                                        && x.IsDelete == false)
                     .Build());
                 if (existedEmp == null) return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy nhân viên." };
-                if (!string.IsNullOrEmpty(emp.DepartmentName))
-                    existedEmp.DepartmentName = emp.DepartmentName;
+                if (!existedEmp.CreatedBy.Equals(userId.ToString()))
+                    return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
+                existedEmp.DepartmentId = emp.DepartmentId;
                 existedEmp.ModifiedDate = DateTime.Now;
                 existedEmp.ModifiedBy = userId.ToString();
+                
                 await empRepoBase.UpdateAsync(existedEmp);
             }
             else
             {
                 var empCreate = new Employee
                 {
-                    DepartmentName = emp.DepartmentName,
+                    DepartmentId = emp.DepartmentId,
                     CreatedDate = DateTime.Now,
                     CreatedBy = userId.ToString()
                 };
@@ -56,7 +60,7 @@ public class EmployeeRepository : IEmployeeRepository
 
             var saver = await _unitOfWork.SaveAsync();
             await _unitOfWork.CommitTransactionAsync();
-            if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu nhân viên không thành công." };
+            if (!saver) return new BaseResponse { IsSuccess = false, Message = Constants.SaveDataFailed };
             return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
         }
         catch (Exception)
