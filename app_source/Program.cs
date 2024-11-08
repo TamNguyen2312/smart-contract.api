@@ -88,6 +88,9 @@ namespace App.API
             {
                 options.AddPolicy("AdminRolePolicy", policy =>
                     policy.Requirements.Add(new RolesAuthorizationRequirement(new[] { "Admin" })));
+                
+                options.AddPolicy("ManagerRolePolicy", policy =>
+                    policy.Requirements.Add(new RolesAuthorizationRequirement(new[] {"Manager"})));
             });
             
             builder.Services.AddIdentity<ApplicationUser, Role>().AddEntityFrameworkStores<FSDbContext>()

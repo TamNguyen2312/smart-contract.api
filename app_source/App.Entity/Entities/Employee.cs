@@ -4,6 +4,6 @@ namespace App.Entity.Entities;
 
 public partial class Employee : CommonDataModel
 {
-    public long Id { get; set; }  //ref to userId
+    public string Id { get; set; }  //ref to userId
     public long DepartmentId { get; set; }
 }
