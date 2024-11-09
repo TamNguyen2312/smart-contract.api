@@ -15,11 +15,13 @@ namespace App.API.Controllers
     {
         private readonly IIdentityBizLogic _identityBizLogic;
         private readonly IEmployeeBizLogic _employeeBizLogic;
+        private readonly IManagerBizLogic _managerBizLogic;
 
-        public ProfilesController(IIdentityBizLogic identityBizLogic, IEmployeeBizLogic employeeBizLogic)
+        public ProfilesController(IIdentityBizLogic identityBizLogic, IEmployeeBizLogic employeeBizLogic, IManagerBizLogic managerBizLogic)
         {
             _identityBizLogic = identityBizLogic;
             _employeeBizLogic = employeeBizLogic;
+            _managerBizLogic = managerBizLogic;
         }
 
         #region COMMON
@@ -41,7 +43,13 @@ namespace App.API.Controllers
                     return GetSuccess(employee);
                 }
                 
-                //tương lai có thể mở rộng thêm bảng Manager nữa...Làm tương tự.
+                
+                if (IsManager)
+                {
+                    var manager = await _managerBizLogic.GetManager(UserId);
+                    if (manager == null) return GetNotFound(Constants.GetNotFound);
+                    return GetSuccess(manager);
+                }
                 
                 var user = await _identityBizLogic.GetByIdAsync(UserId);
                 if (user == null) return GetNotFound(Constants.GetNotFound);

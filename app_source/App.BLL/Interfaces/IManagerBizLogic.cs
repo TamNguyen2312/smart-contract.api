@@ -6,4 +6,5 @@ namespace App.BLL.Interfaces;
 public interface IManagerBizLogic
 {
     Task<BaseResponse> CreateUpdateManager(ManagerRequestDTO dto, long userId);
+    Task<ManagerViewDTO> GetManager(long userId);
 }
