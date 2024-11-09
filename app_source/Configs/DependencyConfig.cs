@@ -39,6 +39,7 @@ public class DependencyConfig
         services.AddTransient<ICustomerBizLogic, CustomerBizLogic>();
         services.AddTransient<IDepartmentBizLogic, DepartmentBizLogic>();
         services.AddTransient<IManagerBizLogic, ManagerBizLogic>();
+        services.AddTransient<IProfileBizLogic, ProfileBizLogic>();
         
         
         //AutoMapper

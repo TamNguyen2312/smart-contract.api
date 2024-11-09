@@ -1,4 +1,5 @@
 using App.BLL.Interfaces;
+using App.Entity.DTOs.Profile;
 using FS.BaseAPI;
 using FS.BLL.Services.Interfaces;
 using FS.Commons;
@@ -16,12 +17,15 @@ namespace App.API.Controllers
         private readonly IIdentityBizLogic _identityBizLogic;
         private readonly IEmployeeBizLogic _employeeBizLogic;
         private readonly IManagerBizLogic _managerBizLogic;
+        private readonly IProfileBizLogic _profileBizLogic;
 
-        public ProfilesController(IIdentityBizLogic identityBizLogic, IEmployeeBizLogic employeeBizLogic, IManagerBizLogic managerBizLogic)
+        public ProfilesController(IIdentityBizLogic identityBizLogic,
+            IEmployeeBizLogic employeeBizLogic, IManagerBizLogic managerBizLogic, IProfileBizLogic profileBizLogic)
         {
             _identityBizLogic = identityBizLogic;
             _employeeBizLogic = employeeBizLogic;
             _managerBizLogic = managerBizLogic;
+            _profileBizLogic = profileBizLogic;
         }
 
         #region COMMON
@@ -50,12 +54,44 @@ namespace App.API.Controllers
                     if (manager == null) return GetNotFound(Constants.GetNotFound);
                     return GetSuccess(manager);
                 }
-                
-                var user = await _identityBizLogic.GetByIdAsync(UserId);
-                if (user == null) return GetNotFound(Constants.GetNotFound);
-                var userRoles = await _identityBizLogic.GetRolesAsync(UserId);
-                var userView = new UserViewDTO(user, userRoles.ToList());
+
+                var userView = await _profileBizLogic.GetPersonalProfile(UserId);
                 return userView == null ? GetNotFound(Constants.GetNotFound) : GetSuccess(userView);
+            }
+            catch(Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        
+        /// <summary>
+        /// This is used to edit PERSONAL profile of the employee 
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        [Authorize]
+        [HttpPost]
+        [Route("edit-personal-profile")]
+        public async Task<IActionResult> EditPersonalProfile([FromBody] PersonalProfileDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!dto.IsValidGender())
+                {
+                    ModelState.AddModelError("Gender", "Giới tính không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                var tryEdit = await _profileBizLogic.EditPersonalProfile(dto, UserId);
+                if (!tryEdit.IsSuccess) return SaveError();
+                return SaveSuccess(tryEdit);
             }
             catch(Exception ex)
             {
