@@ -1,5 +1,6 @@
 using App.DAL.Interfaces;
 using App.Entity.Entities;
+using FS.BaseModels.IdentityModels;
 using FS.Commons;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
@@ -17,7 +18,7 @@ public class ManagerRepository : IManagerRepository
     }
 
 
-    public async Task<BaseResponse> CreateUpdateManager(Manager manager, long userId)
+    public async Task<BaseResponse> CreateUpdateManager(Manager manager, ApplicationUser user)
     {
         try
         {
@@ -34,11 +35,11 @@ public class ManagerRepository : IManagerRepository
                                         && x.IsDelete == false)
                     .Build());
                 if (existedManager == null) return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy quản lý." };
-                if (!existedManager.CreatedBy.Equals(userId.ToString()))
+                if (!existedManager.CreatedBy.Equals(user.Id.ToString()))
                     return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
                 existedManager.DepartmentId = manager.DepartmentId;
                 existedManager.ModifiedDate = DateTime.Now;
-                existedManager.ModifiedBy = userId.ToString();
+                existedManager.ModifiedBy = user.Email;
                 
                 await repoBase.UpdateAsync(existedManager);
             }
@@ -49,7 +50,7 @@ public class ManagerRepository : IManagerRepository
                     Id = manager.Id,
                     DepartmentId = manager.DepartmentId,
                     CreatedDate = DateTime.Now,
-                    CreatedBy = userId.ToString()
+                    CreatedBy = user.Email
                 };
                 await repoBase.CreateAsync(newManager);
             }
@@ -64,5 +65,14 @@ public class ManagerRepository : IManagerRepository
             await _unitOfWork.RollBackAsync();
             throw;
         }
+    }
+
+    public async Task<Manager> GetManager(long userId)
+    {
+        var baseRepo = _unitOfWork.GetRepository<Manager>();
+        var manager = await baseRepo.GetSingleAsync(new QueryBuilder<Manager>()
+            .WithPredicate(x => x.Id.Equals(userId.ToString()) && x.IsDelete == false)
+            .Build());
+        return manager;
     }
 }

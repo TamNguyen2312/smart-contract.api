@@ -133,7 +133,7 @@ namespace App.API.Controllers
                         Id = user.Id.ToString(),
                         DepartmentId = dto.DepartmentId
                     };
-                    var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, UserId);
+                    var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, user.Id);
                     if (!tryAddEmp.IsSuccess) return SaveError(tryAddEmp);
                 }
                 
@@ -145,7 +145,7 @@ namespace App.API.Controllers
                         Id = user.Id.ToString(),
                         DepartmentId = dto.DepartmentId
                     };
-                    var tryAddManager = await _managerBizLogic.CreateUpdateManager(managerRequestDTO, UserId);
+                    var tryAddManager = await _managerBizLogic.CreateUpdateManager(managerRequestDTO, user.Id);
                     if (!tryAddManager.IsSuccess) return SaveError(tryAddManager);
                 }
 

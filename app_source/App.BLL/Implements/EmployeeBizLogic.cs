@@ -2,6 +2,7 @@ using App.BLL.Interfaces;
 using App.DAL.Interfaces;
 using App.Entity.DTOs.Employee;
 using App.Entity.Entities;
+using FS.Commons;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 
@@ -23,7 +24,9 @@ public class EmployeeBizLogic : IEmployeeBizLogic
     public async Task<BaseResponse> CreateUpdateEmployee(EmployeeRequestDTO dto, long userId)
     {
         var entity = dto.GetEntity();
-        var response = await _repository.CreateUpdateEmployee(entity, userId);
+        var user = await _identityRepository.GetByIdAsync(userId);
+        if (user == null) return new BaseResponse { IsSuccess = false, Message = Constants.EXPIRED_SESSION }; 
+        var response = await _repository.CreateUpdateEmployee(entity, user);
         return response;
     }
 

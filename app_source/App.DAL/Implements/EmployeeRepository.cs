@@ -3,6 +3,7 @@ using App.Entity.DTOs.Employee;
 using App.Entity.Entities;
 using App.Entity.Mappers;
 using AutoMapper;
+using FS.BaseModels.IdentityModels;
 using FS.Commons;
 using FS.Commons.Extensions;
 using FS.Commons.Models;
@@ -15,6 +16,7 @@ public class EmployeeRepository : IEmployeeRepository
 {
     private readonly IFSUnitOfWork<AppDbContext> _unitOfWork;
     private readonly IMapper _mapper;
+    
 
     public EmployeeRepository(IFSUnitOfWork<AppDbContext> unitOfWork, IMapper mapper)
     {
@@ -22,7 +24,7 @@ public class EmployeeRepository : IEmployeeRepository
         _mapper = mapper;
     }
     
-    public async Task<BaseResponse> CreateUpdateEmployee(Employee emp, long userId)
+    public async Task<BaseResponse> CreateUpdateEmployee(Employee emp, ApplicationUser user)
     {
         try
         {
@@ -39,11 +41,11 @@ public class EmployeeRepository : IEmployeeRepository
                                         && x.IsDelete == false)
                     .Build());
                 if (existedEmp == null) return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy nhân viên." };
-                if (!existedEmp.CreatedBy.Equals(userId.ToString()))
+                if (!existedEmp.CreatedBy.Equals(user.Id.ToString()))
                     return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
                 existedEmp.DepartmentId = emp.DepartmentId;
                 existedEmp.ModifiedDate = DateTime.Now;
-                existedEmp.ModifiedBy = userId.ToString();
+                existedEmp.ModifiedBy = user.Email;
                 
                 await empRepoBase.UpdateAsync(existedEmp);
             }
@@ -54,7 +56,7 @@ public class EmployeeRepository : IEmployeeRepository
                     Id = emp.Id,
                     DepartmentId = emp.DepartmentId,
                     CreatedDate = DateTime.Now,
-                    CreatedBy = userId.ToString()
+                    CreatedBy = user.Email
                 };
                 await empRepoBase.CreateAsync(empCreate);
             }
