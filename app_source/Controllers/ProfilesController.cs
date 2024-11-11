@@ -111,10 +111,15 @@ namespace App.API.Controllers
 
         #region ADMIN
 
+        /// <summary>
+        /// This is used to get all account profiles for admin
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPost]
         [Route("get-all-profiles")]
-        public async Task<IActionResult> GetAllProfiles(AccountGetListDTO dto)
+        public async Task<IActionResult> GetAllProfiles([FromBody] AccountGetListDTO dto)
         {
             try
             {
@@ -123,7 +128,7 @@ namespace App.API.Controllers
 
                 if (!ModelState.IsValid) return ModelInvalid();
 
-                var userViewDtos = new List<object >();
+                var userViewDtos = new List<object>();
                 var users = await _identityBizLogic.GetAll(dto);
 
                 foreach (var user in users)
@@ -145,8 +150,45 @@ namespace App.API.Controllers
                         userViewDtos.Add(userView);
                     }
                 }
+
                 var response = new PagingDataModel<object>(userViewDtos, dto);
                 return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPost]
+        [Route("get-profile-by-userId/{userId}")]
+        public async Task<IActionResult> GetProfileByUserId(long userId)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                var user = await _identityBizLogic.GetByIdAsync(userId);
+                if (user == null) return GetNotFound(Constants.GetNotFound);
+
+                var userRoles = await _identityBizLogic.GetRolesAsync(user.Id);
+                if (userRoles.Contains(SystemRoleConstants.MANAGER))
+                {
+                    var managerView = await _managerBizLogic.GetManager(user, userRoles.ToList());
+                    return GetSuccess(managerView);
+                }
+                
+                if (userRoles.Contains(SystemRoleConstants.EMPLOYEE))
+                {
+                    var empView = await _employeeBizLogic.GetEmployee(user, userRoles.ToList());
+                    return GetSuccess(empView);
+                }
+
+                var userView = new UserViewDTO(user, userRoles.ToList());
+                return GetSuccess(userView);
             }
             catch (Exception ex)
             {
