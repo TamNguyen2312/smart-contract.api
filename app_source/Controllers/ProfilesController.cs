@@ -1,6 +1,8 @@
+using App.API.Filter;
 using App.BLL.Interfaces;
 using App.Entity.DTOs.Profile;
 using FS.BaseAPI;
+using FS.BaseModels;
 using FS.BLL.Services.Interfaces;
 using FS.Commons;
 using FS.Commons.Models.DTOs;
@@ -30,6 +32,10 @@ namespace App.API.Controllers
 
         #region COMMON
 
+        /// <summary>
+        /// This is used to get PERSONAL profile of every user
+        /// </summary>
+        /// <returns></returns>
         [Authorize]
         [HttpGet]
         [Route("get-personal-profile")]
@@ -46,8 +52,8 @@ namespace App.API.Controllers
                     if (employee == null) return GetNotFound(Constants.GetNotFound);
                     return GetSuccess(employee);
                 }
-                
-                
+
+
                 if (IsManager)
                 {
                     var manager = await _managerBizLogic.GetManager(UserId);
@@ -58,14 +64,14 @@ namespace App.API.Controllers
                 var userView = await _profileBizLogic.GetPersonalProfile(UserId);
                 return userView == null ? GetNotFound(Constants.GetNotFound) : GetSuccess(userView);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ConsoleLog.WriteExceptionToConsoleLog(ex);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
-        
-        
+
+
         /// <summary>
         /// This is used to edit PERSONAL profile of the employee 
         /// </summary>
@@ -93,7 +99,56 @@ namespace App.API.Controllers
                 if (!tryEdit.IsSuccess) return SaveError();
                 return SaveSuccess(tryEdit);
             }
-            catch(Exception ex)
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+        #endregion
+
+
+        #region ADMIN
+
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPost]
+        [Route("get-all-profiles")]
+        public async Task<IActionResult> GetAllProfiles(AccountGetListDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                var userViewDtos = new List<object >();
+                var users = await _identityBizLogic.GetAll(dto);
+
+                foreach (var user in users)
+                {
+                    var userRoles = await _identityBizLogic.GetRolesAsync(user.Id);
+                    if (userRoles.Contains(SystemRoleConstants.MANAGER))
+                    {
+                        var managerView = await _managerBizLogic.GetManager(user, userRoles.ToList());
+                        userViewDtos.Add(managerView);
+                    }
+                    else if (userRoles.Contains(SystemRoleConstants.EMPLOYEE))
+                    {
+                        var empView = await _employeeBizLogic.GetEmployee(user, userRoles.ToList());
+                        userViewDtos.Add(empView);
+                    }
+                    else
+                    {
+                        var userView = new UserViewDTO(user, userRoles.ToList());
+                        userViewDtos.Add(userView);
+                    }
+                }
+                var response = new PagingDataModel<object>(userViewDtos, dto);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
             {
                 ConsoleLog.WriteExceptionToConsoleLog(ex);
                 return Error(Constants.SomeThingWentWrong);

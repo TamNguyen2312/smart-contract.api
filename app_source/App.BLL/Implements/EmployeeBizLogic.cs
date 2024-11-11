@@ -2,6 +2,7 @@ using App.BLL.Interfaces;
 using App.DAL.Interfaces;
 using App.Entity.DTOs.Employee;
 using App.Entity.Entities;
+using FS.BaseModels.IdentityModels;
 using FS.Commons;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
@@ -14,7 +15,8 @@ public class EmployeeBizLogic : IEmployeeBizLogic
     private readonly IIdentityRepository _identityRepository;
     private readonly IDepartmentRepository _departmentRepository;
 
-    public EmployeeBizLogic(IEmployeeRepository repository, IIdentityRepository identityRepository, IDepartmentRepository departmentRepository)
+    public EmployeeBizLogic(IEmployeeRepository repository, IIdentityRepository identityRepository,
+        IDepartmentRepository departmentRepository)
     {
         _repository = repository;
         _identityRepository = identityRepository;
@@ -25,7 +27,7 @@ public class EmployeeBizLogic : IEmployeeBizLogic
     {
         var entity = dto.GetEntity();
         var user = await _identityRepository.GetByIdAsync(userId);
-        if (user == null) return new BaseResponse { IsSuccess = false, Message = Constants.EXPIRED_SESSION }; 
+        if (user == null) return new BaseResponse { IsSuccess = false, Message = Constants.EXPIRED_SESSION };
         var response = await _repository.CreateUpdateEmployee(entity, user);
         return response;
     }
@@ -37,6 +39,13 @@ public class EmployeeBizLogic : IEmployeeBizLogic
         return empView;
     }
 
+    public async Task<EmployeeViewDTO> GetEmployee(ApplicationUser user, List<string> userRoles)
+    {
+        var emp = await _repository.GetEmployee(user.Id);
+        var empView = await GetEmpView(emp, user, userRoles);
+        return empView;
+    }
+
     #region PRIVATE
 
     private async Task<EmployeeViewDTO> GetEmpView(Employee emp)
@@ -45,6 +54,13 @@ public class EmployeeBizLogic : IEmployeeBizLogic
         var user = await _identityRepository.GetByIdAsync(userId);
         var userRoles = await _identityRepository.GetRolesAsync(userId);
         var department = await _departmentRepository.GetDepartment(emp.DepartmentId, userId);
+        var empView = new EmployeeViewDTO(user, userRoles.ToList(), emp, department);
+        return empView;
+    }
+
+    private async Task<EmployeeViewDTO> GetEmpView(Employee emp, ApplicationUser user, List<string> userRoles)
+    {
+        var department = await _departmentRepository.GetDepartment(emp.DepartmentId, user.Id);
         var empView = new EmployeeViewDTO(user, userRoles.ToList(), emp, department);
         return empView;
     }

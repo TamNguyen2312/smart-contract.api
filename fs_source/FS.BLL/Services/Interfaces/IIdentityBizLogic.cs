@@ -123,4 +123,15 @@ public interface IIdentityBizLogic
 	/// <param name="userId"></param>
 	/// <returns></returns>
 	Task<bool> IsTokenInvoked(string jti, long userId);
+
+	/// <summary>
+	/// This is used to get all accounts in db
+	/// </summary>
+	/// <param name="dto"></param>
+	/// <returns></returns>
+	Task<List<ApplicationUser>> GetAll(AccountGetListDTO dto);
+
+	Task<UserViewDTO> GetUserView(ApplicationUser user);
+
+	Task<List<UserViewDTO>> GetUserViews(List<ApplicationUser> users);
 }
