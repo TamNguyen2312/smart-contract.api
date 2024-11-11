@@ -3,8 +3,10 @@ using App.DAL.Interfaces;
 using App.Entity.DTOs.Employee;
 using App.Entity.DTOs.Manager;
 using App.Entity.Entities;
+using FS.BaseModels.IdentityModels;
 using FS.Commons;
 using FS.Commons.Models;
+using FS.Commons.Models.DTOs;
 using FS.DAL.Interfaces;
 
 namespace App.BLL.Implements;
@@ -34,15 +36,22 @@ public class ManagerBizLogic : IManagerBizLogic
 
     public async Task<ManagerViewDTO> GetManager(long userId)
     {
-        var emp = await _managerRepository.GetManager(userId);
-        var empView = await GetManagerView(emp);
-        return empView;
+        var manager = await _managerRepository.GetManager(userId);
+        var managerView = await GetManagerView(manager);
+        return managerView;
     }
 
-    #region PRIVATE
+    public async Task<ManagerViewDTO> GetManager(ApplicationUser user, List<string> userRoles)
+    {
+        var manager = await _managerRepository.GetManager(user.Id);
+        var managerView = await GetManagerView(manager, user, userRoles);
+        return managerView;
+    }
+
+    #region CONVERT
 
     /// <summary>
-    /// This is used to conver a manager to a manager view
+    /// This is used to convert a manager to a manager view
     /// </summary>
     /// <param name="manager"></param>
     /// <returns></returns>
@@ -53,6 +62,13 @@ public class ManagerBizLogic : IManagerBizLogic
         var userRoles = await _identityRepository.GetRolesAsync(userId);
         var department = await _departmentRepository.GetDepartment(manager.DepartmentId, userId);
         var view = new ManagerViewDTO(user, userRoles.ToList(), manager, department);
+        return view;
+    }
+
+    private async Task<ManagerViewDTO> GetManagerView(Manager manager,ApplicationUser user, List<string> userRoles)
+    {
+        var department = await _departmentRepository.GetDepartment(manager.DepartmentId, user.Id);
+        var view = new ManagerViewDTO(user, userRoles, manager, department);
         return view;
     }
 

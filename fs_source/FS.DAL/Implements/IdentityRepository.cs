@@ -9,6 +9,7 @@ using Azure.Core;
 using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
+using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.Commons.Models.DTOs;
 using FS.DAL.Base;
@@ -549,6 +550,26 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
         {
             throw;
         }
+    }
+
+    /// <summary>
+    /// This is used to get all accounts in db
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
+    public async Task<List<ApplicationUser>> GetAll(AccountGetListDTO dto)
+    {
+        var loadedRecords = _userManager.Users;
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            loadedRecords = loadedRecords.Where(x => x.FirstName.Contains(dto.Keyword)
+                                                                || x.LastName.Contains(dto.Keyword)
+                                                                || x.Email.Contains(dto.Keyword));
+        }
+
+        dto.TotalRecord = await loadedRecords.CountAsync();
+        var response = await loadedRecords.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return response;
     }
 
     /// <summary>

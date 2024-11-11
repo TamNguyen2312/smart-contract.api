@@ -3,6 +3,7 @@ using System.Net;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using System.Web;
+using App.API.Filter;
 using App.BLL.Interfaces;
 using App.Entity.DTOs.Employee;
 using App.Entity.DTOs.Manager;
@@ -485,7 +486,8 @@ namespace App.API.Controllers
         }
 
         #endregion
-
+        
+        
         #region PRIVATE
         private async Task<bool> SendEmailConfirm(ApplicationUser user)
         {

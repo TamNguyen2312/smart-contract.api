@@ -116,4 +116,5 @@ public interface IIdentityRepository
     Task<BaseResponse<RefreshToken>> ValidateAndVerifyToken(BaseTokenModel tokenModel);
     Task<bool> UpdateTokenAsync(RefreshToken refreshToken);
     Task<bool> IsTokenInvoked(string jti, long userId);
+    Task<List<ApplicationUser>> GetAll(AccountGetListDTO dto);
 }

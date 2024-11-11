@@ -1,5 +1,6 @@
 using App.BLL.Interfaces;
 using App.Entity.DTOs.Profile;
+using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
 using FS.Commons.Models;
@@ -16,6 +17,9 @@ public class ProfileBizLogic : IProfileBizLogic
     {
         _identityRepository = identityRepository;
     }
+
+
+    #region PERSONAL
 
     public async Task<UserViewDTO> GetPersonalProfile(long userId)
     {
@@ -39,4 +43,7 @@ public class ProfileBizLogic : IProfileBizLogic
         if (!tryUpdate) return new BaseResponse { IsSuccess = false, Message = Constants.SaveDataFailed };
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
     }
+
+    #endregion
+    
 }
