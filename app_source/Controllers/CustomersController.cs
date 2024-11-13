@@ -25,7 +25,7 @@ namespace App.API.Controllers
         [Authorize]
         [HttpPost]
         [Route("create-update-customer")]
-        public async Task<IActionResult> CreateUpdateCustomer(CustomerRequestDTO dto)
+        public async Task<IActionResult> CreateUpdateCustomer(CustomerRequestDto dto)
         {
             try
             {

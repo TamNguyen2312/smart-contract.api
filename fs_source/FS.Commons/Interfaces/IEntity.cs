@@ -1,4 +1,4 @@
-namespace FS.Common.Models.Models.Interfaces;
+namespace FS.Commons.Interfaces;
 
 public interface IEntity<TEntity>
 {

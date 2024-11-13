@@ -59,7 +59,7 @@ public class GenericeRepository<T, TContext> : IGenericRepository<T, TContext> w
     {
         IQueryable<T> query = _dbSet;
 
-        if (options.Tracked)
+        if (options.Tracked == false)
         {
             query = query.AsNoTracking();
         }

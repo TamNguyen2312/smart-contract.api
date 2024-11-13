@@ -1,4 +1,5 @@
 using FS.Common.Models.Models.Interfaces;
+using FS.Commons.Interfaces;
 
 namespace App.Entity.DTOs.Manager;
 

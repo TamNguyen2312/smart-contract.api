@@ -2,11 +2,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using FS.BaseModels.IdentityModels;
 using FS.Common.Models.Models.Interfaces;
+using FS.Commons.Interfaces;
 using FS.Commons.Models;
 
 namespace App.Entity.DTOs.Profile;
 
-public class PersonalProfileDTO : IEntity<ApplicationUser>
+public class PersonalProfileDto : IEntity<ApplicationUser>
 {
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
@@ -50,4 +51,5 @@ public class PersonalProfileDTO : IEntity<ApplicationUser>
             IdentityCard = IdentityCard
         };
     }
+    
 }

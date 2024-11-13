@@ -22,7 +22,7 @@ namespace App.API.Controllers
         [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPost]
         [Route("create-update-department")]
-        public async Task<IActionResult> CreateUpdateDepartment(DepartmentRequestDTO dto)
+        public async Task<IActionResult> CreateUpdateDepartment(DepartmentRequestDto dto)
         {
             try
             {

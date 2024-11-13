@@ -20,7 +20,7 @@ public class DepartmentBizLogic : IDepartmentBizLogic
     }
     
     
-    public async Task<BaseResponse> CreateUpdateDepartment(DepartmentRequestDTO dto, long userId)
+    public async Task<BaseResponse> CreateUpdateDepartment(DepartmentRequestDto dto, long userId)
     {
         var entity = dto.GetEntity();
         var response = await _departmentRepository.CreateUpdateDepartment(entity, userId);

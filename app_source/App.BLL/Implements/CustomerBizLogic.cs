@@ -19,7 +19,7 @@ public class CustomerBizLogic : ICustomerBizLogic
         _customerRepository = customerRepository;
         _identityRepository = identityRepository;
     }
-    public async Task<BaseResponse> CreateUpdateCustomer(CustomerRequestDTO dto, long userId)
+    public async Task<BaseResponse> CreateUpdateCustomer(CustomerRequestDto dto, long userId)
     {
         var entity = dto.GetEntity();
         var response = await _customerRepository.CreateUpdateCustomer(entity, userId);
