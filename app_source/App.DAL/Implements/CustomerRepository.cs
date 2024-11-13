@@ -1,6 +1,7 @@
 using App.DAL.Interfaces;
 using App.Entity.DTOs.Customer;
 using App.Entity.Entities;
+using FS.BaseModels.IdentityModels;
 using FS.Commons;
 using FS.Commons.Extensions;
 using FS.Commons.Models;
@@ -20,7 +21,7 @@ public class CustomerRepository : ICustomerRepository
         _unitOfWork = unitOfWork;
     }
     
-    public async Task<BaseResponse> CreateUpdateCustomer(Customer customer, long userId)
+    public async Task<BaseResponse> CreateUpdateCustomer(Customer customer, ApplicationUser user)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
         var any = await baseCustomerRepo.AnyAsync(new QueryBuilder<Customer>()
@@ -32,17 +33,13 @@ public class CustomerRepository : ICustomerRepository
             var existedCustomer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
                 .WithPredicate(x => x.Id == customer.Id && 
                                     customer.IsDelete == false && 
-                                    customer.CreatedBy.Equals(userId.ToString()))
+                                    customer.CreatedBy.Equals(user.Id.ToString()))
                 .Build());
             if (existedCustomer == null)
                 return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy thông tin khách hàng" };
-            existedCustomer.Address = customer.Address;
-            existedCustomer.TaxIdentificationNumber = customer.TaxIdentificationNumber;
-            existedCustomer.CompanyName = customer.CompanyName;
-            existedCustomer.Email = customer.Email;
-            existedCustomer.PhoneNumber = customer.PhoneNumber;
+            customer.UpdateNonDefaultProperties(existedCustomer);
             existedCustomer.ModifiedDate = DateTime.Now;
-            existedCustomer.ModifiedBy = userId.ToString();
+            existedCustomer.ModifiedBy = user.Email;
 
             await baseCustomerRepo.UpdateAsync(existedCustomer);
         }
@@ -56,7 +53,7 @@ public class CustomerRepository : ICustomerRepository
                 PhoneNumber = customer.PhoneNumber,
                 Address = customer.Address,
                 CreatedDate = DateTime.Now,
-                CreatedBy = userId.ToString(),
+                CreatedBy = user.Email,
                 IsDelete = false
             };
             await baseCustomerRepo.CreateAsync(newCustomer);
@@ -68,11 +65,11 @@ public class CustomerRepository : ICustomerRepository
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
     }
 
-    public async Task<List<Customer>> GetAllCustomers(CustomerGetListDTO dto, long userId)
+    public async Task<List<Customer>> GetAllCustomers(CustomerGetListDTO dto, ApplicationUser user)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
         var loadedRecord = baseCustomerRepo.Get(new QueryBuilder<Customer>()
-            .WithPredicate(x => x.IsDelete == false && x.CreatedBy.Equals(userId.ToString()))
+            .WithPredicate(x => x.IsDelete == false && x.CreatedBy.Equals(user.Email))
             .Build());
         if (!string.IsNullOrEmpty(dto.Keyword))
         {
@@ -84,24 +81,24 @@ public class CustomerRepository : ICustomerRepository
         return response;
     }
 
-    public async Task<Customer> GetCustomer(long customerId, long userId)
+    public async Task<Customer> GetCustomer(long customerId, ApplicationUser user)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
         var customer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
             .WithPredicate(x => x.Id == customerId &&
-                                x.CreatedBy.Equals(userId.ToString())
+                                x.CreatedBy.Equals(user.Email)
                                 && x.IsDelete == false)
             .Build());
         if (customer == null) return null;
         return customer;
     }
 
-    public async Task<BaseResponse> DeleteCustomer(long customerId, long userId)
+    public async Task<BaseResponse> DeleteCustomer(long customerId, ApplicationUser user)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
         var customer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
             .WithPredicate(x => x.Id == customerId &&
-                                x.CreatedBy.Equals(userId.ToString())
+                                x.CreatedBy.Equals(user.Email)
                                 && x.IsDelete == false)
             .Build());
         if (customer == null) return new BaseResponse { IsSuccess = false, Message = Constants.GetNotFound };
