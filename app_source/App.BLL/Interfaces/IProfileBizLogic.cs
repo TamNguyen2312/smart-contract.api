@@ -7,5 +7,6 @@ namespace App.BLL.Interfaces;
 public interface IProfileBizLogic
 {
     Task<UserViewDTO> GetPersonalProfile(long userId);
-    Task<BaseResponse> EditPersonalProfile(PersonalProfileDTO dto, long userId);
+    Task<BaseResponse> EditPersonalProfile(PersonalProfileDto dto, long userId);
+    Task<BaseResponse> EditProfile(ProfileUpdateDto dto);
 }

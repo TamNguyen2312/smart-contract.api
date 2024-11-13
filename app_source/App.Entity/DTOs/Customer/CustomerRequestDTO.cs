@@ -3,10 +3,11 @@ using App.Entity.Mappers;
 using AutoMapper;
 using FS.Common.Models.Models.Interfaces;
 using FS.Commons;
+using FS.Commons.Interfaces;
 
 namespace App.Entity.DTOs.Customer;
 
-public class CustomerRequestDTO : IEntity<Entities.Customer>
+public class CustomerRequestDto : IEntity<Entities.Customer>
 {
     public long Id { get; set; } 
     
@@ -40,4 +41,5 @@ public class CustomerRequestDTO : IEntity<Entities.Customer>
             Address = Address
         };
     }
+    
 }

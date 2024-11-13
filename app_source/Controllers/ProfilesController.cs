@@ -80,7 +80,7 @@ namespace App.API.Controllers
         [Authorize]
         [HttpPost]
         [Route("edit-personal-profile")]
-        public async Task<IActionResult> EditPersonalProfile([FromBody] PersonalProfileDTO dto)
+        public async Task<IActionResult> EditPersonalProfile([FromBody] PersonalProfileDto dto)
         {
             try
             {
@@ -161,8 +161,13 @@ namespace App.API.Controllers
             }
         }
 
+        /// <summary>
+        /// This is used to get a single profile for admin
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         [FSAuthorize(Policy = "AdminRolePolicy")]
-        [HttpPost]
+        [HttpGet]
         [Route("get-profile-by-userId/{userId}")]
         public async Task<IActionResult> GetProfileByUserId(long userId)
         {
@@ -196,7 +201,52 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+        
+        
+        /// <summary>
+        /// This is used to edit profile of any user for admin
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPost]
+        [Route("edit-profile-by-userId")]
+        public async Task<IActionResult> EditProfile([FromBody] ProfileUpdateDto dto)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+                
+                if (!ModelState.IsValid) return ModelInvalid();
 
+                if (!dto.IsValidGender())
+                {
+                    ModelState.AddModelError("Gender", "Giới tính không hợp lệ.");
+                    return ModelInvalid();
+                }
+
+                if (!dto.CheckValidDateOfBirth().Equals("VALID"))
+                {
+                    ModelState.AddModelError("DateOfBirth", dto.CheckValidDateOfBirth());
+                    return ModelInvalid();
+                }
+
+                if (!dto.CheckValidIdentityCard().Equals("VALID"))
+                {
+                    ModelState.AddModelError("IdentityCard", dto.CheckValidIdentityCard());
+                    return ModelInvalid();
+                }
+
+                var response = await _profileBizLogic.EditProfile(dto);
+                if (!response.IsSuccess) return SaveError(response.Message);
+                return SaveSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
         #endregion
     }
 }

@@ -13,7 +13,6 @@ public class Constants
     public const string EmailAddressFormatError = "Email không đúng định dạng.";
     public const string PasswordStringLengthError = "{0} phải có tối thiểu {2} và tối đa {1} kí tự";
     public const string ConfirmPasswordError = "Mật khẩu nhập lại không đúng.";
-    public const string FormatDate = "dd/MM/yyyy";
     public const string MaxlengthError = "{0} độ dài tối đa {1} ký tự.";
     public const string APIURL = "http://localhost:7012/";
     public const string POLICY_VERIFY_EMAIL = "VerifyEmail";
@@ -32,6 +31,7 @@ public class Constants
     public const string IS_REMEMBER = "is_remember";
     public const string FormatDateTime = "dd/MM/yyyy HH:mm";
     public const string FormatFullDateTime = "dd/MM/yyyy HH:mm:ss";
+    public const string FormatDate = "dd/MM/yyyy";
     public const string UserNameAdminSeller = "seller";
     public const string UserRole = "user";
     public const string SellerRole = "seller";

@@ -3,6 +3,7 @@ using App.Entity.DTOs.Profile;
 using FS.BaseModels;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
+using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.Commons.Models.DTOs;
 using FS.DAL.Interfaces;
@@ -30,15 +31,25 @@ public class ProfileBizLogic : IProfileBizLogic
         return view;
     }
 
-    public async Task<BaseResponse> EditPersonalProfile(PersonalProfileDTO dto, long userId)
+    public async Task<BaseResponse> EditPersonalProfile(PersonalProfileDto dto, long userId)
     {
         var user = await _identityRepository.GetByIdAsync(userId);
         if (user == null) return new BaseResponse { IsSuccess = false, Message = Constants.EXPIRED_SESSION };
-        user.FirstName = dto.FirstName;
-        user.LastName = dto.LastName;
-        user.Gender = dto.Gender.Value.ToString();
-        user.DateOfBirth = dto.DateOfBirth;
-        user.IdentityCard = dto.IdentityCard;
+        dto.UpdateNonDefaultProperties(user);
+        var tryUpdate = await _identityRepository.UpdateAsync(user);
+        if (!tryUpdate) return new BaseResponse { IsSuccess = false, Message = Constants.SaveDataFailed };
+        return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
+    }
+
+    #endregion
+
+    #region ADMIN
+
+    public async Task<BaseResponse> EditProfile(ProfileUpdateDto dto)
+    {
+        var user = await _identityRepository.GetByIdAsync(dto.Id);
+        if (user == null) return new BaseResponse { IsSuccess = false, Message = Constants.EXPIRED_SESSION };
+        dto.UpdateNonDefaultProperties(user);
         var tryUpdate = await _identityRepository.UpdateAsync(user);
         if (!tryUpdate) return new BaseResponse { IsSuccess = false, Message = Constants.SaveDataFailed };
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };

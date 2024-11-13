@@ -1,10 +1,13 @@
 using System.ComponentModel.DataAnnotations;
+using App.Entity.DTOs.Profile;
+using FS.BaseModels.IdentityModels;
 using FS.Common.Models.Models.Interfaces;
 using FS.Commons;
+using FS.Commons.Interfaces;
 
 namespace App.Entity.DTOs.Department;
 
-public class DepartmentRequestDTO : IEntity<Entities.Department>
+public class DepartmentRequestDto : IEntity<Entities.Department>
 {
     public long Id { get; set; }
     
@@ -23,4 +26,5 @@ public class DepartmentRequestDTO : IEntity<Entities.Department>
             Description = Description
         };
     }
+    
 }
