@@ -2,6 +2,7 @@ using App.BLL.Interfaces;
 using App.DAL.Interfaces;
 using App.Entity.DTOs.Department;
 using App.Entity.Entities;
+using FS.BaseModels.IdentityModels;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using Microsoft.IdentityModel.Abstractions;
@@ -23,7 +24,8 @@ public class DepartmentBizLogic : IDepartmentBizLogic
     public async Task<BaseResponse> CreateUpdateDepartment(DepartmentRequestDto dto, long userId)
     {
         var entity = dto.GetEntity();
-        var response = await _departmentRepository.CreateUpdateDepartment(entity, userId);
+        var user = await _identityRepository.GetByIdAsync(userId);
+        var response = await _departmentRepository.CreateUpdateDepartment(entity, user);
         return response;
     }
 

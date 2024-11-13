@@ -1,7 +1,9 @@
 using App.DAL.Interfaces;
 using App.Entity.DTOs.Department;
 using App.Entity.Entities;
+using FS.BaseModels.IdentityModels;
 using FS.Commons;
+using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
@@ -18,7 +20,7 @@ public class DepartmentRepository : IDepartmentRepository
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<BaseResponse> CreateUpdateDepartment(Department department, long userId)
+    public async Task<BaseResponse> CreateUpdateDepartment(Department department, ApplicationUser user)
     {
         var baseRepo = _unitOfWork.GetRepository<Department>();
         var any = await baseRepo.AnyAsync(new QueryBuilder<Department>()
@@ -29,12 +31,13 @@ public class DepartmentRepository : IDepartmentRepository
             var existed = await baseRepo.GetSingleAsync(new QueryBuilder<Department>()
                 .WithPredicate(x => x.Id == department.Id && x.IsDelete == false)
                 .Build());
+            
             if (existed == null) return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy phòng ban." };
-            if (!existed.CreatedBy.Equals(userId.ToString()))
+            if (!existed.CreatedBy.Equals(user.Id.ToString()))
                 return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
-            existed.Name = department.Name;
-            existed.Description = department.Description;
-            existed.ModifiedBy = userId.ToString();
+            
+            department.UpdateNonDefaultProperties(existed);
+            existed.ModifiedBy = user.Email;
             existed.ModifiedDate = DateTime.Now;
 
             await baseRepo.UpdateAsync(existed);
@@ -46,7 +49,7 @@ public class DepartmentRepository : IDepartmentRepository
                 Name = department.Name,
                 Description = department.Description,
                 CreatedDate = DateTime.Now,
-                CreatedBy = userId.ToString(),
+                CreatedBy = user.Email,
                 IsDelete = false,
                 ModifiedDate = default,
                 ModifiedBy = default

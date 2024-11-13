@@ -22,19 +22,22 @@ public class CustomerBizLogic : ICustomerBizLogic
     public async Task<BaseResponse> CreateUpdateCustomer(CustomerRequestDto dto, long userId)
     {
         var entity = dto.GetEntity();
-        var response = await _customerRepository.CreateUpdateCustomer(entity, userId);
+        var user = await _identityRepository.GetByIdAsync(userId);
+        var response = await _customerRepository.CreateUpdateCustomer(entity, user);
         return response;
     }
 
     public async Task<List<CustomerViewDTO>> GetAllCustomers(CustomerGetListDTO dto, long userId)
     {
-        var response = await _customerRepository.GetAllCustomers(dto, userId);
+        var user = await _identityRepository.GetByIdAsync(userId);
+        var response = await _customerRepository.GetAllCustomers(dto, user);
         return await GetCustomerViews(response);
     }
 
     public async Task<CustomerViewDTO> GetCustomer(long customerId, long userId)
     {
-        var data = await _customerRepository.GetCustomer(customerId, userId);
+        var user = await _identityRepository.GetByIdAsync(userId);
+        var data = await _customerRepository.GetCustomer(customerId, user);
         if (data == null) return null;
         var response = await GetCustomerView(data);
         return response;
@@ -42,7 +45,8 @@ public class CustomerBizLogic : ICustomerBizLogic
 
     public async Task<BaseResponse> DeleteCustomer(long customerId, long userId)
     {
-        var response = await _customerRepository.DeleteCustomer(customerId, userId);
+        var user = await _identityRepository.GetByIdAsync(userId);
+        var response = await _customerRepository.DeleteCustomer(customerId, user);
         return response;
     }
 
