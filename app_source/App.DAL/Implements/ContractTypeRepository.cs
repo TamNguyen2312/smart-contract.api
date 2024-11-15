@@ -60,4 +60,13 @@ public class ContractTypeRepository : IContractTypeRepository
             throw;
         }
     }
+
+    public async Task<ContractType> GetContractTypeById(long id)
+    {
+        var baseRepo = _unitOfWork.GetRepository<ContractType>();
+        var existed = await baseRepo.GetSingleAsync(new QueryBuilder<ContractType>()
+                                                           .WithPredicate(x => x.Id == id && x.IsDelete == false)
+                                                           .Build());
+        return existed;
+    }
 }

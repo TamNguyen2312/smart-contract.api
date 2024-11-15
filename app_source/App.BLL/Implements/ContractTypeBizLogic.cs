@@ -24,4 +24,12 @@ public class ContractTypeBizLogic : IContractTypeBizLogic
         var response = await _contractTypeRepository.CreateUpdateContractType(entity, user);
         return response;
     }
+
+    public async Task<ContractTypeViewDTO> GetContractTypeById(long id)
+    {
+        var data = await _contractTypeRepository.GetContractTypeById(id);
+        if (data == null) return null;
+        var response = new ContractTypeViewDTO(data);
+        return response;
+    }
 }
