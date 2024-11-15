@@ -20,7 +20,7 @@ public class CustomerRepository : ICustomerRepository
     {
         _unitOfWork = unitOfWork;
     }
-    
+
     public async Task<BaseResponse> CreateUpdateCustomer(Customer customer, ApplicationUser user)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
@@ -31,8 +31,8 @@ public class CustomerRepository : ICustomerRepository
         if (any)
         {
             var existedCustomer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
-                .WithPredicate(x => x.Id == customer.Id && 
-                                    customer.IsDelete == false && 
+                .WithPredicate(x => x.Id == customer.Id &&
+                                    customer.IsDelete == false &&
                                     customer.CreatedBy.Equals(user.Id.ToString()))
                 .Build());
             if (existedCustomer == null)
@@ -61,7 +61,7 @@ public class CustomerRepository : ICustomerRepository
 
         var saver = await _unitOfWork.SaveAsync();
         if (!saver) return new BaseResponse { IsSuccess = false, Message = "Thêm khách hàng không thành công." };
-        
+
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
     }
 
@@ -89,7 +89,6 @@ public class CustomerRepository : ICustomerRepository
                                 x.CreatedBy.Equals(user.Email)
                                 && x.IsDelete == false)
             .Build());
-        if (customer == null) return null;
         return customer;
     }
 
@@ -102,7 +101,7 @@ public class CustomerRepository : ICustomerRepository
                                 && x.IsDelete == false)
             .Build());
         if (customer == null) return new BaseResponse { IsSuccess = false, Message = Constants.GetNotFound };
-        
+
         //nên check thêm các ràng buộc sau này
         customer.IsDelete = true;
         await baseCustomerRepo.UpdateAsync(customer);

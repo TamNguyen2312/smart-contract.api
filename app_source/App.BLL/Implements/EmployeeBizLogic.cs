@@ -35,6 +35,7 @@ public class EmployeeBizLogic : IEmployeeBizLogic
     public async Task<EmployeeViewDTO> GetEmployee(long userId)
     {
         var emp = await _repository.GetEmployee(userId);
+        if (emp == null) return null;
         var empView = await GetEmpView(emp);
         return empView;
     }
@@ -42,6 +43,7 @@ public class EmployeeBizLogic : IEmployeeBizLogic
     public async Task<EmployeeViewDTO> GetEmployee(ApplicationUser user, List<string> userRoles)
     {
         var emp = await _repository.GetEmployee(user.Id);
+        if (emp == null) return null;
         var empView = await GetEmpView(emp, user, userRoles);
         return empView;
     }

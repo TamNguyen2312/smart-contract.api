@@ -92,7 +92,7 @@ namespace App.API.Controllers
                         $"{guidFileName}{extension}"
                     };
 
-                    var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", Helpers.PathCombine(guildStringPath));
+                    var path = Path.Combine(_hostingEnvironment.ContentRootPath, "wwwroot", Helpers.PathCombine(guildStringPath));
 
                     string directory = Path.GetDirectoryName(path);
                     if (!Directory.Exists(directory))
@@ -188,7 +188,7 @@ namespace App.API.Controllers
                         guidFileName
                     };
 
-                    var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", Helpers.PathCombine(guildStringPath));
+                    var path = Path.Combine(_hostingEnvironment.ContentRootPath, "wwwroot", Helpers.PathCombine(guildStringPath));
 
                     string directory = Path.GetDirectoryName(path);
                     if (!Directory.Exists(directory))
@@ -275,7 +275,7 @@ namespace App.API.Controllers
                     string subFolder = $"userId_{UserId}";
 
                     // Xác định đường dẫn lưu trữ ngoài wwwroot
-                    var storagePath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", fileFolder, subFolder);
+                    var storagePath = Path.Combine(_hostingEnvironment.ContentRootPath, "App_Data", fileFolder, subFolder);
                     if (!Directory.Exists(storagePath))
                         Directory.CreateDirectory(storagePath);
 
@@ -336,7 +336,7 @@ namespace App.API.Controllers
 
                 string subFolder = $"userId_{UserId}";
 
-                var storagePath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", fileFolder, subFolder);
+                var storagePath = Path.Combine(_hostingEnvironment.ContentRootPath, "App_Data", fileFolder, subFolder);
                 var filePath = Path.Combine(storagePath, safeFileName);
 
                 var existedfileUpload = await _fileUploadBizLogic.GetFileUploadByFilePath(storagePath, safeFileName);

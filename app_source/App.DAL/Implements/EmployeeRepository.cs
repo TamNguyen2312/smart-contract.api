@@ -16,14 +16,14 @@ public class EmployeeRepository : IEmployeeRepository
 {
     private readonly IFSUnitOfWork<AppDbContext> _unitOfWork;
     private readonly IMapper _mapper;
-    
+
 
     public EmployeeRepository(IFSUnitOfWork<AppDbContext> unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
-    
+
     public async Task<BaseResponse> CreateUpdateEmployee(Employee emp, ApplicationUser user)
     {
         try
@@ -36,8 +36,8 @@ public class EmployeeRepository : IEmployeeRepository
             if (any)
             {
                 var existedEmp = await empRepoBase.GetSingleAsync(new QueryBuilder<Employee>()
-                    .WithPredicate(x => x.Id == emp.Id 
-                                        && x.DepartmentId == emp.DepartmentId 
+                    .WithPredicate(x => x.Id == emp.Id
+                                        && x.DepartmentId == emp.DepartmentId
                                         && x.IsDelete == false)
                     .Build());
                 if (existedEmp == null) return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy nhân viên." };
@@ -46,7 +46,7 @@ public class EmployeeRepository : IEmployeeRepository
                 existedEmp.DepartmentId = emp.DepartmentId;
                 existedEmp.ModifiedDate = DateTime.Now;
                 existedEmp.ModifiedBy = user.Email;
-                
+
                 await empRepoBase.UpdateAsync(existedEmp);
             }
             else
@@ -79,7 +79,6 @@ public class EmployeeRepository : IEmployeeRepository
         var emp = await baseEmpRepo.GetSingleAsync(new QueryBuilder<Employee>()
             .WithPredicate(x => x.Id.Equals(userId.ToString()) && x.IsDelete == false)
             .Build());
-        if (emp == null) return null;
         return emp;
     }
 
