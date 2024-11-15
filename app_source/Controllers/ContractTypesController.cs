@@ -1,0 +1,42 @@
+using App.API.Filter;
+using App.BLL.Interfaces;
+using App.Entity.DTOs.ContractType;
+using FS.BaseAPI;
+using FS.Commons;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace App.API.Controllers
+{
+    // [Route("api/[controller]")]
+    [ApiController]
+    public class ContractTypesController : BaseAPIController
+    {
+        private readonly IContractTypeBizLogic _contractTypeBizLogic;
+
+        public ContractTypesController(IContractTypeBizLogic contractTypeBizLogic)
+        {
+            this._contractTypeBizLogic = contractTypeBizLogic;
+        }
+
+        [FSAuthorize]
+        [HttpPost]
+        [Route("create-update-contract-type")]
+        public async Task<IActionResult> CreateUpdateContractType(ContractTypeRequestDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                var response = await _contractTypeBizLogic.CreateUpdateContractType(dto, UserId);
+                if (!response.IsSuccess) return SaveError(response.Message);
+                return SaveSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+    }
+}

@@ -32,7 +32,7 @@ public class DependencyConfig
         services.AddTransient<IDepartmentRepository, DepartmentRepository>();
         services.AddTransient<IManagerRepository, ManagerRepository>();
         services.AddTransient<IFileUploadRepository, FileUploadRepository>();
-
+        services.AddTransient<IContractTypeRepository, ContractTypeRepository>();
 
 
         //App.BLL
@@ -42,6 +42,7 @@ public class DependencyConfig
         services.AddTransient<IManagerBizLogic, ManagerBizLogic>();
         services.AddTransient<IProfileBizLogic, ProfileBizLogic>();
         services.AddTransient<IFileUploadBizLogic, FileUploadBizLogic>();
+        services.AddTransient<IContractTypeBizLogic, ContractTypeBizLogic>();
 
 
         //AutoMapper

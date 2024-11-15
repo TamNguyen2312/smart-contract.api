@@ -2,7 +2,7 @@ using FS.Commons.Models;
 
 namespace App.Entity.Entities;
 
-public class FileUpload : CommonDataModel
+public partial class FileUpload : CommonDataModel
 {
     public long Id { get; set; }
     public long UserId { get; set; }
