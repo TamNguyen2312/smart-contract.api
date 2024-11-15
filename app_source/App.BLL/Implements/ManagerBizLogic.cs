@@ -37,6 +37,7 @@ public class ManagerBizLogic : IManagerBizLogic
     public async Task<ManagerViewDTO> GetManager(long userId)
     {
         var manager = await _managerRepository.GetManager(userId);
+        if (manager == null) return null;
         var managerView = await GetManagerView(manager);
         return managerView;
     }
@@ -44,6 +45,7 @@ public class ManagerBizLogic : IManagerBizLogic
     public async Task<ManagerViewDTO> GetManager(ApplicationUser user, List<string> userRoles)
     {
         var manager = await _managerRepository.GetManager(user.Id);
+        if (manager == null) return null;
         var managerView = await GetManagerView(manager, user, userRoles);
         return managerView;
     }
@@ -65,7 +67,7 @@ public class ManagerBizLogic : IManagerBizLogic
         return view;
     }
 
-    private async Task<ManagerViewDTO> GetManagerView(Manager manager,ApplicationUser user, List<string> userRoles)
+    private async Task<ManagerViewDTO> GetManagerView(Manager manager, ApplicationUser user, List<string> userRoles)
     {
         var department = await _departmentRepository.GetDepartment(manager.DepartmentId, user.Id);
         var view = new ManagerViewDTO(user, userRoles, manager, department);
