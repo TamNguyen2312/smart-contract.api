@@ -7,4 +7,5 @@ namespace App.BLL.Interfaces;
 public interface IContractTypeBizLogic
 {
     Task<BaseResponse> CreateUpdateContractType(ContractTypeRequestDTO dto, long userId);
+    Task<ContractTypeViewDTO> GetContractTypeById(long id);
 }

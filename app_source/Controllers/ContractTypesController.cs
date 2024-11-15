@@ -38,5 +38,24 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+
+
+        [FSAuthorize]
+        [HttpPost]
+        [Route("get-contract-type-by-id/{id}")]
+        public async Task<IActionResult> GetContractTypeById(long id)
+        {
+            try
+            {
+                var response = await _contractTypeBizLogic.GetContractTypeById(id);
+                if (response == null) return GetNotFound(Constants.GetNotFound);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
     }
 }
