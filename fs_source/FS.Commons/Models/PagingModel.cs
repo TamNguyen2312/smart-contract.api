@@ -7,8 +7,9 @@ public class PagingModel
     [Required(ErrorMessage = Constants.Required)]
     public int PageIndex { get; set; }
     [Required(ErrorMessage = Constants.Required)]
-    public int  PageSize { get; set; }
+    public int PageSize { get; set; }
     public string? Keyword { get; set; }
+    public OrderDate? OrderDate { get; set; }
     [OutputParam]
     public int TotalRecord { get; set; }
     public int Day { get; set; }
@@ -25,4 +26,22 @@ public class PagingModel
         PageIndex = 1,
         PageSize = 10
     };
+
+
+    #region Filter
+    public bool IsValidOrderDate()
+    {
+        if (OrderDate.HasValue)
+            return Enum.IsDefined(typeof(OrderDate), OrderDate);
+        return true;
+    }
+    #endregion
+}
+
+public enum OrderDate
+{
+    DescesdendingCreated = 1,
+    IncreasingCreated = 2,
+    DescendingModified = 3,
+    IncreasingModified = 4
 }

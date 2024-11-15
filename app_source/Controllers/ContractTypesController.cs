@@ -3,6 +3,7 @@ using App.BLL.Interfaces;
 using App.Entity.DTOs.ContractType;
 using FS.BaseAPI;
 using FS.Commons;
+using FS.Commons.Models.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,6 +50,24 @@ namespace App.API.Controllers
             {
                 var response = await _contractTypeBizLogic.GetContractTypeById(id);
                 if (response == null) return GetNotFound(Constants.GetNotFound);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+        [FSAuthorize]
+        [HttpPost]
+        [Route("get-all-contract-types")]
+        public async Task<IActionResult> GetAllContractTypes([FromBody] ContractTypeGetListDTO dto)
+        {
+            try
+            {
+                var data = await _contractTypeBizLogic.GetAllContractType(dto);
+                var response = new PagingDataModel<ContractTypeViewDTO>(data, dto);
                 return GetSuccess(response);
             }
             catch (Exception ex)
