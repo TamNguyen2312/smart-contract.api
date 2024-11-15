@@ -314,6 +314,56 @@ namespace App.API.Controllers
         }
 
 
+        [FSAuthorize]
+        [HttpGet()]
+        [Route("download-file/{fileName}")]
+        public async Task<IActionResult> DownloadFile(string fileName)
+        {
+            try
+            {
+                // Kiểm tra và làm sạch tên tệp để tránh tấn công Path Traversal
+                var safeFileName = Path.GetFileName(fileName);
+
+                string fileFolder = string.Empty;
+                if (IsAdmin)
+                    fileFolder = "admin";
+                else if (IsManager)
+                    fileFolder = "manager";
+                else if (IsEmployee)
+                    fileFolder = "employee";
+                else
+                    fileFolder = "others";
+
+                string subFolder = $"userId_{UserId}";
+
+                var storagePath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", fileFolder, subFolder);
+                var filePath = Path.Combine(storagePath, safeFileName);
+
+                var existedfileUpload = await _fileUploadBizLogic.GetFileUploadByFilePath(storagePath, safeFileName);
+                if (existedfileUpload == null)
+                {
+                    return GetNotFound("Tệp không tồn tại.");
+                }
+
+                if (existedfileUpload.UserId != UserId || !existedfileUpload.CreatedBy.Equals(UserEmail)) return GetError("Tệp không phải do người dùng đăng tải.");
+
+                if (!System.IO.File.Exists(filePath))
+                    return GetNotFound("Tệp không tồn tại.");
+
+                var contentType = GetContentType(filePath);
+
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+                return File(fileBytes, contentType, safeFileName);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+
         #region PRIVATE
 
         private bool IsValidFileExtension(string fileName, string[] allowedExtensions)
@@ -365,6 +415,23 @@ namespace App.API.Controllers
             // Return the URL path to the thumbnail
             var thumbnailUrlPath = Helpers.UrlCombine(thumbnailGuildStringPath);
             return thumbnailUrlPath;
+        }
+
+        private string GetContentType(string path)
+        {
+            var types = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                { ".pdf", "application/pdf" },
+                { ".doc", "application/msword" },
+                { ".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+                { ".xls", "application/vnd.ms-excel" },
+                { ".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+                { ".txt", "text/plain" },
+        // Thêm các loại tệp khác nếu cần
+            };
+
+            var extension = Path.GetExtension(path);
+            return types.ContainsKey(extension) ? types[extension] : "application/octet-stream";
         }
 
         #endregion

@@ -63,4 +63,15 @@ public class FileUploadRepository : IFileUploadRepository
             throw;
         }
     }
+
+    public async Task<FileUpload> GetFileUploadByFilePath(string storagePath, string safeFileName)
+    {
+        var baseRepo = _unitOfWork.GetRepository<FileUpload>();
+        var file = await baseRepo.GetSingleAsync(new QueryBuilder<FileUpload>()
+                                                .WithPredicate(x => x.FileName.Equals(safeFileName)
+                                                                && x.FilePath.Equals(storagePath)
+                                                                && x.IsDelete == false)
+                                                .Build());
+        return file;
+    }
 }

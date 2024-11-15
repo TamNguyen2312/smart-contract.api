@@ -136,7 +136,7 @@ public class BaseAPIController : ControllerBase
     /// <summary>
     /// Get the logged in user email.
     /// </summary>
-    protected string UserEmail => User.FindFirst(Constants.CLAIM_EMAIL)?.Value;
+    protected string UserEmail => User.FindFirst(ClaimTypes.Email)?.Value;
 
     /// <summary>
     /// Get the loged in UserId;
