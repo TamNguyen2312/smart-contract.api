@@ -837,26 +837,53 @@ public static class Helpers
         return descriptionAttributes.Length > 0 ? descriptionAttributes[0].Description : enumValue.ToString();
     }
 
+    /// <summary>
+    /// This is used to covert to an URL
+    /// </summary>
+    /// <param name="paths"></param>
+    /// <returns></returns>
     public static string UrlCombine(params string[] paths)
     {
-        return String.Join("/", paths.Where(x => !string.IsNullOrEmpty(x)));
+        var trimmedPaths = paths.Where(x => !string.IsNullOrEmpty(x))
+                                .Select(x => x.Trim('/'))
+                                .ToArray();
+        return "/" + string.Join("/", trimmedPaths);
     }
 
-    public static string UrlCombine(string path1, string path2 = null, string path3 = null, string path4 = null)
-    {
-        string[] paths = new string[] { path1, path2, path3, path4 };
-        return String.Join("/", paths.Where(x => !string.IsNullOrEmpty(x)));
-    }
 
-    public static string UrlCombine(string path1, params string[] paths)
-    {
-        paths = new[] { path1 }.Concat(paths).ToArray();
-        return String.Join("/", paths.Where(x => !string.IsNullOrEmpty(x)));
-    }
-
+    /// <summary>
+    /// This is used to convert to a directory
+    /// </summary>
+    /// <param name="paths"></param>
+    /// <returns></returns>
     public static string PathCombine(params string[] paths)
     {
-        return String.Join(@"\", paths.Where(x => !string.IsNullOrEmpty(x)));
+        return Path.Combine(paths.Where(x => !string.IsNullOrEmpty(x)).ToArray());
+    }
+
+    /// <summary>
+    /// This is used to convert a string to camelCase or PascalCase
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="isCamelCase"></param>
+    /// <returns></returns>
+    public static string ConvertToPascalOrCamelCase(string input, bool isCamelCase = false)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        string cleanedInput = Regex.Replace(input, @"[^a-zA-Z0-9]", " ");
+        cleanedInput = Regex.Replace(cleanedInput, @"^\d+", "");
+
+        var textInfo = CultureInfo.CurrentCulture.TextInfo;
+        string pascalCase = textInfo.ToTitleCase(cleanedInput.ToLower()).Replace(" ", "");
+
+        if (isCamelCase && pascalCase.Length > 0)
+        {
+            return char.ToLower(pascalCase[0]) + pascalCase.Substring(1);
+        }
+
+        return pascalCase;
     }
 
     public static Bitmap SVGToImage(string url, int width = 0, int height = 0, int density = 0)
