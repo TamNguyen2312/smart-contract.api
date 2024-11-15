@@ -1,5 +1,6 @@
 using System;
 using App.DAL.Interfaces;
+using App.Entity.DTOs.ContractType;
 using App.Entity.Entities;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
@@ -7,6 +8,7 @@ using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
+using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.Implements;
 
@@ -59,6 +61,39 @@ public class ContractTypeRepository : IContractTypeRepository
             await _unitOfWork.RollBackAsync();
             throw;
         }
+    }
+
+    public async Task<List<ContractType>> GetAllContractType(ContractTypeGetListDTO dto)
+    {
+        var baseRepo = _unitOfWork.GetRepository<ContractType>();
+        var loadedRecords = baseRepo.Get(new QueryBuilder<ContractType>()
+                                                           .WithPredicate(x => x.IsDelete == false)
+                                                           .Build());
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            loadedRecords = loadedRecords.Where(x => x.Name.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            switch ((int)dto.OrderDate.Value)
+            {
+                case 1:
+                    loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate);
+                    break;
+                case 2:
+                    loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate);
+                    break;
+                case 3:
+                    loadedRecords = loadedRecords.OrderByDescending(x => x.ModifiedDate ?? DateTime.MinValue);
+                    break;
+                case 4:
+                    loadedRecords = loadedRecords.OrderBy(x => x.ModifiedDate ?? DateTime.MaxValue);
+                    break;
+            }
+        }
+        dto.TotalRecord = await loadedRecords.CountAsync();
+        return await loadedRecords.ToPagedList<ContractType>(dto.PageIndex, dto.PageSize).ToListAsync();
     }
 
     public async Task<ContractType> GetContractTypeById(long id)

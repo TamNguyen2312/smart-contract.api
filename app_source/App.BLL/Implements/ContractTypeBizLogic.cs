@@ -2,6 +2,7 @@ using System;
 using App.BLL.Interfaces;
 using App.DAL.Interfaces;
 using App.Entity.DTOs.ContractType;
+using App.Entity.Entities;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 
@@ -25,6 +26,13 @@ public class ContractTypeBizLogic : IContractTypeBizLogic
         return response;
     }
 
+    public async Task<List<ContractTypeViewDTO>> GetAllContractType(ContractTypeGetListDTO dto)
+    {
+        var data = await _contractTypeRepository.GetAllContractType(dto);
+        var response = GetContractTypeViews(data);
+        return response;
+    }
+
     public async Task<ContractTypeViewDTO> GetContractTypeById(long id)
     {
         var data = await _contractTypeRepository.GetContractTypeById(id);
@@ -32,4 +40,23 @@ public class ContractTypeBizLogic : IContractTypeBizLogic
         var response = new ContractTypeViewDTO(data);
         return response;
     }
+
+    #region PRIVATE
+    /// <summary>
+    /// This is used to convert a collection of contract types to collection of contract type views
+    /// </summary>
+    /// <param name="contractTypes"></param>
+    /// <returns></returns>
+    private List<ContractTypeViewDTO> GetContractTypeViews(List<ContractType> contractTypes)
+    {
+        var response = new List<ContractTypeViewDTO>();
+        foreach (var type in contractTypes)
+        {
+            var view = new ContractTypeViewDTO(type);
+            response.Add(view);
+        }
+        return response;
+    }
+
+    #endregion
 }

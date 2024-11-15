@@ -68,16 +68,34 @@ public class CustomerRepository : ICustomerRepository
     public async Task<List<Customer>> GetAllCustomers(CustomerGetListDTO dto, ApplicationUser user)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
-        var loadedRecord = baseCustomerRepo.Get(new QueryBuilder<Customer>()
+        var loadedRecords = baseCustomerRepo.Get(new QueryBuilder<Customer>()
             .WithPredicate(x => x.IsDelete == false && x.CreatedBy.Equals(user.Email))
             .Build());
         if (!string.IsNullOrEmpty(dto.Keyword))
         {
-            loadedRecord = loadedRecord.Where(x =>
+            loadedRecords = loadedRecords.Where(x =>
                 x.PhoneNumber.Contains(dto.Keyword) || x.CompanyName.Contains(dto.Keyword));
         }
-        dto.TotalRecord = await loadedRecord.CountAsync();
-        var response = await loadedRecord.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        if (dto.OrderDate.HasValue)
+        {
+            switch ((int)dto.OrderDate.Value)
+            {
+                case 1:
+                    loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate);
+                    break;
+                case 2:
+                    loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate);
+                    break;
+                case 3:
+                    loadedRecords = loadedRecords.OrderByDescending(x => x.ModifiedDate ?? DateTime.MinValue);
+                    break;
+                case 4:
+                    loadedRecords = loadedRecords.OrderBy(x => x.ModifiedDate ?? DateTime.MaxValue);
+                    break;
+            }
+        }
+        dto.TotalRecord = await loadedRecords.CountAsync();
+        var response = await loadedRecords.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return response;
     }
 
