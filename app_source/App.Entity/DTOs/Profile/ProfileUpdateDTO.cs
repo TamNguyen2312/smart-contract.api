@@ -12,21 +12,21 @@ public class ProfileUpdateDto : IEntity<ApplicationUser>
 {
     [Required(ErrorMessage = Constants.Required)]
     public long Id { get; set; }
-    
+
     /// <summary>
     /// email
     /// </summary>
-    [Display(Name = "Email"), StringLength(255, ErrorMessage = Constants.MaxlengthError)]
-    [EmailAddress(ErrorMessage = Constants.EmailAddressFormatError)]
-    public string? Email { get; set; }
-    
+    // [Display(Name = "Email"), StringLength(255, ErrorMessage = Constants.MaxlengthError)]
+    // [EmailAddress(ErrorMessage = Constants.EmailAddressFormatError)]
+    // public string? Email { get; set; }
+
     /// <summary>
     /// PhoneNumber
     /// </summary>
     [StringLength(11, ErrorMessage = "Số điện thoại chỉ chứa tối đa 11 số!")]
     public string? PhoneNumber { get; set; }
-    
-    
+
+
     /// <summary>
     /// FirstName
     /// </summary>
@@ -40,8 +40,8 @@ public class ProfileUpdateDto : IEntity<ApplicationUser>
     [Required(ErrorMessage = Constants.Required)]
     [Display(Name = "Tên"), StringLength(255, ErrorMessage = Constants.MaxlengthError)]
     public string? LastName { get; set; }
-    
-    
+
+
     /// <summary>
     /// Giới tính user
     /// </summary>
@@ -54,13 +54,13 @@ public class ProfileUpdateDto : IEntity<ApplicationUser>
             return Enum.IsDefined(typeof(Gender), Gender);
         return true;
     }
-    
+
     /// <summary>
     /// ngày tháng năm sinh
     /// </summary>
     [DataType(DataType.Date)]
     public DateTime? DateOfBirth { get; set; }
-    
+
     public string CheckValidDateOfBirth()
     {
         if (DateOfBirth.HasValue)
@@ -81,7 +81,7 @@ public class ProfileUpdateDto : IEntity<ApplicationUser>
         return "VALID";
     }
     public string? IdentityCard { get; set; }
-    
+
     public string CheckValidIdentityCard()
     {
         if (!string.IsNullOrEmpty(IdentityCard))
@@ -91,10 +91,10 @@ public class ProfileUpdateDto : IEntity<ApplicationUser>
             {
                 return "Giấy tờ tuỳ thân không đúng định dạng.";
             }
-            return "VALID";            
+            return "VALID";
         }
 
-        return "VALID"; 
+        return "VALID";
     }
 
     public ApplicationUser GetEntity()
@@ -105,10 +105,10 @@ public class ProfileUpdateDto : IEntity<ApplicationUser>
             LastName = LastName,
             Gender = Gender.Value.ToString(),
             IdentityCard = IdentityCard,
-            Email = Email,
+            // Email = Email,
             PhoneNumber = PhoneNumber
         };
     }
-    
-    
+
+
 }
