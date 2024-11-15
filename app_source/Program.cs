@@ -19,6 +19,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace App.API
 {
@@ -88,11 +89,11 @@ namespace App.API
             {
                 options.AddPolicy("AdminRolePolicy", policy =>
                     policy.Requirements.Add(new RolesAuthorizationRequirement(new[] { "Admin" })));
-                
+
                 options.AddPolicy("ManagerRolePolicy", policy =>
-                    policy.Requirements.Add(new RolesAuthorizationRequirement(new[] {"Manager"})));
+                    policy.Requirements.Add(new RolesAuthorizationRequirement(new[] { "Manager" })));
             });
-            
+
             builder.Services.AddIdentity<ApplicationUser, Role>().AddEntityFrameworkStores<FSDbContext>()
                 .AddDefaultTokenProviders();
             builder.Services.Configure<IdentityOptions>(options =>
@@ -135,6 +136,7 @@ namespace App.API
             builder.Services.AddHttpClient();
 
             //<=====Add JWT Authentication=====>
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

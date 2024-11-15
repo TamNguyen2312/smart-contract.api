@@ -64,13 +64,11 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
     {
         var claims = new[] {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Email, user.Email ?? String.Empty),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
                 new Claim(Constants.USERNAME, user.FirstName + " " +  user.LastName ?? string.Empty),
-                new Claim(Constants.CLAIM_EMAIL, user.Email ?? String.Empty),
                 new Claim(Constants.POLICY_VERIFY_EMAIL, user.EmailConfirmed.ToString()),
-                new Claim(Constants.CLAIM_ID, user.Id.ToString()),
                 new Claim(Constants.AVATAR, user.Avatar ?? Constants.DefaultAvatar),
                 new Claim(Constants.IS_ADMIN, isAdmin.ToString()),
                 new Claim(Constants.IS_MANAGER, isManager.ToString()),

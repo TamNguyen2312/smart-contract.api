@@ -18,7 +18,7 @@ public class Constants
     public const string POLICY_VERIFY_EMAIL = "VerifyEmail";
     public const string CLAIM_USER_TYPE = "user_type";
     public const string CLAIM_FULL_NAME = "full_name";
-    public const string CLAIM_EMAIL = "email";
+    public const string CLAIM_EMAIL = "Email";
     public const string CLAIM_ID = "id";
     public const string IS_SELLER = "is_seller";
     public const string IS_ADMIN = "is_admin";

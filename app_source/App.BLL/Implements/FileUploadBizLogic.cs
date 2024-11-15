@@ -24,4 +24,12 @@ public class FileUploadBizLogic : IFileUploadBizLogic
         var response = await _fileUploadRepository.CreateUpdateFileUpload(entity, user);
         return response;
     }
+
+    public async Task<FileUploadViewDTO> GetFileUploadByFilePath(string storagePath, string safeFileName)
+    {
+        var data = await _fileUploadRepository.GetFileUploadByFilePath(storagePath, safeFileName);
+        if (data == null) return null;
+        var response = new FileUploadViewDTO(data);
+        return response;
+    }
 }
