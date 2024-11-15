@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="../../fs_source/FS.Utility/FS.Utility.csproj" />
       <ProjectReference Include="..\..\fs_source\FS.Commons\FS.Commons.csproj" />
     </ItemGroup>
 
