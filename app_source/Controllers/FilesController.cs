@@ -16,7 +16,8 @@ namespace App.API.Controllers
     {
         private readonly IHostEnvironment _hostingEnvironment;
         private readonly IConfiguration _configuration;
-        private readonly long _fileSizeLimit = 10 * 1024 * 1024;
+        private readonly long _imageFileSizeLimit = 10 * 1024 * 1024;
+        private readonly long _fileSizeLimit = 50 * 1024 * 1024;
 
         public FilesController(IHostEnvironment hostingEnvironment, IConfiguration configuration)
         {
@@ -44,19 +45,29 @@ namespace App.API.Controllers
                         return ModelInvalid();
                     }
 
-                    if (dto.File.Length > _fileSizeLimit)
+                    if (dto.File.Length > _imageFileSizeLimit)
                     {
-                        var megabyteSizeLimit = _fileSizeLimit / 1048576;
+                        var megabyteSizeLimit = _imageFileSizeLimit / 1048576;
                         ModelState.AddModelError("File", $"Kích thước ảnh vượt quá quy định cho phép ({megabyteSizeLimit:N1} MB).");
                         return ModelInvalid();
                     }
 
                     if (!ModelState.IsValid) return ModelInvalid();
 
-                    var guidFileName = dto.FileName;
-                    dto.ProccessFileName(isCamelCase: true);
 
-                    // Determine the role-based folder
+                    string safeFileName = string.Empty;
+                    if (!string.IsNullOrEmpty(dto.CustomFileName))
+                    {
+                        dto.ProccessFileName(isCamelCase: true);
+                        safeFileName = dto.CustomFileName;
+                    }
+                    else
+                    {
+                        safeFileName = Path.GetFileNameWithoutExtension(dto.File.FileName);
+                    }
+
+                    var guidFileName = $"{safeFileName}_{Guid.NewGuid()}{extension}";
+
                     string imageFolder = string.Empty;
                     if (IsAdmin)
                         imageFolder = "admin";
@@ -65,7 +76,7 @@ namespace App.API.Controllers
                     else if (IsEmployee)
                         imageFolder = "employee";
                     else
-                        imageFolder = "others"; // For users without specific roles
+                        imageFolder = "others";
 
                     string subFolder = @$"userId_{UserId}";
 
@@ -99,6 +110,100 @@ namespace App.API.Controllers
                         Success = true,
                         ImageUrl = imageUrl,
                         ThumbnailUrl = thumbUrl
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                // _logger.LogError("UploadStockPhoto: {0} {1}", ex.Message, ex.StackTrace);
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+
+        [FSAuthorize]
+        [HttpPost()]
+        [Route("upload-customize-file")]
+        public async Task<IActionResult> UploadCustomizeFile(FileUploadDTO dto)
+        {
+            try
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await dto.File.CopyToAsync(memoryStream);
+                    var extension = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
+
+                    var allowedExtensions = new string[] { ".doc", ".docx", ".xls", ".xlsx", ".pdf", ".txt" };
+                    var isValid = IsValidFileExtension(dto.File.FileName, allowedExtensions);
+                    if (!isValid)
+                    {
+                        ModelState.AddModelError("File", "Không hỗ trợ định dạng tệp hiện tại.");
+                        return ModelInvalid();
+                    }
+
+                    if (dto.File.Length > _fileSizeLimit)
+                    {
+                        var megabyteSizeLimit = _fileSizeLimit / 1048576;
+                        ModelState.AddModelError("File", $"Kích thước tệp vượt quá giới hạn cho phép ({megabyteSizeLimit:N1} MB).");
+                        return ModelInvalid();
+                    }
+
+                    if (!ModelState.IsValid) return ModelInvalid();
+
+                    string safeFileName = string.Empty;
+                    if (!string.IsNullOrEmpty(dto.CustomFileName))
+                    {
+                        dto.ProccessFileName(isCamelCase: true);
+                        safeFileName = dto.CustomFileName;
+                    }
+                    else
+                    {
+                        safeFileName = Path.GetFileNameWithoutExtension(dto.File.FileName);
+                    }
+
+                    var guidFileName = $"{safeFileName}_{Guid.NewGuid()}{extension}";
+
+                    // Xác định thư mục lưu trữ dựa trên vai trò
+                    string fileFolder = string.Empty;
+                    if (IsAdmin)
+                        fileFolder = "admin";
+                    else if (IsManager)
+                        fileFolder = "manager";
+                    else if (IsEmployee)
+                        fileFolder = "employee";
+                    else
+                        fileFolder = "others";
+
+                    string subFolder = @$"userId_{UserId}";
+
+                    var guildStringPath = new string[]
+                    {
+                        "files",
+                        fileFolder,
+                        subFolder,
+                        guidFileName
+                    };
+
+                    var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", Helpers.PathCombine(guildStringPath));
+
+                    string directory = Path.GetDirectoryName(path);
+                    if (!Directory.Exists(directory))
+                        Directory.CreateDirectory(directory);
+
+                    using (var fileStream = System.IO.File.Create(path))
+                    {
+                        await fileStream.WriteAsync(memoryStream.ToArray());
+                        fileStream.Close();
+                    }
+
+                    string cdnhost = _configuration.GetSection("AppSettings").GetValue<string>("CdnUrl");
+                    string fileUrl = $"{cdnhost}{Helpers.UrlCombine(guildStringPath)}";
+
+                    return SaveSuccess(new
+                    {
+                        Success = true,
+                        FileUrl = fileUrl
                     });
                 }
             }

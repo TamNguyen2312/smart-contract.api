@@ -12,13 +12,13 @@ public class FileUploadDTO
     public IFormFile File { get; set; } = null!;
 
     [StringLength(20, ErrorMessage = "Tên file không được vượt quá 20 kí tự")]
-    public string? FileName { get; set; }
+    public string? CustomFileName { get; set; }
 
     public void ProccessFileName(bool isCamelCase = false)
     {
-        if (!string.IsNullOrEmpty(FileName))
+        if (!string.IsNullOrEmpty(CustomFileName))
         {
-            FileName = Helpers.ConvertToPascalOrCamelCase(FileName, isCamelCase);
+            CustomFileName = Helpers.ConvertToPascalOrCamelCase(CustomFileName, isCamelCase);
         }
     }
 }
