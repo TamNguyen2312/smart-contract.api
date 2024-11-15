@@ -25,12 +25,13 @@ public class DependencyConfig
         services.AddTransient<IIdentityRepository, IdentityRepository>();
         services.AddTransient(typeof(IGenericRepository<,>), typeof(GenericeRepository<,>));
         services.AddScoped(typeof(IFSUnitOfWork<>), typeof(FSUnitOfWork<>));
-        
+
         //App.DAL
         services.AddTransient<IEmployeeRepository, EmployeeRepository>();
         services.AddTransient<ICustomerRepository, CustomerRepository>();
         services.AddTransient<IDepartmentRepository, DepartmentRepository>();
         services.AddTransient<IManagerRepository, ManagerRepository>();
+        services.AddTransient<IFileUploadRepository, FileUploadRepository>();
 
 
 
@@ -40,11 +41,12 @@ public class DependencyConfig
         services.AddTransient<IDepartmentBizLogic, DepartmentBizLogic>();
         services.AddTransient<IManagerBizLogic, ManagerBizLogic>();
         services.AddTransient<IProfileBizLogic, ProfileBizLogic>();
-        
-        
+        services.AddTransient<IFileUploadBizLogic, FileUploadBizLogic>();
+
+
         //AutoMapper
         services.AddAutoMapper(typeof(MapperProfile));
-        
+
         //Authorization
         services.AddSingleton<IAuthorizationPolicyProvider, FSAuthorizationPolicyProvider>();
         services.AddSingleton<IAuthorizationHandler, FSRolesHandler>();

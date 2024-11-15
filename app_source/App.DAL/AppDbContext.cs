@@ -7,7 +7,7 @@ public partial class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
-        
+
     }
 
     #region AppDbSet
@@ -16,6 +16,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Employee> Employees { get; set; }
     public virtual DbSet<Manager> Managers { get; set; }
     public virtual DbSet<Department> Departments { get; set; }
+    public virtual DbSet<FileUpload> FileUploads { get; set; }
 
     #endregion
 
@@ -23,13 +24,19 @@ public partial class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("app");
-        
+
+        modelBuilder.Entity<FileUpload>(c =>
+        {
+            c.ToTable("App_FileUploads");
+            c.HasKey(f => f.Id);
+        });
+
         modelBuilder.Entity<Department>(c =>
         {
             c.ToTable("App_Departments");
             c.HasKey(m => m.Id);
         });
-        
+
         modelBuilder.Entity<Manager>(c =>
         {
             c.ToTable("App_Managers");

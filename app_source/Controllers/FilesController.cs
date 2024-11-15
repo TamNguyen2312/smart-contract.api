@@ -1,4 +1,5 @@
 using App.API.Filter;
+using App.BLL.Interfaces;
 using App.Entity.DTOs.File;
 using FS.BaseAPI;
 using FS.Commons;
@@ -16,13 +17,15 @@ namespace App.API.Controllers
     {
         private readonly IHostEnvironment _hostingEnvironment;
         private readonly IConfiguration _configuration;
+        private readonly IFileUploadBizLogic _fileUploadBizLogic;
         private readonly long _imageFileSizeLimit = 10 * 1024 * 1024;
         private readonly long _fileSizeLimit = 50 * 1024 * 1024;
 
-        public FilesController(IHostEnvironment hostingEnvironment, IConfiguration configuration)
+        public FilesController(IHostEnvironment hostingEnvironment, IConfiguration configuration, IFileUploadBizLogic fileUploadBizLogic)
         {
             _hostingEnvironment = hostingEnvironment;
             _configuration = configuration;
+            this._fileUploadBizLogic = fileUploadBizLogic;
         }
 
         [FSAuthorize]
@@ -210,6 +213,101 @@ namespace App.API.Controllers
             catch (Exception ex)
             {
                 // _logger.LogError("UploadStockPhoto: {0} {1}", ex.Message, ex.StackTrace);
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+
+        [FSAuthorize]
+        [HttpPost()]
+        [Route("upload-file")]
+        public async Task<IActionResult> UploadFile(FileUploadDTO dto)
+        {
+            try
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await dto.File.CopyToAsync(memoryStream);
+                    var extension = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
+
+                    var allowedExtensions = new string[] { ".doc", ".docx", ".xls", ".xlsx", ".pdf", ".txt" };
+                    var isValid = IsValidFileExtension(dto.File.FileName, allowedExtensions);
+                    if (!isValid)
+                    {
+                        ModelState.AddModelError("File", "Không hỗ trợ định dạng tệp hiện tại.");
+                        return ModelInvalid();
+                    }
+
+                    if (dto.File.Length > _fileSizeLimit)
+                    {
+                        var megabyteSizeLimit = _fileSizeLimit / 1048576;
+                        ModelState.AddModelError("File", $"Kích thước tệp vượt quá giới hạn cho phép ({megabyteSizeLimit:N1} MB).");
+                        return ModelInvalid();
+                    }
+
+                    if (!ModelState.IsValid) return ModelInvalid();
+
+                    string safeFileName = string.Empty;
+                    if (!string.IsNullOrEmpty(dto.CustomFileName))
+                    {
+                        dto.ProccessFileName(isCamelCase: true);
+                        safeFileName = dto.CustomFileName;
+                    }
+                    else
+                    {
+                        safeFileName = Path.GetFileNameWithoutExtension(dto.File.FileName);
+                    }
+
+                    var guidFileName = $"{safeFileName}_{Guid.NewGuid()}{extension}";
+
+                    // Xác định thư mục lưu trữ dựa trên vai trò
+                    string fileFolder = string.Empty;
+                    if (IsAdmin)
+                        fileFolder = "admin";
+                    else if (IsManager)
+                        fileFolder = "manager";
+                    else if (IsEmployee)
+                        fileFolder = "employee";
+                    else
+                        fileFolder = "others";
+
+                    string subFolder = $"userId_{UserId}";
+
+                    // Xác định đường dẫn lưu trữ ngoài wwwroot
+                    var storagePath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", fileFolder, subFolder);
+                    if (!Directory.Exists(storagePath))
+                        Directory.CreateDirectory(storagePath);
+
+                    var filePath = Path.Combine(storagePath, guidFileName);
+
+                    using (var fileStream = System.IO.File.Create(filePath))
+                    {
+                        await fileStream.WriteAsync(memoryStream.ToArray());
+                        fileStream.Close();
+                    }
+
+                    // Lưu thông tin tệp vào cơ sở dữ liệu nếu cần
+                    var fileUploadRequest = new FileUploadRequestDTO
+                    {
+                        FileName = guidFileName,
+                        FilePath = storagePath,
+                        UserId = UserId
+                    };
+
+                    var saveFileToDb = await _fileUploadBizLogic.CreateUpdateFileUpload(fileUploadRequest, UserId);
+                    if (!saveFileToDb.IsSuccess) return SaveError(saveFileToDb.Message);
+
+                    return SaveSuccess(new
+                    {
+                        Success = true,
+                        FileName = guidFileName
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi nếu cần
                 ConsoleLog.WriteExceptionToConsoleLog(ex);
                 return Error(Constants.SomeThingWentWrong);
             }
