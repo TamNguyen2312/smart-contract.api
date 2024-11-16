@@ -104,4 +104,13 @@ public class ContractTypeRepository : IContractTypeRepository
                                                            .Build());
         return existed;
     }
+
+    public async Task<List<ContractType>> GetDropdownList()
+    {
+        var baseRepo = _unitOfWork.GetRepository<ContractType>();
+        var loadedRecords = await baseRepo.GetAllAsync(new QueryBuilder<ContractType>()
+                                                           .WithPredicate(x => x.IsDelete == false)
+                                                           .Build());
+        return loadedRecords.ToList();
+    }
 }
