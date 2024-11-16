@@ -41,6 +41,13 @@ public class ContractTypeBizLogic : IContractTypeBizLogic
         return response;
     }
 
+    public async Task<List<ContractTypeViewDTO>> GetDropdownList()
+    {
+        var data = await _contractTypeRepository.GetDropdownList();
+        var response = GetContractTypeViews(data);
+        return response;
+    }
+
     #region PRIVATE
     /// <summary>
     /// This is used to convert a collection of contract types to collection of contract type views

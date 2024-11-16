@@ -42,7 +42,7 @@ namespace App.API.Controllers
 
 
         [FSAuthorize]
-        [HttpPost]
+        [HttpGet]
         [Route("get-contract-type-by-id/{id}")]
         public async Task<IActionResult> GetContractTypeById(long id)
         {
@@ -69,6 +69,23 @@ namespace App.API.Controllers
                 var data = await _contractTypeBizLogic.GetAllContractType(dto);
                 var response = new PagingDataModel<ContractTypeViewDTO>(data, dto);
                 return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+        [FSAuthorize]
+        [HttpGet]
+        [Route("get-dropdown-list-contract-types")]
+        public async Task<IActionResult> GetDropdownListContractTypes()
+        {
+            try
+            {
+                var data = await _contractTypeBizLogic.GetDropdownList();
+                return GetSuccess(data);
             }
             catch (Exception ex)
             {
