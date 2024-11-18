@@ -9,7 +9,6 @@ using FS.BLL.Services.Interfaces;
 using FS.DAL.Implements;
 using FS.DAL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.CodeAnalysis.Operations;
 
 namespace App.API.Configs;
 
@@ -33,6 +32,7 @@ public class DependencyConfig
         services.AddTransient<IManagerRepository, ManagerRepository>();
         services.AddTransient<IFileUploadRepository, FileUploadRepository>();
         services.AddTransient<IContractTypeRepository, ContractTypeRepository>();
+        services.AddTransient<IContractRepository, ContractRepository>();
 
 
         //App.BLL
@@ -43,6 +43,7 @@ public class DependencyConfig
         services.AddTransient<IProfileBizLogic, ProfileBizLogic>();
         services.AddTransient<IFileUploadBizLogic, FileUploadBizLogic>();
         services.AddTransient<IContractTypeBizLogic, ContractTypeBizLogic>();
+        services.AddTransient<IContractBizLogic, ContractBizLogic>();
 
 
         //AutoMapper
