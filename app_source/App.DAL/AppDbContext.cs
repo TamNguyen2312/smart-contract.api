@@ -18,6 +18,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Department> Departments { get; set; }
     public virtual DbSet<FileUpload> FileUploads { get; set; }
     public virtual DbSet<ContractType> ContractTypes { get; set; }
+    public virtual DbSet<Contract> Contracts { get; set; }
 
     #endregion
 
@@ -25,6 +26,12 @@ public partial class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("app");
+
+        modelBuilder.Entity<Contract>(c =>
+        {
+            c.ToTable("App_Contracts");
+            c.HasKey(c => c.Id);
+        });
 
         modelBuilder.Entity<ContractType>(c =>
         {

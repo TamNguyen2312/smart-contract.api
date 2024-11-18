@@ -1,6 +1,4 @@
-using System;
 using System.Text;
-using System.Threading.Tasks;
 using App.API.Configs;
 using App.DAL;
 using FS.BaseModels.IdentityModels;
@@ -14,12 +12,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore.Migrations;
 using FS.Commons;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
+using Serilog;
 
 namespace App.API
 {
@@ -28,7 +23,14 @@ namespace App.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
+            //<===Add SeriLog===>
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .CreateLogger();
 
+            builder.Host.UseSerilog();
+            
             // Add services to the container.
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -206,7 +208,8 @@ namespace App.API
                 });
             }
 
-
+            app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
+            app.UseSerilogRequestLogging();
             app.UseCors("corspolicy");
             app.UseHttpsRedirection();
             app.UseAuthentication();
