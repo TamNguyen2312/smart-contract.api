@@ -149,7 +149,7 @@ namespace App.API.Controllers
             }
         }
         
-        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [FSAuthorize(Policy = "AdminManagerPolicy")]
         [HttpPost]
         [Route("get-all-employee-profiles")]
         public async Task<IActionResult> GetAllEmployeeProfiles([FromBody] AccountGetListDTO dto)
@@ -165,6 +165,12 @@ namespace App.API.Controllers
                 {
                     ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
                     return ModelInvalid();
+                }
+
+                if (IsManager)
+                {
+                    var managerView = await _managerBizLogic.GetManager(UserId);
+                    dto.DepartmentId = managerView.DepartmentId;
                 }
 
                 var data = await _employeeBizLogic.GetAllEmployee(dto);
@@ -183,7 +189,7 @@ namespace App.API.Controllers
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [FSAuthorize(Policy = "AdminManagerPolicy")]
         [HttpGet]
         [Route("get-profile-by-userId/{userId}")]
         public async Task<IActionResult> GetProfileByUserId(long userId)
@@ -197,16 +203,28 @@ namespace App.API.Controllers
                 if (user == null) return GetNotFound(Constants.GetNotFound);
 
                 var userRoles = await _identityBizLogic.GetRolesAsync(user.Id);
-                if (userRoles.Contains(SystemRoleConstants.MANAGER))
+                
+                if (IsManager)
                 {
-                    var managerView = await _managerBizLogic.GetManager(user, userRoles.ToList());
-                    return GetSuccess(managerView);
+                    if (!userRoles.Contains(SystemRoleConstants.EMPLOYEE)) return Forbid();
+                    var loggedManager = await _managerBizLogic.GetManager(UserId);
+                    var empViewForManager = await _employeeBizLogic.GetEmployee(user, userRoles.ToList(), loggedManager);
+                    if (empViewForManager == null) return GetNotFound(Constants.GetNotFound);
+                    return GetSuccess(empViewForManager);
                 }
                 
                 if (userRoles.Contains(SystemRoleConstants.EMPLOYEE))
                 {
                     var empView = await _employeeBizLogic.GetEmployee(user, userRoles.ToList());
+                    if (empView == null) return GetNotFound(Constants.GetNotFound);
                     return GetSuccess(empView);
+                }
+                
+                if (userRoles.Contains(SystemRoleConstants.MANAGER))
+                {
+                    var managerView = await _managerBizLogic.GetManager(user, userRoles.ToList());
+                    if (managerView == null) return GetNotFound(Constants.GetNotFound);
+                    return GetSuccess(managerView);
                 }
 
                 var userView = new UserViewDTO(user, userRoles.ToList());
