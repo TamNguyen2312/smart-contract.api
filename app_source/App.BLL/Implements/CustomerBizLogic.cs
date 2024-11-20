@@ -23,6 +23,7 @@ public class CustomerBizLogic : ICustomerBizLogic
     {
         var entity = dto.GetEntity();
         var user = await _identityRepository.GetByIdAsync(userId);
+        var userRoles = await _identityRepository.GetRolesAsync(userId);
         var response = await _customerRepository.CreateUpdateCustomer(entity, user);
         return response;
     }

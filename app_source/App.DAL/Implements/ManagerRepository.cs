@@ -1,10 +1,18 @@
 using App.DAL.Interfaces;
+using App.Entity.DTOs.Employee;
+using App.Entity.DTOs.Manager;
 using App.Entity.Entities;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
+using FS.Commons.Extensions;
 using FS.Commons.Models;
+using FS.Commons.Models.DTOs;
+using FS.DAL.Implements;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
+using FS.IdentityFramework;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace App.DAL.Implements;
@@ -13,11 +21,15 @@ public class ManagerRepository : IManagerRepository
 {
     private readonly IFSUnitOfWork<AppDbContext> _unitOfWork;
     private readonly ILogger<ManagerRepository> _logger;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public ManagerRepository(IFSUnitOfWork<AppDbContext> unitOfWork, ILogger<ManagerRepository> logger)
+    public ManagerRepository(IFSUnitOfWork<AppDbContext> unitOfWork,
+                            ILogger<ManagerRepository> logger,
+                            UserManager<ApplicationUser> userManager)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _userManager = userManager;
     }
 
 
@@ -28,7 +40,7 @@ public class ManagerRepository : IManagerRepository
             var repoBase = _unitOfWork.GetRepository<Manager>();
             await _unitOfWork.BeginTransactionAsync();
             var any = await repoBase.AnyAsync(new QueryBuilder<Manager>()
-                .WithPredicate(x =>  x.Id.Equals(manager.Id) && x.DepartmentId == manager.DepartmentId)
+                .WithPredicate(x => x.DepartmentId == manager.DepartmentId)
                 .Build());
             if (any)
             {
@@ -40,11 +52,11 @@ public class ManagerRepository : IManagerRepository
                     .Build());
                 if (existedManager == null)
                     return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy quản lý." };
-                if (!existedManager.CreatedBy.Equals($"{user.FirstName} {user.LastName}"))
+                if (!existedManager.CreatedBy.Equals(user.UserName))
                     return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
                 existedManager.DepartmentId = manager.DepartmentId;
                 existedManager.ModifiedDate = DateTime.Now;
-                existedManager.ModifiedBy = $"{user.FirstName} {user.LastName}";
+                existedManager.ModifiedBy = user.UserName;
 
                 await repoBase.UpdateAsync(existedManager);
             }
@@ -55,7 +67,7 @@ public class ManagerRepository : IManagerRepository
                     Id = manager.Id,
                     DepartmentId = manager.DepartmentId,
                     CreatedDate = DateTime.Now,
-                    CreatedBy = $"{user.FirstName} {user.LastName}"
+                    CreatedBy = user.UserName
                 };
                 await repoBase.CreateAsync(newManager);
             }
@@ -79,6 +91,54 @@ public class ManagerRepository : IManagerRepository
             .WithPredicate(x => x.Id.Equals(userId.ToString()) && x.IsDelete == false)
             .Build());
         return manager;
+    }
+
+    public async Task<List<UserManagerDTO>> GetAllManager(AccountGetListDTO dto)
+    {
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var managerQuery = baseManagerRepo.Get(new QueryBuilder<Manager>()
+            .WithPredicate(x => x.IsDelete == false)
+            .Build());
+
+        if (dto.DepartmentId.HasValue)
+        {
+            managerQuery = managerQuery.Where(x => x.DepartmentId == dto.DepartmentId.Value);
+        }
+        
+        managerQuery = managerQuery.ApplyOrderDate(dto.OrderDate);
+        
+        var managerIds = await managerQuery.Select(manager => manager.Id).ToListAsync();
+        
+        var userQuery = _userManager.Users.Where(user => managerIds.Contains(user.Id.ToString()));
+
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            userQuery = userQuery.Where(x => x.FirstName.Contains(dto.Keyword)
+                                             || x.LastName.Contains(dto.Keyword)
+                                             || x.Email.Contains(dto.Keyword)
+                                             || x.UserName.Contains(dto.Keyword));
+        }
+        
+        dto.TotalRecord = await userQuery.CountAsync();
+        
+        var pagedUsers = await userQuery.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        
+        var userIds = pagedUsers.Select(u => u.Id).ToList();
+        
+        var managers = await managerQuery
+            .Where(emp => userIds.Contains(Convert.ToInt64(emp.Id)))
+            .ToListAsync();
+        
+        var result = pagedUsers.Join(managers, 
+                user => user.Id.ToString(), 
+                manager => manager.Id, 
+                (user, manager) => new UserManagerDTO
+                {
+                    User = user,
+                    Manager = manager
+                })
+            .ToList();
+        return result;
     }
 
     /// <summary>

@@ -16,4 +16,5 @@ public interface IGenericRepository<T, TContext> where T : class where TContext 
     public Task<IEnumerable<T>> GetAllAsync(QueryOptions<T> options);
     public Task<T> GetSingleAsync(QueryOptions<T> options);
     public Task<bool> AnyAsync(QueryOptions<T> options);
+    public DbSet<T> GetDbSet();
 }

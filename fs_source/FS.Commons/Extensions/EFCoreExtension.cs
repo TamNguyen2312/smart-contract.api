@@ -1,4 +1,5 @@
 using System.Reflection;
+using FS.Commons.Models;
 
 namespace FS.Commons.Extensions;
 
@@ -7,6 +8,30 @@ public static class EfCoreExtension
     public static IQueryable<T> ToPagedList<T>(this IQueryable<T> list, int pageNumber, int pageSize)
     {
         return list.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+    }
+
+    public static IQueryable<T> ApplyOrderDate<T>(this IQueryable<T> source, OrderDate? orderOption)
+        where T : CommonDataModel
+    {
+        if (orderOption.HasValue)
+        {
+            switch (orderOption.Value)
+            {
+                case OrderDate.DescesdendingCreated:
+                    source = source.OrderByDescending(x => x.CreatedDate);
+                    break;
+                case OrderDate.IncreasingCreated:
+                    source = source.OrderBy(x => x.CreatedDate);
+                    break;
+                case OrderDate.DescendingModified:
+                    source = source.OrderByDescending(x => x.ModifiedDate ?? DateTime.MinValue);
+                    break;
+                case OrderDate.IncreasingModified:
+                    source = source.OrderBy(x => x.ModifiedDate ?? DateTime.MaxValue);
+                    break;
+            }
+        }
+        return source;
     }
 
     public static IEnumerable<T> ToPagedList<T>(this IEnumerable<T> list, int pageNumber, int pageSize)

@@ -34,6 +34,11 @@ public class ManagerBizLogic : IManagerBizLogic
         return response;
     }
 
+    /// <summary>
+    /// This is used to get personal manager profile
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
     public async Task<ManagerViewDTO> GetManager(long userId)
     {
         var manager = await _managerRepository.GetManager(userId);
@@ -56,6 +61,13 @@ public class ManagerBizLogic : IManagerBizLogic
         if (manager == null) return null;
         var managerView = await GetManagerView(manager);
         return managerView;
+    }
+
+    public async Task<List<ManagerViewDTO>> GetAllManager(AccountGetListDTO dto)
+    {
+        var data = await _managerRepository.GetAllManager(dto);
+        var response = await GetManagerViews(data);
+        return response;
     }
 
     #region CONVERT
@@ -82,5 +94,25 @@ public class ManagerBizLogic : IManagerBizLogic
         return view;
     }
 
+    private async Task<ManagerViewDTO> GetManagerView(Manager manager, ApplicationUser user)
+    {
+        var department = await _departmentRepository.GetDepartment(manager.DepartmentId, user.Id);
+        var userRoles = await _identityRepository.GetRolesAsync(user.Id);
+        var view = new ManagerViewDTO(user, userRoles.ToList(), manager, department);
+        return view;
+    }
+
+    private async Task<List<ManagerViewDTO>> GetManagerViews(List<UserManagerDTO> userManagers)
+    {
+        var response = new List<ManagerViewDTO>();
+        foreach (var item in userManagers)
+        {
+            var managerView = await GetManagerView(item.Manager, item.User);
+            response.Add(managerView);
+        }
+
+        return response;
+    }
+    
     #endregion
 }

@@ -5,6 +5,7 @@ using App.Entity.Entities;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
 using FS.Commons.Models;
+using FS.Commons.Models.DTOs;
 using FS.DAL.Interfaces;
 
 namespace App.BLL.Implements;
@@ -32,6 +33,12 @@ public class EmployeeBizLogic : IEmployeeBizLogic
         return response;
     }
 
+    
+    /// <summary>
+    /// This is used to get personal emp profile
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
     public async Task<EmployeeViewDTO> GetEmployee(long userId)
     {
         var emp = await _repository.GetEmployee(userId);
@@ -46,6 +53,13 @@ public class EmployeeBizLogic : IEmployeeBizLogic
         if (emp == null) return null;
         var empView = await GetEmpView(emp, user, userRoles);
         return empView;
+    }
+
+    public async Task<List<EmployeeViewDTO>> GetAllEmployee(AccountGetListDTO dto)
+    {
+        var data = await _repository.GetAllEmployee(dto);
+        var response = await GetEmpViews(data);
+        return response;
     }
 
     #region PRIVATE
@@ -65,6 +79,26 @@ public class EmployeeBizLogic : IEmployeeBizLogic
         var department = await _departmentRepository.GetDepartment(emp.DepartmentId, user.Id);
         var empView = new EmployeeViewDTO(user, userRoles.ToList(), emp, department);
         return empView;
+    }
+    
+    private async Task<EmployeeViewDTO> GetEmpView(Employee emp, ApplicationUser user)
+    {
+        var department = await _departmentRepository.GetDepartment(emp.DepartmentId, user.Id);
+        var userRoles = await _identityRepository.GetRolesAsync(user.Id);
+        var empView = new EmployeeViewDTO(user, userRoles.ToList(), emp, department);
+        return empView;
+    }
+
+    private async Task<List<EmployeeViewDTO>> GetEmpViews(List<UserEmpDTO> userEmps)
+    {
+        var response = new List<EmployeeViewDTO>();
+        foreach (var item in userEmps)
+        {
+            var empView = await GetEmpView(item.Employee, item.User);
+            response.Add(empView);
+        }
+
+        return response;
     }
 
     #endregion

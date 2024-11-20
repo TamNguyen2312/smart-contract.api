@@ -46,12 +46,15 @@ public class ProfileUpdateDto : IEntity<ApplicationUser>
     /// Giới tính user
     /// </summary>
     [Display(Name = "Giới tính")]
-    public Gender? Gender { get; set; }
+    public string? Gender { get; set; }
 
     public bool IsValidGender()
     {
-        if (Gender.HasValue)
+        if (!string.IsNullOrEmpty(Gender))
+        {
             return Enum.IsDefined(typeof(Gender), Gender);
+        }
+
         return true;
     }
 
@@ -103,7 +106,7 @@ public class ProfileUpdateDto : IEntity<ApplicationUser>
         {
             FirstName = FirstName,
             LastName = LastName,
-            Gender = Gender.Value.ToString(),
+            Gender = Gender,
             IdentityCard = IdentityCard,
             // Email = Email,
             PhoneNumber = PhoneNumber
