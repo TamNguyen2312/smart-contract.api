@@ -44,6 +44,7 @@ public class Constants
     public const string UserNotSame = "Người dùng không giống nhau.";
     public const string DefaultAvatar = "https://static.vecteezy.com/system/resources/previews/009/734/564/non_2x/default-avatar-profile-icon-of-social-media-user-vector.jpg";
     public const string EXPIRED_SESSION = "Phiên đăng nhập đã hết hạn.";
+    public const string FULL_NAME = "fullName";
     #endregion
 
     #region Password

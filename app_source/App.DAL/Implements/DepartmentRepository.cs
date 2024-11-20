@@ -33,11 +33,11 @@ public class DepartmentRepository : IDepartmentRepository
                 .Build());
             
             if (existed == null) return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy phòng ban." };
-            if (!existed.CreatedBy.Equals(user.Id.ToString()))
+            if (!existed.CreatedBy.Equals(user.FirstName + user.LastName))
                 return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
             
             department.UpdateNonDefaultProperties(existed);
-            existed.ModifiedBy = user.Email;
+            existed.ModifiedBy = user.FirstName + user.LastName;
             existed.ModifiedDate = DateTime.Now;
 
             await baseRepo.UpdateAsync(existed);
@@ -48,8 +48,10 @@ public class DepartmentRepository : IDepartmentRepository
             {
                 Name = department.Name,
                 Description = department.Description,
+                EmployeeQuantity = department.EmployeeQuantity,
+                MornitorQuantity = 0,
                 CreatedDate = DateTime.Now,
-                CreatedBy = user.Email,
+                CreatedBy = user.FirstName + user.LastName,
                 IsDelete = false,
                 ModifiedDate = default,
                 ModifiedBy = default

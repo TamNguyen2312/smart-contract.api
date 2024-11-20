@@ -41,11 +41,11 @@ public class EmployeeRepository : IEmployeeRepository
                                         && x.IsDelete == false)
                     .Build());
                 if (existedEmp == null) return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy nhân viên." };
-                if (!existedEmp.CreatedBy.Equals(user.Id.ToString()))
+                if (!existedEmp.CreatedBy.Equals($"{user.FirstName} {user.LastName}"))
                     return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
                 existedEmp.DepartmentId = emp.DepartmentId;
                 existedEmp.ModifiedDate = DateTime.Now;
-                existedEmp.ModifiedBy = user.Email;
+                existedEmp.ModifiedBy = $"{user.FirstName} {user.LastName}";
 
                 await empRepoBase.UpdateAsync(existedEmp);
             }
@@ -56,7 +56,7 @@ public class EmployeeRepository : IEmployeeRepository
                     Id = emp.Id,
                     DepartmentId = emp.DepartmentId,
                     CreatedDate = DateTime.Now,
-                    CreatedBy = user.Email
+                    CreatedBy = $"{user.FirstName} {user.LastName}"
                 };
                 await empRepoBase.CreateAsync(empCreate);
             }

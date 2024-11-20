@@ -1,10 +1,7 @@
-using System;
 using System.Net;
-using System.Reflection.Metadata;
-using System.Threading.Tasks;
 using System.Web;
-using App.API.Filter;
 using App.BLL.Interfaces;
+using App.Entity.DTOs.Department;
 using App.Entity.DTOs.Employee;
 using App.Entity.DTOs.Manager;
 using FS.BaseAPI;
@@ -19,7 +16,6 @@ using FS.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 
 namespace App.API.Controllers
 {
@@ -34,12 +30,15 @@ namespace App.API.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmployeeBizLogic _employeeBizLogic;
         private readonly IManagerBizLogic _managerBizLogic;
+        private readonly IDepartmentBizLogic _departmentBizLogic;
+        private readonly ILogger<AccountsController> _logger;
 
         public AccountsController(IIdentityBizLogic identityBizLogic, IConfiguration configuration,
                                     IEmailService emailService, SignInManager<ApplicationUser> signInManager,
                                     UserManager<ApplicationUser> userManager,
                                     IEmployeeBizLogic employeeBizLogic,
-                                    IManagerBizLogic managerBizLogic)
+                                    IManagerBizLogic managerBizLogic,
+                                    IDepartmentBizLogic departmentBizLogic, ILogger<AccountsController> logger)
         {
             this._identityBizLogic = identityBizLogic;
             this._configuration = configuration;
@@ -48,6 +47,8 @@ namespace App.API.Controllers
             this._userManager = userManager;
             _employeeBizLogic = employeeBizLogic;
             _managerBizLogic = managerBizLogic;
+            _departmentBizLogic = departmentBizLogic;
+            _logger = logger;
         }
 
         #region COMMON
@@ -98,16 +99,39 @@ namespace App.API.Controllers
                     ModelState.AddModelError("IdentityCard", dto.CheckValidIdentityCard());
                 }
 
-                var userEmail = await _identityBizLogic.GetByEmailAsync(dto.Email);
+                var userEmail = await _identityBizLogic.GetByEmailOrUserNameAsync(dto.Email);
                 if (userEmail != null)
                 {
                     ModelState.AddModelError("Email", "Email đã tồn tại!");
                     return ModelInvalid();
                 }
+                
+                var userName = await _identityBizLogic.GetByEmailOrUserNameAsync(dto.Email);
+                if (userName != null)
+                {
+                    ModelState.AddModelError("UserName", "UserName đã tồn tại!");
+                    return ModelInvalid();
+                }
+
+                var departmentView = await _departmentBizLogic.GetDepartment(dto.DepartmentId, UserId);
+                if (departmentView.MornitorQuantity >= departmentView.EmployeeQuantity)
+                {
+                    ModelState.AddModelError("DepartmentId", "Phòng ban đã đủ nhân viên!");
+                    return ModelInvalid();
+                }
+
+                var deparmentRequest = new DepartmentRequestDto
+                {
+                    Id = departmentView.Id,
+                    Name = departmentView.Name,
+                    Description = departmentView.Description,
+                    EmployeeQuantity = departmentView.EmployeeQuantity,
+                    MornitorQuantity = departmentView.MornitorQuantity
+                };
 
                 var user = new ApplicationUser
                 {
-                    UserName = dto.Email,
+                    UserName = dto.UserName,
                     Email = dto.Email,
                     EmailConfirmed = false,
                     FirstName = dto.FirstName,
@@ -134,20 +158,29 @@ namespace App.API.Controllers
                         Id = user.Id.ToString(),
                         DepartmentId = dto.DepartmentId
                     };
-                    var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, user.Id);
+                    var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, UserId);
                     if (!tryAddEmp.IsSuccess) return SaveError(tryAddEmp);
+                    deparmentRequest.MornitorQuantity += 1;
+                    var updateDepartment = await _departmentBizLogic.CreateUpdateDepartment(deparmentRequest, UserId);
+                    if (!updateDepartment.IsSuccess) return SaveError(updateDepartment);
                 }
                 
                 //<===Add to Manager===>
                 if (dto.UserType == UserType.Manager)
                 {
+                    var manager = await _managerBizLogic.GetManagerByDepartmentId(deparmentRequest.Id);
+                    if (manager != null)
+                        return SaveError($"Department {deparmentRequest.Name} đã tồn tại manager {manager.FullName}");
                     var managerRequestDTO = new ManagerRequestDTO
                     {
                         Id = user.Id.ToString(),
                         DepartmentId = dto.DepartmentId
                     };
-                    var tryAddManager = await _managerBizLogic.CreateUpdateManager(managerRequestDTO, user.Id);
+                    var tryAddManager = await _managerBizLogic.CreateUpdateManager(managerRequestDTO, UserId);
                     if (!tryAddManager.IsSuccess) return SaveError(tryAddManager);
+                    deparmentRequest.MornitorQuantity += 1;
+                    var updateDepartment = await _departmentBizLogic.CreateUpdateDepartment(deparmentRequest, UserId);
+                    if (!updateDepartment.IsSuccess) return SaveError(updateDepartment);
                 }
 
                 var sendMail = await SendEmailConfirm(user);
@@ -158,7 +191,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("Sign up account {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -190,16 +223,19 @@ namespace App.API.Controllers
             {
                 if (!ModelState.IsValid) return ModelInvalid();
 
-                if (!Helpers.IsValidEmail(dto.Email.Trim()))
+                if (dto.UserNameOrEmail.Contains("@gmail.com"))
                 {
-                    ModelState.AddModelError("Email", Constants.EmailAddressFormatError);
-                    return ModelInvalid();
+                    if (!Helpers.IsValidEmail(dto.UserNameOrEmail.Trim()))
+                    {
+                        ModelState.AddModelError("Email", Constants.EmailAddressFormatError);
+                        return ModelInvalid();
+                    }
                 }
 
-                var user = await _identityBizLogic.GetByEmailAsync(dto.Email);
+                var user = await _identityBizLogic.GetByEmailOrUserNameAsync(dto.UserNameOrEmail);
                 if (user == null)
                 {
-                    ModelState.AddModelError("Email", "Email không tồn tại.");
+                    ModelState.AddModelError("UserNameOrEmail", "Tên đăng nhập hoặc Email không đúng.");
                     return ModelInvalid();
                 }
 
@@ -252,7 +288,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("Login account {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -297,7 +333,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("Forgot password {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -325,7 +361,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("Reset password {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -386,7 +422,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("Renew Token {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -424,7 +460,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("LogOut account {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -480,7 +516,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("Change password {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -519,7 +555,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("Send Email Confirm {0} {1}", ex.Message, ex.StackTrace);
                 throw;
             }
         }

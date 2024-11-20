@@ -17,7 +17,7 @@ public static class DataSeeder
         var identityBizLogic = serviceProvider.GetRequiredService<IIdentityBizLogic>();
 
         var adminEmail = "minhtam14231204@gmail.com";
-        var adminUserName = "minhtam14231204@gmail.com";
+        var adminUserName = "Administrator";
         var adminPhoneNumber = "0942775673";
         var adminPassword = "ThisIsAdmin123456@";
         var adminFirstName = "System";

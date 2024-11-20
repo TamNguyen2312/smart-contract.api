@@ -38,7 +38,7 @@ public interface IIdentityRepository
     /// <param name="user"></param>
     /// <param name="token"></param>
     /// <returns></returns>
-    Task<bool> VerifyEmailAsycn(ApplicationUser user, string token);
+    Task<bool> VerifyEmailAsync(ApplicationUser user, string token);
     /// <summary>
     /// thay đổi mật khẩu
     /// </summary>
@@ -117,4 +117,6 @@ public interface IIdentityRepository
     Task<bool> UpdateTokenAsync(RefreshToken refreshToken);
     Task<bool> IsTokenInvoked(string jti, long userId);
     Task<List<ApplicationUser>> GetAll(AccountGetListDTO dto);
+    Task<ApplicationUser> GetByUserName(string username);
+    Task<ApplicationUser> GetByEmailOrUserNameAsync(string input);
 }

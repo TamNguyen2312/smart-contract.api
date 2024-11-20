@@ -47,7 +47,14 @@ public class RegisterDTO : ITrimmable, IValidatableObject
     [Required(ErrorMessage = Constants.Required)]
     [Display(Name = "Email"), StringLength(255, ErrorMessage = Constants.MaxlengthError)]
     [EmailAddress(ErrorMessage = Constants.EmailAddressFormatError)]
-    public string Email { get; set; }
+    public string Email { get; set; } = null!;
+
+    /// <summary>
+    /// username
+    /// </summary>
+    [Required(ErrorMessage = Constants.Required)]
+    [Display(Name = "UserName"), StringLength(255, ErrorMessage = Constants.MaxlengthError)]
+    public string UserName { get; set; } = null!;
 
     /// <summary>
     /// mật khẩu
@@ -57,7 +64,7 @@ public class RegisterDTO : ITrimmable, IValidatableObject
      StringLength(255, ErrorMessage = Constants.PasswordStringLengthError, MinimumLength = 6)]
     [DataType(DataType.Password)]
     [RegularExpression(Constants.REGEX_PASSWORD, ErrorMessage = Constants.PasswordInvalidFormat)]
-    public string Password { get; set; }
+    public string Password { get; set; } = null!;
 
     /// <summary>
     /// nhập lại mật khẩu
@@ -66,7 +73,7 @@ public class RegisterDTO : ITrimmable, IValidatableObject
     [Required(ErrorMessage = Constants.Required)]
     [Compare("Password", ErrorMessage = Constants.ConfirmPasswordError)]
     [Display(Name = "Nhập lại mật khẩu"), StringLength(255, ErrorMessage = Constants.MaxlengthError)]
-    public string ConfirmPassword { get; set; }
+    public string ConfirmPassword { get; set; } = null!;
 
 
     /// <summary>
