@@ -1,6 +1,7 @@
 using App.BLL.Interfaces;
 using App.DAL.Interfaces;
 using App.Entity.DTOs.Employee;
+using App.Entity.DTOs.Manager;
 using App.Entity.Entities;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
@@ -33,6 +34,20 @@ public class EmployeeBizLogic : IEmployeeBizLogic
         return response;
     }
 
+    /// <summary>
+    /// Get an employee profile also check permission if the logged user is manager
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="userRoles"></param>
+    /// <param name="loggedManager"></param>
+    /// <returns></returns>
+    public async Task<EmployeeViewDTO> GetEmployee(ApplicationUser user, List<string> userRoles, ManagerViewDTO loggedManager)
+    {
+        var emp = await _repository.GetEmployee(user.Id);
+        if (emp == null || emp.DepartmentId != loggedManager.DepartmentId) return null;
+        var empView = await GetEmpView(emp, user, userRoles);
+        return empView;
+    }
     
     /// <summary>
     /// This is used to get personal emp profile

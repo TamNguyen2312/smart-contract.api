@@ -7,6 +7,7 @@ public class Constants
     public const string GetDataFailed = "Get data failed.";
     public const string GetUnAuthorized = "Bạn đã hết phiên đăng nhập. Vui lòng đăng nhập lại để tiếp tục.";
     public const string GetNotFound = "Oops!!! Không tìm thấy.";
+    public const string GetForbidden = "Oops!!! Không đủ quyền hạn.";
     public const string SaveDataSuccess = "Lưu thành công.";
     public const string SaveDataFailed = "Lưu thất bại.";
     public const string Required = "Dữ liệu không được để trống.";

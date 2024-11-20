@@ -45,6 +45,11 @@ public class BaseAPIController : ControllerBase
             StatusCode = System.Net.HttpStatusCode.Unauthorized
         });
     }
+    
+    protected ActionResult GetForbidden()
+    {
+        return new ForbidResult(Constants.GetForbidden);
+    }
 
     /// <summary>
     /// Gets the data failed.

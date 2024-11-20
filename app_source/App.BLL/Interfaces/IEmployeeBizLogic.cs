@@ -1,4 +1,5 @@
 using App.Entity.DTOs.Employee;
+using App.Entity.DTOs.Manager;
 using FS.BaseModels.IdentityModels;
 using FS.Commons.Models;
 using FS.Commons.Models.DTOs;
@@ -11,4 +12,5 @@ public interface IEmployeeBizLogic
     Task<EmployeeViewDTO> GetEmployee(long userId);
     Task<EmployeeViewDTO> GetEmployee(ApplicationUser user, List<string> userRoles);
     Task<List<EmployeeViewDTO>> GetAllEmployee(AccountGetListDTO dto);
+    Task<EmployeeViewDTO> GetEmployee(ApplicationUser user, List<string> userRoles, ManagerViewDTO loggedManager);
 }
