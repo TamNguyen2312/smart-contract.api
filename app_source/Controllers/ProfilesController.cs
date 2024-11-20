@@ -1,5 +1,7 @@
 using App.API.Filter;
 using App.BLL.Interfaces;
+using App.Entity.DTOs.Employee;
+using App.Entity.DTOs.Manager;
 using App.Entity.DTOs.Profile;
 using FS.BaseAPI;
 using FS.BaseModels;
@@ -20,14 +22,16 @@ namespace App.API.Controllers
         private readonly IEmployeeBizLogic _employeeBizLogic;
         private readonly IManagerBizLogic _managerBizLogic;
         private readonly IProfileBizLogic _profileBizLogic;
+        private readonly ILogger<ProfilesController> _logger;
 
         public ProfilesController(IIdentityBizLogic identityBizLogic,
-            IEmployeeBizLogic employeeBizLogic, IManagerBizLogic managerBizLogic, IProfileBizLogic profileBizLogic)
+            IEmployeeBizLogic employeeBizLogic, IManagerBizLogic managerBizLogic, IProfileBizLogic profileBizLogic, ILogger<ProfilesController> logger)
         {
             _identityBizLogic = identityBizLogic;
             _employeeBizLogic = employeeBizLogic;
             _managerBizLogic = managerBizLogic;
             _profileBizLogic = profileBizLogic;
+            _logger = logger;
         }
 
         #region COMMON
@@ -66,7 +70,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("GetPersonalProfile {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -78,7 +82,7 @@ namespace App.API.Controllers
         /// <param name="dto"></param>
         /// <returns></returns>
         [Authorize]
-        [HttpPost]
+        [HttpPut]
         [Route("edit-personal-profile")]
         public async Task<IActionResult> EditPersonalProfile([FromBody] PersonalProfileDto dto)
         {
@@ -101,7 +105,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("EditPersonalProfile {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -112,14 +116,43 @@ namespace App.API.Controllers
         #region ADMIN
 
         /// <summary>
-        /// This is used to get all account profiles for admin
+        /// This is used to get all manager profiles for admin
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
         [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPost]
-        [Route("get-all-profiles")]
-        public async Task<IActionResult> GetAllProfiles([FromBody] AccountGetListDTO dto)
+        [Route("get-all-manager-profiles")]
+        public async Task<IActionResult> GetAllManagerProfiles([FromBody] AccountGetListDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+                
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
+                    return ModelInvalid();
+                }
+
+                var data = await _managerBizLogic.GetAllManager(dto);
+                var response = new PagingDataModel<ManagerViewDTO>(data, dto);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetAllManagerProfiles {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPost]
+        [Route("get-all-employee-profiles")]
+        public async Task<IActionResult> GetAllEmployeeProfiles([FromBody] AccountGetListDTO dto)
         {
             try
             {
@@ -128,35 +161,19 @@ namespace App.API.Controllers
 
                 if (!ModelState.IsValid) return ModelInvalid();
 
-                var userViewDtos = new List<object>();
-                var users = await _identityBizLogic.GetAll(dto);
-
-                foreach (var user in users)
+                if (!dto.IsValidOrderDate())
                 {
-                    var userRoles = await _identityBizLogic.GetRolesAsync(user.Id);
-                    if (userRoles.Contains(SystemRoleConstants.MANAGER))
-                    {
-                        var managerView = await _managerBizLogic.GetManager(user, userRoles.ToList());
-                        userViewDtos.Add(managerView);
-                    }
-                    else if (userRoles.Contains(SystemRoleConstants.EMPLOYEE))
-                    {
-                        var empView = await _employeeBizLogic.GetEmployee(user, userRoles.ToList());
-                        userViewDtos.Add(empView);
-                    }
-                    else
-                    {
-                        var userView = new UserViewDTO(user, userRoles.ToList());
-                        userViewDtos.Add(userView);
-                    }
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
+                    return ModelInvalid();
                 }
 
-                var response = new PagingDataModel<object>(userViewDtos, dto);
+                var data = await _employeeBizLogic.GetAllEmployee(dto);
+                var response = new PagingDataModel<EmployeeViewDTO>(data, dto);
                 return GetSuccess(response);
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("GetAllEmployeeProfiles {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -197,7 +214,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("GetProfileByUserId {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
@@ -209,7 +226,7 @@ namespace App.API.Controllers
         /// <param name="dto"></param>
         /// <returns></returns>
         [FSAuthorize(Policy = "AdminRolePolicy")]
-        [HttpPost]
+        [HttpPut]
         [Route("edit-profile-by-userId")]
         public async Task<IActionResult> EditProfile([FromBody] ProfileUpdateDto dto)
         {
@@ -243,7 +260,7 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("EditProfile {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }

@@ -589,16 +589,16 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
     /// <returns></returns>
     public async Task<List<ApplicationUser>> GetAll(AccountGetListDTO dto)
     {
-        var loadedRecords = _userManager.Users;
+        var userQuery = _userManager.Users;
         if (!string.IsNullOrEmpty(dto.Keyword))
         {
-            loadedRecords = loadedRecords.Where(x => x.FirstName.Contains(dto.Keyword)
+            userQuery = userQuery.Where(x => x.FirstName.Contains(dto.Keyword)
                                                                 || x.LastName.Contains(dto.Keyword)
                                                                 || x.Email.Contains(dto.Keyword));
         }
 
-        dto.TotalRecord = await loadedRecords.CountAsync();
-        var response = await loadedRecords.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        dto.TotalRecord = await userQuery.CountAsync();
+        var response = await userQuery.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return response;
     }
 

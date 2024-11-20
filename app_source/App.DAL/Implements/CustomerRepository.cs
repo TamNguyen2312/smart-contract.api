@@ -32,14 +32,15 @@ public class CustomerRepository : ICustomerRepository
         {
             var existedCustomer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
                 .WithPredicate(x => x.Id == customer.Id &&
-                                    customer.IsDelete == false &&
-                                    customer.CreatedBy.Equals(user.Id.ToString()))
+                                    customer.IsDelete == false)
                 .Build());
             if (existedCustomer == null)
                 return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy thông tin khách hàng" };
+            if (!existedCustomer.CreatedBy.Equals(user.UserName))
+                return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
             customer.UpdateNonDefaultProperties(existedCustomer);
             existedCustomer.ModifiedDate = DateTime.Now;
-            existedCustomer.ModifiedBy = user.Email;
+            existedCustomer.ModifiedBy = user.UserName;
 
             await baseCustomerRepo.UpdateAsync(existedCustomer);
         }
@@ -53,7 +54,7 @@ public class CustomerRepository : ICustomerRepository
                 PhoneNumber = customer.PhoneNumber,
                 Address = customer.Address,
                 CreatedDate = DateTime.Now,
-                CreatedBy = user.Email,
+                CreatedBy = user.UserName,
                 IsDelete = false
             };
             await baseCustomerRepo.CreateAsync(newCustomer);
@@ -76,24 +77,9 @@ public class CustomerRepository : ICustomerRepository
             loadedRecords = loadedRecords.Where(x =>
                 x.PhoneNumber.Contains(dto.Keyword) || x.CompanyName.Contains(dto.Keyword));
         }
-        if (dto.OrderDate.HasValue)
-        {
-            switch ((int)dto.OrderDate.Value)
-            {
-                case 1:
-                    loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate);
-                    break;
-                case 2:
-                    loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate);
-                    break;
-                case 3:
-                    loadedRecords = loadedRecords.OrderByDescending(x => x.ModifiedDate ?? DateTime.MinValue);
-                    break;
-                case 4:
-                    loadedRecords = loadedRecords.OrderBy(x => x.ModifiedDate ?? DateTime.MaxValue);
-                    break;
-            }
-        }
+
+        loadedRecords = loadedRecords.ApplyOrderDate(dto.OrderDate);
+        
         dto.TotalRecord = await loadedRecords.CountAsync();
         var response = await loadedRecords.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return response;

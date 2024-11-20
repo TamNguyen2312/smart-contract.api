@@ -35,7 +35,7 @@ public class FileUploadRepository : IFileUploadRepository
                                                         .Build());
                 if (existed.UserId != fileUpload.UserId) return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
                 fileUpload.UpdateNonDefaultProperties(existed);
-                existed.ModifiedBy = $"{user.FirstName} {user.LastName}";
+                existed.ModifiedBy = user.UserName;
                 existed.ModifiedDate = DateTime.Now;
                 await baseRepo.UpdateAsync(existed);
             }
@@ -46,7 +46,7 @@ public class FileUploadRepository : IFileUploadRepository
                     FileName = fileUpload.FileName,
                     FilePath = fileUpload.FilePath,
                     UserId = fileUpload.UserId,
-                    CreatedBy = $"{user.FirstName} {user.LastName}",
+                    CreatedBy = user.UserName,
                     CreatedDate = DateTime.Now,
                     IsDelete = false
                 };

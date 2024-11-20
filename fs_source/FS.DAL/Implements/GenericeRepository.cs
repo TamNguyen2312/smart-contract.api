@@ -103,4 +103,9 @@ public class GenericeRepository<T, TContext> : IGenericRepository<T, TContext> w
         }
         return false;
     }
+
+    public DbSet<T> GetDbSet()
+    {
+        return _context.Set<T>();
+    }
 }

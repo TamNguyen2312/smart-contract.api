@@ -1,10 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using App.Entity.DTOs.Profile;
-using FS.BaseModels.IdentityModels;
-using FS.Common.Models.Models.Interfaces;
+using System.Text.Json.Serialization;
 using FS.Commons;
 using FS.Commons.Interfaces;
-using Newtonsoft.Json;
 
 namespace App.Entity.DTOs.Department;
 

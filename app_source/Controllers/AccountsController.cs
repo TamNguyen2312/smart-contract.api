@@ -1,5 +1,6 @@
 using System.Net;
 using System.Web;
+using App.API.Filter;
 using App.BLL.Interfaces;
 using App.Entity.DTOs.Department;
 using App.Entity.DTOs.Employee;
@@ -34,11 +35,11 @@ namespace App.API.Controllers
         private readonly ILogger<AccountsController> _logger;
 
         public AccountsController(IIdentityBizLogic identityBizLogic, IConfiguration configuration,
-                                    IEmailService emailService, SignInManager<ApplicationUser> signInManager,
-                                    UserManager<ApplicationUser> userManager,
-                                    IEmployeeBizLogic employeeBizLogic,
-                                    IManagerBizLogic managerBizLogic,
-                                    IDepartmentBizLogic departmentBizLogic, ILogger<AccountsController> logger)
+            IEmailService emailService, SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            IEmployeeBizLogic employeeBizLogic,
+            IManagerBizLogic managerBizLogic,
+            IDepartmentBizLogic departmentBizLogic, ILogger<AccountsController> logger)
         {
             this._identityBizLogic = identityBizLogic;
             this._configuration = configuration;
@@ -53,149 +54,6 @@ namespace App.API.Controllers
 
         #region COMMON
 
-        [HttpPost]
-        [Route("sign-up-account")]
-        public async Task<IActionResult> SignUpAsync(RegisterDTO dto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return ModelInvalid();
-                }
-
-                if (!Helpers.IsValidEmail(dto.Email.Trim()))
-                {
-                    ModelState.AddModelError("Email", Constants.EmailAddressFormatError);
-                    return ModelInvalid();
-                }
-
-                if (dto.Password != dto.ConfirmPassword)
-                {
-                    ModelState.AddModelError("Password", Constants.ConfirmPasswordError);
-                    return ModelInvalid();
-                }
-
-                if (!dto.IsValidGender())
-                {
-                    ModelState.AddModelError("Gender", "Giới tính không hợp lệ");
-                    return ModelInvalid();
-                }
-
-                if (!dto.IsValidUserType())
-                {
-                    ModelState.AddModelError("UserType", "Loại người dùng không hợp lệ");
-                    return ModelInvalid();
-                }
-
-                if (!dto.CheckValidDateOfBirth().Equals("VALID"))
-                {
-                    ModelState.AddModelError("DateOfBirth", dto.CheckValidDateOfBirth());
-                    return ModelInvalid();
-                }
-
-                if (!dto.CheckValidIdentityCard().Equals("VALID"))
-                {
-                    ModelState.AddModelError("IdentityCard", dto.CheckValidIdentityCard());
-                }
-
-                var userEmail = await _identityBizLogic.GetByEmailOrUserNameAsync(dto.Email);
-                if (userEmail != null)
-                {
-                    ModelState.AddModelError("Email", "Email đã tồn tại!");
-                    return ModelInvalid();
-                }
-                
-                var userName = await _identityBizLogic.GetByEmailOrUserNameAsync(dto.Email);
-                if (userName != null)
-                {
-                    ModelState.AddModelError("UserName", "UserName đã tồn tại!");
-                    return ModelInvalid();
-                }
-
-                var departmentView = await _departmentBizLogic.GetDepartment(dto.DepartmentId, UserId);
-                if (departmentView.MornitorQuantity >= departmentView.EmployeeQuantity)
-                {
-                    ModelState.AddModelError("DepartmentId", "Phòng ban đã đủ nhân viên!");
-                    return ModelInvalid();
-                }
-
-                var deparmentRequest = new DepartmentRequestDto
-                {
-                    Id = departmentView.Id,
-                    Name = departmentView.Name,
-                    Description = departmentView.Description,
-                    EmployeeQuantity = departmentView.EmployeeQuantity,
-                    MornitorQuantity = departmentView.MornitorQuantity
-                };
-
-                var user = new ApplicationUser
-                {
-                    UserName = dto.UserName,
-                    Email = dto.Email,
-                    EmailConfirmed = false,
-                    FirstName = dto.FirstName,
-                    LastName = dto.LastName,
-                    PhoneNumber = dto.PhoneNumber,
-                    Avatar = Constants.DefaultAvatar,
-                    Gender = dto.Gender.ToString() ?? Gender.None.ToString(),
-                    DateOfBirth = dto.DateOfBirth,
-                    IdentityCard = dto.IdentityCard,
-                    Status = Status.Online.ToString()
-                };
-
-                var result = await _identityBizLogic.AddUserAsync(user, dto.Password);
-                if (result < 0) return Error(Constants.SomeThingWentWrong);
-
-                var addRole = await _identityBizLogic.AddRoleByNameAsync(user.Id.ToString(), dto.UserType.ToString());
-                if (!addRole) return Error(Constants.SomeThingWentWrong);
-                
-                //<===Add to employee===>
-                if (dto.UserType == UserType.Employee)
-                {
-                    var empRequestDTO = new EmployeeRequestDTO
-                    {
-                        Id = user.Id.ToString(),
-                        DepartmentId = dto.DepartmentId
-                    };
-                    var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, UserId);
-                    if (!tryAddEmp.IsSuccess) return SaveError(tryAddEmp);
-                    deparmentRequest.MornitorQuantity += 1;
-                    var updateDepartment = await _departmentBizLogic.CreateUpdateDepartment(deparmentRequest, UserId);
-                    if (!updateDepartment.IsSuccess) return SaveError(updateDepartment);
-                }
-                
-                //<===Add to Manager===>
-                if (dto.UserType == UserType.Manager)
-                {
-                    var manager = await _managerBizLogic.GetManagerByDepartmentId(deparmentRequest.Id);
-                    if (manager != null)
-                        return SaveError($"Department {deparmentRequest.Name} đã tồn tại manager {manager.FullName}");
-                    var managerRequestDTO = new ManagerRequestDTO
-                    {
-                        Id = user.Id.ToString(),
-                        DepartmentId = dto.DepartmentId
-                    };
-                    var tryAddManager = await _managerBizLogic.CreateUpdateManager(managerRequestDTO, UserId);
-                    if (!tryAddManager.IsSuccess) return SaveError(tryAddManager);
-                    deparmentRequest.MornitorQuantity += 1;
-                    var updateDepartment = await _departmentBizLogic.CreateUpdateDepartment(deparmentRequest, UserId);
-                    if (!updateDepartment.IsSuccess) return SaveError(updateDepartment);
-                }
-
-                var sendMail = await SendEmailConfirm(user);
-                if (!sendMail) return Error("Đã xảy ra lỗi trong quá trình gửi mail xác thực. Vui lòng đăng nhập lại để nhận một mail mới");
-                var userRoles = await _identityBizLogic.GetRolesAsync(user.Id);
-                var userData = new UserViewDTO(user, userRoles.ToList());
-                return SaveSuccess(userData);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Sign up account {0} {1}", ex.Message, ex.StackTrace);
-                return Error(Constants.SomeThingWentWrong);
-            }
-        }
-
         [HttpGet]
         [Route("verify-email")]
         public async Task<IActionResult> VerifyEmail(string token, string email)
@@ -205,6 +63,7 @@ namespace App.API.Controllers
             {
                 return GetNotFound("Không tìm thấy Email người dùng trong hệ thống.");
             }
+
             var response = await _identityBizLogic.VerifyEmailAsync(user, token);
 
             if (!response)
@@ -256,7 +115,8 @@ namespace App.API.Controllers
                     }
                     else
                     {
-                        return GetUnAuthorized("Chúng tôi đã gửi email xác thực đến tài khoản của bạn. Hãy kiểm tra và thực hiện xác thực");
+                        return GetUnAuthorized(
+                            "Chúng tôi đã gửi email xác thực đến tài khoản của bạn. Hãy kiểm tra và thực hiện xác thực");
                     }
                 }
 
@@ -267,16 +127,20 @@ namespace App.API.Controllers
                 var signedInAccount = await _signInManager.PasswordSignInAsync(user, dto.Password, true, true);
                 if (signedInAccount.IsLockedOut)
                 {
-                    return GetUnAuthorized($"Tài khoản của bạn đã bị khóa vì đăng nhập sai nhiều lần. Khóa đến: {user.LockoutEnd.Value.LocalDateTime}.");
+                    return GetUnAuthorized(
+                        $"Tài khoản của bạn đã bị khóa vì đăng nhập sai nhiều lần. Khóa đến: {user.LockoutEnd.Value.LocalDateTime}.");
                 }
+
                 await _userManager.ResetAccessFailedCountAsync(user);
 
                 //gen token
                 var roles = await _userManager.GetRolesAsync(user);
-                var genAccesToken = await _identityBizLogic.GenerateJwtToken(user, dto.IsRemember, roles.Contains(SystemRoleConstants.ADMIN),
-                                                                                                            roles.Contains(SystemRoleConstants.MANAGER),
-                                                                                                                    roles.Contains(SystemRoleConstants.EMPLOYEE));
-                string refreshToken = await _identityBizLogic.GenerateRefreshToken(user, genAccesToken.JwtToken, dto.IsRemember);
+                var genAccesToken = await _identityBizLogic.GenerateJwtToken(user, dto.IsRemember,
+                    roles.Contains(SystemRoleConstants.ADMIN),
+                    roles.Contains(SystemRoleConstants.MANAGER),
+                    roles.Contains(SystemRoleConstants.EMPLOYEE));
+                string refreshToken =
+                    await _identityBizLogic.GenerateRefreshToken(user, genAccesToken.JwtToken, dto.IsRemember);
 
                 var response = new LoginResponseDTO
                 {
@@ -306,19 +170,21 @@ namespace App.API.Controllers
                     ModelState.AddModelError("Email", Constants.EmailAddressFormatError);
                     return ModelInvalid();
                 }
+
                 var user = await _identityBizLogic.GetByEmailAsync(dto.Email);
                 if (user == null)
                     return GetNotFound(Constants.GetNotFound);
                 var resetPassToken = await _identityBizLogic.GeneratePasswordResetTokenAsync(user);
-                if (resetPassToken == null) return Error("Không thể xác thực mã để làm mới mật khẩu. Vui lòng thử lại sau ít phút.");
+                if (resetPassToken == null)
+                    return Error("Không thể xác thực mã để làm mới mật khẩu. Vui lòng thử lại sau ít phút.");
                 var encodedToken = WebUtility.UrlEncode(resetPassToken);
                 var forgotUrl = Url.Action(
-                                            action: "ResetPasswordView",
-                                            controller: "Accounts",
-                                            values: new { token = encodedToken, userId = user.Id },
-                                            protocol: Request.Scheme,
-                                            host: _configuration["AppSettings:HomeUrl"].TrimEnd('/')
-                                            );
+                    action: "ResetPasswordView",
+                    controller: "Accounts",
+                    values: new { token = encodedToken, userId = user.Id },
+                    protocol: Request.Scheme,
+                    host: _configuration["AppSettings:HomeUrl"].TrimEnd('/')
+                );
                 var message = new EmailDTO
                 (
                     new string[] { user.Email! },
@@ -328,7 +194,8 @@ namespace App.API.Controllers
 <p>- Vui lòng truy cập vào link này để tiếp tục quá trình thay đổi mật khẩu: <b>{forgotUrl!}<b></p>"
                 );
                 var sendMail = await _emailService.SendEmailAsync(message);
-                if (!sendMail) return Error("Đã xảy ra lỗi trong quá trình gửi mail xác thực. Vui lòng gửi lại 1 yêu cầu khác.");
+                if (!sendMail)
+                    return Error("Đã xảy ra lỗi trong quá trình gửi mail xác thực. Vui lòng gửi lại 1 yêu cầu khác.");
                 return Success(sendMail, $"Chúng tôi đã gửi một yêu cầu thay đổi mật khẩu đến {dto.Email}");
             }
             catch (Exception ex)
@@ -355,9 +222,11 @@ namespace App.API.Controllers
             try
             {
                 if (!ModelState.IsValid) return ModelInvalid();
-                var result = await _identityBizLogic.ResetPasswordAsync(dto.UserId.ToString(), dto.Token, dto.NewPassword);
+                var result =
+                    await _identityBizLogic.ResetPasswordAsync(dto.UserId.ToString(), dto.Token, dto.NewPassword);
                 if (!result) return Error("Thay đổi mật khẩu không thành công.");
-                return Success(result, "Thay đổi mật khẩu thành công. Hãy đăng nhập bằng mật khẩu mới của bạn để trải nghiệm dịch vụ.");
+                return Success(result,
+                    "Thay đổi mật khẩu thành công. Hãy đăng nhập bằng mật khẩu mới của bạn để trải nghiệm dịch vụ.");
             }
             catch (Exception ex)
             {
@@ -365,6 +234,7 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+
         #endregion
 
         #region USER
@@ -418,7 +288,8 @@ namespace App.API.Controllers
                     return Error("Tạo mã đăng nhập mới không thành công. Vui lòng thử lại sau ít phút.");
                 }
 
-                return SaveSuccess(new LoginResponseDTO { AccessToken = newToken.AccessToken, RefreshToken = newRefreshToken });
+                return SaveSuccess(new LoginResponseDTO
+                    { AccessToken = newToken.AccessToken, RefreshToken = newRefreshToken });
             }
             catch (Exception ex)
             {
@@ -487,7 +358,8 @@ namespace App.API.Controllers
 
                 var token = await _identityBizLogic.GeneratePasswordResetTokenAsync(user);
                 if (string.IsNullOrEmpty(token)) return Error("Lỗi tạo mã thay đổi mật khẩu.");
-                var tryResetPasss = await _identityBizLogic.ResetPasswordAsync(UserId.ToString(), token, dto.NewPassword);
+                var tryResetPasss =
+                    await _identityBizLogic.ResetPasswordAsync(UserId.ToString(), token, dto.NewPassword);
                 if (!tryResetPasss) return Error("Thay đổi mật khẩu không thành công.");
 
                 //Generate new token:
@@ -522,9 +394,156 @@ namespace App.API.Controllers
         }
 
         #endregion
-        
-        
+
+        #region ADMIN
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPost]
+        [Route("sign-up-account")]
+        public async Task<IActionResult> SignUpAsync(RegisterDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return ModelInvalid();
+                }
+
+                if (!Helpers.IsValidEmail(dto.Email.Trim()))
+                {
+                    ModelState.AddModelError("Email", Constants.EmailAddressFormatError);
+                    return ModelInvalid();
+                }
+
+                if (dto.Password != dto.ConfirmPassword)
+                {
+                    ModelState.AddModelError("Password", Constants.ConfirmPasswordError);
+                    return ModelInvalid();
+                }
+
+                if (!dto.IsValidGender())
+                {
+                    ModelState.AddModelError("Gender", "Giới tính không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                if (!dto.IsValidUserType())
+                {
+                    ModelState.AddModelError("UserType", "Loại người dùng không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                if (!dto.CheckValidDateOfBirth().Equals("VALID"))
+                {
+                    ModelState.AddModelError("DateOfBirth", dto.CheckValidDateOfBirth());
+                    return ModelInvalid();
+                }
+
+                if (!dto.CheckValidIdentityCard().Equals("VALID"))
+                {
+                    ModelState.AddModelError("IdentityCard", dto.CheckValidIdentityCard());
+                }
+
+                var userEmail = await _identityBizLogic.GetByEmailOrUserNameAsync(dto.Email);
+                if (userEmail != null)
+                {
+                    ModelState.AddModelError("Email", "Email đã tồn tại!");
+                    return ModelInvalid();
+                }
+
+                var userName = await _identityBizLogic.GetByEmailOrUserNameAsync(dto.Email);
+                if (userName != null)
+                {
+                    ModelState.AddModelError("UserName", "UserName đã tồn tại!");
+                    return ModelInvalid();
+                }
+
+                var departmentView = await _departmentBizLogic.GetDepartment(dto.DepartmentId, UserId);
+                if (departmentView.MornitorQuantity >= departmentView.EmployeeQuantity)
+                {
+                    ModelState.AddModelError("DepartmentId", "Phòng ban đã đủ nhân viên!");
+                    return ModelInvalid();
+                }
+
+                var deparmentRequest = new DepartmentRequestDto
+                {
+                    Id = departmentView.Id,
+                    Name = departmentView.Name,
+                    Description = departmentView.Description,
+                    EmployeeQuantity = departmentView.EmployeeQuantity,
+                    MornitorQuantity = departmentView.MornitorQuantity
+                };
+
+                var user = new ApplicationUser
+                {
+                    UserName = dto.UserName,
+                    Email = dto.Email,
+                    EmailConfirmed = false,
+                    FirstName = dto.FirstName,
+                    LastName = dto.LastName,
+                    PhoneNumber = dto.PhoneNumber,
+                    Avatar = Constants.DefaultAvatar,
+                    Gender = dto.Gender.ToString() ?? Gender.None.ToString(),
+                    DateOfBirth = dto.DateOfBirth,
+                    IdentityCard = dto.IdentityCard,
+                    Status = Status.Online.ToString()
+                };
+
+                var result = await _identityBizLogic.AddUserAsync(user, dto.Password);
+                if (result < 0) return Error(Constants.SomeThingWentWrong);
+
+                var addRole = await _identityBizLogic.AddRoleByNameAsync(user.Id.ToString(), dto.UserType.ToString());
+                if (!addRole) return Error(Constants.SomeThingWentWrong);
+
+                //<===Add to employee===>
+                if (dto.UserType == UserType.Employee)
+                {
+                    var empRequestDTO = new EmployeeRequestDTO
+                    {
+                        Id = user.Id.ToString(),
+                        DepartmentId = dto.DepartmentId
+                    };
+                    var tryAddEmp = await _employeeBizLogic.CreateUpdateEmployee(empRequestDTO, UserId);
+                    if (!tryAddEmp.IsSuccess) return SaveError(tryAddEmp);
+                    deparmentRequest.MornitorQuantity += 1;
+                    var updateDepartment = await _departmentBizLogic.CreateUpdateDepartment(deparmentRequest, UserId);
+                    if (!updateDepartment.IsSuccess) return SaveError(updateDepartment);
+                }
+
+                //<===Add to Manager===>
+                if (dto.UserType == UserType.Manager)
+                {
+                    var managerRequestDTO = new ManagerRequestDTO
+                    {
+                        Id = user.Id.ToString(),
+                        DepartmentId = dto.DepartmentId
+                    };
+                    var tryAddManager = await _managerBizLogic.CreateUpdateManager(managerRequestDTO, UserId);
+                    if (!tryAddManager.IsSuccess) return SaveError(tryAddManager);
+                    deparmentRequest.MornitorQuantity += 1;
+                    var updateDepartment = await _departmentBizLogic.CreateUpdateDepartment(deparmentRequest, UserId);
+                    if (!updateDepartment.IsSuccess) return SaveError(updateDepartment);
+                }
+
+                var sendMail = await SendEmailConfirm(user);
+                if (!sendMail)
+                    return Error(
+                        "Đã xảy ra lỗi trong quá trình gửi mail xác thực. Vui lòng đăng nhập lại để nhận một mail mới");
+                var userRoles = await _identityBizLogic.GetRolesAsync(user.Id);
+                var userData = new UserViewDTO(user, userRoles.ToList());
+                return SaveSuccess(userData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Sign up account {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+
+        #endregion
+
+
         #region PRIVATE
+
         private async Task<bool> SendEmailConfirm(ApplicationUser user)
         {
             try
@@ -532,12 +551,12 @@ namespace App.API.Controllers
                 var emailToken = await _identityBizLogic.GenerateEmailConfirmationTokenAsync(user);
                 var encodedToken = HttpUtility.UrlEncode(emailToken);
                 var confirmationLink = Url.Action(
-                                            action: "VerifyEmail",
-                                            controller: "Accounts",
-                                            values: new { token = encodedToken, email = user.Email },
-                                            protocol: Request.Scheme,
-                                            host: _configuration["AppSettings:HomeUrl"].TrimEnd('/')
-                                            );
+                    action: "VerifyEmail",
+                    controller: "Accounts",
+                    values: new { token = encodedToken, email = user.Email },
+                    protocol: Request.Scheme,
+                    host: _configuration["AppSettings:HomeUrl"].TrimEnd('/')
+                );
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Url: {confirmationLink}");
                 Console.ResetColor();
@@ -559,6 +578,7 @@ namespace App.API.Controllers
                 throw;
             }
         }
+
         #endregion
     }
 }
