@@ -72,6 +72,14 @@ public class IdentityBizLogic : IIdentityBizLogic
         return await _identityRepository.IsTokenInvoked(jti, userId);
     }
 
+    public async Task<ApplicationUser> GetByEmailOrUserNameAsync(string input)
+    {
+        return await _identityRepository.GetByEmailOrUserNameAsync(input.Trim());
+    }
+    public async Task<ApplicationUser> GetByUserName(string username)
+    {
+        return await _identityRepository.GetByUserName(username.Trim());
+    }
     public async Task<ApplicationUser> GetByEmailAsync(string email)
     {
         return await _identityRepository.GetByEmailAsync(email);
@@ -114,7 +122,7 @@ public class IdentityBizLogic : IIdentityBizLogic
 
     public async Task<bool> VerifyEmailAsync(ApplicationUser user, string token)
     {
-        return await _identityRepository.VerifyEmailAsycn(user, token);
+        return await _identityRepository.VerifyEmailAsync(user, token);
     }
 
     public async Task<bool> ChangePassword(string userId, string passwordNew)

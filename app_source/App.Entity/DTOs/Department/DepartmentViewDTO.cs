@@ -6,6 +6,8 @@ public class DepartmentViewDTO
 {
     public long Id { get; set; }
     public string Name { get; set; } = null!;
+    public int EmployeeQuantity { get; set; }
+    public int MornitorQuantity { get; set; }
     public string? Description { get; set; }
     public string? CreatedBy { get; set; }
     public DateTime? CreatedDate { get; set; }
@@ -16,6 +18,8 @@ public class DepartmentViewDTO
     {
         Id = department.Id;
         Name = department.Name;
+        EmployeeQuantity = department.EmployeeQuantity;
+        MornitorQuantity = department.MornitorQuantity;
         Description = department.Description;
         CreatedBy = user.UserName;
         CreatedDate = department.CreatedDate;

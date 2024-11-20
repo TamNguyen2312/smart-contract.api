@@ -36,6 +36,13 @@ public class DepartmentBizLogic : IDepartmentBizLogic
         return response;
     }
 
+    public async Task<DepartmentViewDTO> GetDepartment(long id, long userId)
+    {
+        var data = await _departmentRepository.GetDepartment(id, userId);
+        var response = await GetDepartmentView(data);
+        return response;
+    }
+
 
     #region PRIVATE
 
@@ -46,7 +53,7 @@ public class DepartmentBizLogic : IDepartmentBizLogic
     /// <returns></returns>
     private async Task<DepartmentViewDTO> GetDepartmentView(Department department)
     {
-        var user = await _identityRepository.GetByIdAsync(Convert.ToInt64(department.CreatedBy));
+        var user = await _identityRepository.GetByEmailAsync(department.CreatedBy);
         if (user == null) return null;
         var view = new DepartmentViewDTO(department, user);
         return view;

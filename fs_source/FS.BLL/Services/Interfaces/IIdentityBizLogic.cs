@@ -12,6 +12,8 @@ namespace FS.BLL.Services.Interfaces;
 public interface IIdentityBizLogic
 {
 	Task<ApplicationUser> GetByEmailAsync(string email);
+	Task<ApplicationUser> GetByEmailOrUserNameAsync(string input);
+	Task<ApplicationUser> GetByUserName(string username);
 	Task<long> AddUserAsync(ApplicationUser dto, string password);
 	Task<bool> UpdateAsync(ApplicationUser dto);
 	Task<ApplicationUser> GetByIdAsync(long id);

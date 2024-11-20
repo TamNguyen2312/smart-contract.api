@@ -50,6 +50,14 @@ public class ManagerBizLogic : IManagerBizLogic
         return managerView;
     }
 
+    public async Task<ManagerViewDTO> GetManagerByDepartmentId(long departmentId)
+    {
+        var manager = await _managerRepository.GetManager(departmentId);
+        if (manager == null) return null;
+        var managerView = await GetManagerView(manager);
+        return managerView;
+    }
+
     #region CONVERT
 
     /// <summary>

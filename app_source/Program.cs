@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace App.API
 {
@@ -79,7 +80,7 @@ namespace App.API
                     options.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "fs");
                 }));
 
-            builder.Services.AddDbContext<AppDbContext>(opts => opts.UseSqlServer(connectionString, options =>
+            builder.Services.AddDbContext<App.DAL.AppDbContext>(opts => opts.UseSqlServer(connectionString, options =>
             {
                 options.MigrationsAssembly("App.API");
                 options.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "app");

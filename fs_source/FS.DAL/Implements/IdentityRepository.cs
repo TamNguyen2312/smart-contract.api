@@ -67,7 +67,7 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
                 new Claim(ClaimTypes.Email, user.Email ?? String.Empty),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
-                new Claim(Constants.USERNAME, user.FirstName + " " +  user.LastName ?? string.Empty),
+                new Claim(Constants.FULL_NAME, user.FirstName + " " +  user.LastName ?? string.Empty),
                 new Claim(Constants.POLICY_VERIFY_EMAIL, user.EmailConfirmed.ToString()),
                 new Claim(Constants.AVATAR, user.Avatar ?? Constants.DefaultAvatar),
                 new Claim(Constants.IS_ADMIN, isAdmin.ToString()),
@@ -263,7 +263,39 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
         if (storedToken.IsRevoked || storedToken.IsUsed) return true;
         return false;
     }
-
+    
+    public async Task<ApplicationUser> GetByUserName(string username)
+    {
+        var user = await _userManager.FindByNameAsync(username);
+        return user;
+    }
+    
+    /// <summary>
+    /// This is used to find a user by Email or UserName
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    public async Task<ApplicationUser> GetByEmailOrUserNameAsync(string input)
+    {
+        if (input.Contains("@"))
+        {
+            // Xử lý như email
+            var user = await _userManager.FindByEmailAsync(input);
+            if (user == null)
+            {
+                user = await _dbContext.Users.FirstOrDefaultAsync(
+                    x => x.Email.Replace(".", "") == input.Replace(".", "")
+                );
+            }
+            return user;
+        }
+        else
+        {
+            // Xử lý như tên người dùng
+            return await _userManager.FindByNameAsync(input);
+        }
+    }
+    
     public async Task<ApplicationUser> GetByEmailAsync(string email)
     {
         if (email.IndexOf('@') >= 0)
@@ -346,7 +378,7 @@ public class IdentityRepository : BaseRepository, IIdentityRepository
     /// <param name="user"></param>
     /// <param name="token"></param>
     /// <returns></returns>
-    public async Task<bool> VerifyEmailAsycn(ApplicationUser user, string token)
+    public async Task<bool> VerifyEmailAsync(ApplicationUser user, string token)
     {
         var decodedToken = HttpUtility.UrlDecode(token);
         var result = await _userManager.ConfirmEmailAsync(user, decodedToken.Replace(" ", "+"));

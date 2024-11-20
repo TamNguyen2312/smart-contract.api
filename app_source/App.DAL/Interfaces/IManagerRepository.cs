@@ -8,4 +8,5 @@ public interface IManagerRepository
 {
     Task<BaseResponse> CreateUpdateManager(Manager manager, ApplicationUser user);
     Task<Manager> GetManager(long userId);
+    Task<Manager> GetManagerByDepartmentId(long departmentId);
 }
