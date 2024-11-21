@@ -58,4 +58,13 @@ public class CustomerDocumentRepository : ICustomerDocumentRepository
 
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
     }
+    
+    public async Task<CustomerDocument> GetCustomerDocument(long id)
+    {
+        var baseRepo = _unitOfWork.GetRepository<CustomerDocument>();
+        var customerDocument = await baseRepo.GetSingleAsync(new QueryBuilder<CustomerDocument>()
+            .WithPredicate(x => x.Id == id && x.IsDelete == false)
+            .Build());
+        return customerDocument;
+    }
 }

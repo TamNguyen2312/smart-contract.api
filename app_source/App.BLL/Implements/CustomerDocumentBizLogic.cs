@@ -1,6 +1,7 @@
 using App.BLL.Interfaces;
 using App.DAL.Interfaces;
 using App.Entity.DTOs.CustomerDocument;
+using App.Entity.Entities;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 
@@ -23,4 +24,21 @@ public class CustomerDocumentBizLogic : ICustomerDocumentBizLogic
         var response = await _customerDocumentRepository.CreateUpdateCustomerDocument(entity, user);
         return response;
     }
+
+    public async Task<CustomerDocumentViewDTO> GetCustomerDocument(long id)
+    {
+        var data = await _customerDocumentRepository.GetCustomerDocument(id);
+        if (data == null) return null;
+        var response = GetCustomerDocumentView(data);
+        return response;
+    }
+
+    #region PRIVATE
+
+    private CustomerDocumentViewDTO GetCustomerDocumentView(CustomerDocument customerDocument)
+    {
+        return new CustomerDocumentViewDTO(customerDocument);
+    }
+
+    #endregion
 }

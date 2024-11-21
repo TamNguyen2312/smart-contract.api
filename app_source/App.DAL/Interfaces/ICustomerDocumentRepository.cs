@@ -7,4 +7,5 @@ namespace App.DAL.Interfaces;
 public interface ICustomerDocumentRepository
 {
     Task<BaseResponse> CreateUpdateCustomerDocument(CustomerDocument customerDocument, ApplicationUser user);
+    Task<CustomerDocument> GetCustomerDocument(long id);
 }
