@@ -48,6 +48,7 @@ public class CustomerDocumentRepository : ICustomerDocumentRepository
                 FilePath = customerDocument.FilePath,
                 CreatedDate = DateTime.Now,
                 CreatedBy = user.UserName,
+                CustomerId = customerDocument.CustomerId,
                 IsDelete = false
             };
             await baseRepo.CreateAsync(newCustomerDocument);
