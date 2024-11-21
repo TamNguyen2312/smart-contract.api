@@ -27,6 +27,12 @@ public partial class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("app");
 
+        modelBuilder.Entity<CustomerDocument>(c =>
+        {
+            c.ToTable("App_CustomerDocuments");
+            c.HasKey(cd => cd.Id);
+        });
+        
         modelBuilder.Entity<Contract>(c =>
         {
             c.ToTable("App_Contracts");

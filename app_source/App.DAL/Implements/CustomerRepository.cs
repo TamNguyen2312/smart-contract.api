@@ -95,6 +95,37 @@ public class CustomerRepository : ICustomerRepository
             .Build());
         return customer;
     }
+    
+    public async Task<Customer> GetCustomer(long customerId)
+    {
+        var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
+        var customer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
+            .WithPredicate(x => x.Id == customerId && x.IsDelete == false)
+            .Build());
+        return customer;
+    }
+    
+    public async Task<Customer> GetCustomerByEmail(string email)
+    {
+        var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
+        if (email.IndexOf('@') >= 0)
+        {
+            // Find by email:
+            var customer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
+                .WithPredicate(x => x.Email.Equals(email)
+                                    && x.IsDelete == false)
+                .Build());
+            if (customer == null)
+            {
+                customer = await baseCustomerRepo.GetSingleAsync(new QueryBuilder<Customer>()
+                    .WithPredicate(x => x.Email.Replace(".", "") == email.Replace(".", "")
+                                        && x.IsDelete == false)
+                    .Build());
+            }
+            return customer;
+        }
+        return null;
+    }
 
     public async Task<BaseResponse> DeleteCustomer(long customerId, ApplicationUser user)
     {
