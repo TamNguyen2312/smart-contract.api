@@ -84,21 +84,21 @@ public class EmployeeBizLogic : IEmployeeBizLogic
         var userId = Convert.ToInt64(emp.Id);
         var user = await _identityRepository.GetByIdAsync(userId);
         var userRoles = await _identityRepository.GetRolesAsync(userId);
-        var department = await _departmentRepository.GetDepartment(emp.DepartmentId, userId);
+        var department = await _departmentRepository.GetDepartment(emp.DepartmentId);
         var empView = new EmployeeViewDTO(user, userRoles.ToList(), emp, department);
         return empView;
     }
 
     private async Task<EmployeeViewDTO> GetEmpView(Employee emp, ApplicationUser user, List<string> userRoles)
     {
-        var department = await _departmentRepository.GetDepartment(emp.DepartmentId, user.Id);
+        var department = await _departmentRepository.GetDepartment(emp.DepartmentId);
         var empView = new EmployeeViewDTO(user, userRoles.ToList(), emp, department);
         return empView;
     }
     
     private async Task<EmployeeViewDTO> GetEmpView(Employee emp, ApplicationUser user)
     {
-        var department = await _departmentRepository.GetDepartment(emp.DepartmentId, user.Id);
+        var department = await _departmentRepository.GetDepartment(emp.DepartmentId);
         var userRoles = await _identityRepository.GetRolesAsync(user.Id);
         var empView = new EmployeeViewDTO(user, userRoles.ToList(), emp, department);
         return empView;

@@ -1,4 +1,5 @@
 using FS.BaseModels.IdentityModels;
+using FS.Commons;
 
 namespace App.Entity.DTOs.Department;
 
@@ -10,9 +11,9 @@ public class DepartmentViewDTO
     public int MornitorQuantity { get; set; }
     public string? Description { get; set; }
     public string? CreatedBy { get; set; }
-    public DateTime? CreatedDate { get; set; }
+    public string? CreatedDate { get; set; }
     public string? ModifiedBy { get; set; }
-    public DateTime? ModifiedDate { get; set; }
+    public string? ModifiedDate { get; set; }
 
     public DepartmentViewDTO(Entities.Department department, ApplicationUser user)
     {
@@ -21,9 +22,9 @@ public class DepartmentViewDTO
         EmployeeQuantity = department.EmployeeQuantity;
         MornitorQuantity = department.MornitorQuantity;
         Description = department.Description;
-        CreatedBy = user.UserName;
-        CreatedDate = department.CreatedDate;
-        ModifiedBy = user.UserName;
-        ModifiedDate = department.ModifiedDate;
+        CreatedBy = department.CreatedBy;
+        CreatedDate = department.CreatedDate.HasValue ? department.CreatedDate.Value.ToString(Constants.FormatDate) : null;
+        ModifiedBy = department.ModifiedBy;
+        ModifiedDate = department.ModifiedDate.HasValue ? department.ModifiedDate.Value.ToString(Constants.FormatDate) : null;
     }
 }

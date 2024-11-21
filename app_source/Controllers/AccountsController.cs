@@ -457,7 +457,7 @@ namespace App.API.Controllers
                     return ModelInvalid();
                 }
 
-                var departmentView = await _departmentBizLogic.GetDepartment(dto.DepartmentId, UserId);
+                var departmentView = await _departmentBizLogic.GetDepartment(dto.DepartmentId);
                 if (departmentView.MornitorQuantity >= departmentView.EmployeeQuantity)
                 {
                     ModelState.AddModelError("DepartmentId", "Phòng ban đã đủ nhân viên!");
