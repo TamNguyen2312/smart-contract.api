@@ -9,5 +9,6 @@ public interface IDepartmentRepository
 {
     Task<BaseResponse> CreateUpdateDepartment(Department department, ApplicationUser user);
     Task<List<Department>> GetDropDownDepartment();
-    Task<Department> GetDepartment(long id, long userId);
+    Task<Department> GetDepartment(long id);
+    Task<List<Department>> GetAllDepartments(DepartmentGetListDTO dto);
 }

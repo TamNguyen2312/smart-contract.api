@@ -36,13 +36,21 @@ public class DepartmentBizLogic : IDepartmentBizLogic
         return response;
     }
 
-    public async Task<DepartmentViewDTO> GetDepartment(long id, long userId)
+    public async Task<DepartmentViewDTO> GetDepartment(long id)
     {
-        var data = await _departmentRepository.GetDepartment(id, userId);
+        var data = await _departmentRepository.GetDepartment(id);
+        if (data == null) return null;
         var response = await GetDepartmentView(data);
         return response;
     }
-
+    
+    
+    public async Task<List<DepartmentViewDTO>> GetAllDepartments(DepartmentGetListDTO dto)
+    {
+        var data = await _departmentRepository.GetAllDepartments(dto);
+        var response = await GetDepartmentViews(data);
+        return response;
+    }
 
     #region PRIVATE
 

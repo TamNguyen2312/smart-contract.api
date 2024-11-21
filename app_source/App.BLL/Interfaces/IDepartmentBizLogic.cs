@@ -8,5 +8,6 @@ public interface IDepartmentBizLogic
     Task<BaseResponse> CreateUpdateDepartment(DepartmentRequestDto dto, long userId);
     Task<List<DepartmentViewDTO>> GetDropDownDepartment();
 
-    Task<DepartmentViewDTO> GetDepartment(long id, long userId);
+    Task<DepartmentViewDTO> GetDepartment(long id);
+    Task<List<DepartmentViewDTO>> GetAllDepartments(DepartmentGetListDTO dto);
 }

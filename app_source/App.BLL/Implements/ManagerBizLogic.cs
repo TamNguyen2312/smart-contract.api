@@ -82,21 +82,21 @@ public class ManagerBizLogic : IManagerBizLogic
         var userId = Convert.ToInt64(manager.Id);
         var user = await _identityRepository.GetByIdAsync(userId);
         var userRoles = await _identityRepository.GetRolesAsync(userId);
-        var department = await _departmentRepository.GetDepartment(manager.DepartmentId, userId);
+        var department = await _departmentRepository.GetDepartment(manager.DepartmentId);
         var view = new ManagerViewDTO(user, userRoles.ToList(), manager, department);
         return view;
     }
 
     private async Task<ManagerViewDTO> GetManagerView(Manager manager, ApplicationUser user, List<string> userRoles)
     {
-        var department = await _departmentRepository.GetDepartment(manager.DepartmentId, user.Id);
+        var department = await _departmentRepository.GetDepartment(manager.DepartmentId);
         var view = new ManagerViewDTO(user, userRoles, manager, department);
         return view;
     }
 
     private async Task<ManagerViewDTO> GetManagerView(Manager manager, ApplicationUser user)
     {
-        var department = await _departmentRepository.GetDepartment(manager.DepartmentId, user.Id);
+        var department = await _departmentRepository.GetDepartment(manager.DepartmentId);
         var userRoles = await _identityRepository.GetRolesAsync(user.Id);
         var view = new ManagerViewDTO(user, userRoles.ToList(), manager, department);
         return view;

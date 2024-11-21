@@ -7,6 +7,7 @@ using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace App.DAL.Implements;
@@ -53,8 +54,8 @@ public class DepartmentRepository : IDepartmentRepository
                 CreatedDate = DateTime.Now,
                 CreatedBy = user.UserName,
                 IsDelete = false,
-                ModifiedDate = default,
-                ModifiedBy = default
+                ModifiedBy = default,
+                ModifiedDate = default
             };
             await baseRepo.CreateAsync(newDepartment);
         }
@@ -73,12 +74,30 @@ public class DepartmentRepository : IDepartmentRepository
         return response.ToList();
     }
 
-    public async Task<Department> GetDepartment(long id, long userId)
+    public async Task<Department> GetDepartment(long id)
     {
         var baseRepo = _unitOfWork.GetRepository<Department>();
         var response = await baseRepo.GetSingleAsync(new QueryBuilder<Department>()
             .WithPredicate(x => x.IsDelete == false && x.Id == id)
             .Build());
         return response;
+    }
+
+    public async Task<List<Department>> GetAllDepartments(DepartmentGetListDTO dto)
+    {
+        var baseRepo = _unitOfWork.GetRepository<Department>();
+        var query = baseRepo.Get(new QueryBuilder<Department>()
+            .WithPredicate(x => x.IsDelete == false)
+            .Build());
+
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            query = query.Where(x => x.Name.Contains(dto.Keyword) ||
+                                     x.CreatedBy.Contains(dto.Keyword));
+        }
+
+        query = query.ApplyOrderDate(dto.OrderDate);
+        dto.TotalRecord = await query.CountAsync();
+        return await query.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
     }
 }
