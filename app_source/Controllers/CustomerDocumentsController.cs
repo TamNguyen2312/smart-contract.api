@@ -52,5 +52,29 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }   
         }
+        
+        [FSAuthorize(Policy = "AdminManagerPolicy")]
+        [HttpPost]
+        [Route("get-customer-document-by-id/{id}")]
+        public async Task<IActionResult> GetCustomerDocument([FromRoute]long id)
+
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                //...author manager
+                
+                var data = await _customerDocumentBizLogic.GetCustomerDocument(id);
+                if (data == null) return GetNotFound(Constants.GetNotFound);
+                return GetSuccess(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetCustomerDocument {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
     }
 }

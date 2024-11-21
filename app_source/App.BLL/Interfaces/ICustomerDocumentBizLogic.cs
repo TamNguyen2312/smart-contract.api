@@ -6,4 +6,5 @@ namespace App.BLL.Interfaces;
 public interface ICustomerDocumentBizLogic
 {
     Task<BaseResponse> CreateUpdateCustomerDocument(CustomerDocumentRequestDTO dto, long userId);
+    Task<CustomerDocumentViewDTO> GetCustomerDocument(long id);
 }
