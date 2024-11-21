@@ -44,6 +44,23 @@ public class CustomerBizLogic : ICustomerBizLogic
         return response;
     }
 
+    public async Task<CustomerViewDTO> GetCustomer(long customerId)
+    {
+        var data = await _customerRepository.GetCustomer(customerId);
+        if (data == null) return null;
+        var response = await GetCustomerView(data);
+        return response;
+    }
+
+
+    public async Task<CustomerViewDTO> GetCustomerByEmail(string email)
+    {
+        var data = await _customerRepository.GetCustomerByEmail(email);
+        if (data == null) return null;
+        var response = await GetCustomerView(data);
+        return response;
+    }
+
     public async Task<BaseResponse> DeleteCustomer(long customerId, long userId)
     {
         var user = await _identityRepository.GetByIdAsync(userId);
@@ -75,9 +92,7 @@ public class CustomerBizLogic : ICustomerBizLogic
     /// <returns></returns>
     private async Task<CustomerViewDTO> GetCustomerView(Customer customer)
     {
-        var userView = await GetUserView(Convert.ToInt64(customer.CreatedBy));
-        if (userView == null) return null;
-        var customerView = new CustomerViewDTO(customer, userView);
+        var customerView = new CustomerViewDTO(customer);
         return customerView;
     }
 

@@ -1,3 +1,4 @@
+using App.API.Filter;
 using App.BLL.Interfaces;
 using App.Entity.DTOs.Customer;
 using App.Entity.Entities;
@@ -16,13 +17,15 @@ namespace App.API.Controllers
     public class CustomersController : BaseAPIController
     {
         private readonly ICustomerBizLogic _customerBizLogic;
+        private readonly ILogger<CustomersController> _logger;
 
-        public CustomersController(ICustomerBizLogic customerBizLogic)
+        public CustomersController(ICustomerBizLogic customerBizLogic, ILogger<CustomersController> logger)
         {
             _customerBizLogic = customerBizLogic;
+            _logger = logger;
         }
 
-        [Authorize]
+        [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPost]
         [Route("create-update-customer")]
         public async Task<IActionResult> CreateUpdateCustomer(CustomerRequestDto dto)
@@ -40,20 +43,25 @@ namespace App.API.Controllers
                     return ModelInvalid();
                 }
 
+                var existedEmail = await _customerBizLogic.GetCustomerByEmail(dto.Email);
+                if (existedEmail != null)
+                {
+                    return SaveError("Email khách hàng đã tồn tại.");
+                }
                 var responnse = await _customerBizLogic.CreateUpdateCustomer(dto, UserId);
                 if (!responnse.IsSuccess) return SaveError(responnse.Message);
                 return SaveSuccess(responnse);
             }
             catch (Exception e)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(e);
+                _logger.LogError("CreateUpdateCustomer {0} {1}", e.Message, e.StackTrace); 
                 return Error(Constants.SomeThingWentWrong);
             }   
         }
 
         [Authorize]
         [HttpPost]
-        [Route("get-list-customers")]
+        [Route("get-all-customers")]
         public async Task<IActionResult> GetAllCustomers([FromBody]CustomerGetListDTO dto)
         {
             try
@@ -62,20 +70,25 @@ namespace App.API.Controllers
                 if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
                 
                 if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
+                }
                 var data = await _customerBizLogic.GetAllCustomers(dto, UserId);
                 var response = new PagingDataModel<CustomerViewDTO>(data, dto);
                 return GetSuccess(response);
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("GetAllCustomers {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
 
         [Authorize]
         [HttpPost]
-        [Route("get-customer/{customerId}")]
+        [Route("get-customer-by-id/{customerId}")]
         public async Task<IActionResult> GetCustomer([FromRoute]long customerId)
 
         {
