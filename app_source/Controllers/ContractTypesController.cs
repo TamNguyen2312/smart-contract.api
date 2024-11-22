@@ -20,7 +20,7 @@ namespace App.API.Controllers
             this._contractTypeBizLogic = contractTypeBizLogic;
         }
 
-        [FSAuthorize]
+        [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPost]
         [Route("create-update-contract-type")]
         public async Task<IActionResult> CreateUpdateContractType(ContractTypeRequestDTO dto)
@@ -41,7 +41,7 @@ namespace App.API.Controllers
         }
 
 
-        [FSAuthorize]
+        [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpGet]
         [Route("get-contract-type-by-id/{id}")]
         public async Task<IActionResult> GetContractTypeById(long id)
@@ -59,7 +59,7 @@ namespace App.API.Controllers
             }
         }
 
-        [FSAuthorize]
+        [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPost]
         [Route("get-all-contract-types")]
         public async Task<IActionResult> GetAllContractTypes([FromBody] ContractTypeGetListDTO dto)
@@ -77,7 +77,7 @@ namespace App.API.Controllers
             }
         }
 
-        [FSAuthorize]
+        [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpGet]
         [Route("get-dropdown-list-contract-types")]
         public async Task<IActionResult> GetDropdownListContractTypes()
