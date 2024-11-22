@@ -84,6 +84,30 @@ public class CustomerRepository : ICustomerRepository
         var response = await loadedRecords.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return response;
     }
+    
+    /// <summary>
+    /// method check permission of manager when access customer information
+    /// </summary>
+    /// <param name="managerId"></param>
+    /// <param name="customerId"></param>
+    /// <returns></returns>
+    public async Task<bool> ManagerHasAccessToCustomerAsync(string managerId, long customerId)
+    {
+        var managerBaseRepo = _unitOfWork.GetRepository<Manager>();
+        var assignBaseRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var managerDbSet = managerBaseRepo.GetDbSet();
+        var assignDbSet = assignBaseRepo.GetDbSet();
+        
+        var hasAccess = await (from cda in assignDbSet
+            join m in managerDbSet on cda.DeparmentId equals m.DepartmentId
+            where cda.CustomerId == customerId
+                  && m.Id == managerId
+                  && !cda.IsDelete
+                  && !m.IsDelete
+            select cda).AnyAsync();
+
+        return hasAccess;
+    }
 
     public async Task<Customer> GetCustomer(long customerId, ApplicationUser user)
     {

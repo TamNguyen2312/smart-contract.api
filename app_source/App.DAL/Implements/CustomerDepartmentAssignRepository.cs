@@ -59,4 +59,33 @@ public class CustomerDepartmentAssignRepository : ICustomerDepartmentAssignRepos
 
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
     }
+
+    /// <summary>
+    /// Get assign using its id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public async Task<CustomerDepartmentAssign> GetCustomerDepartmentAssign(long id)
+    {
+        var baseRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var assign = await baseRepo.GetSingleAsync(new QueryBuilder<CustomerDepartmentAssign>()
+            .WithPredicate(x => x.Id == id && !x.IsDelete)
+            .Build());
+        return assign;
+    }
+    
+    /// <summary>
+    /// Get assign but using customer id and departmentId
+    /// </summary>
+    /// <param name="customerId"></param>
+    /// <param name="departmentId"></param>
+    /// <returns></returns>
+    public async Task<CustomerDepartmentAssign> GetCustomerDepartmentAssign(long customerId, long departmentId)
+    {
+        var baseRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var assign = await baseRepo.GetSingleAsync(new QueryBuilder<CustomerDepartmentAssign>()
+            .WithPredicate(x => x.CustomerId == customerId && x.DeparmentId == departmentId && !x.IsDelete)
+            .Build());
+        return assign;
+    }
 }

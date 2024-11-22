@@ -1,7 +1,7 @@
 using App.API.Filter;
 using App.BLL.Interfaces;
 using App.Entity.DTOs.Customer;
-using App.Entity.DTOs.CustomerDeparmentAssgin;
+using App.Entity.DTOs.CustomerDeparmentAssign;
 using FS.BaseAPI;
 using FS.Commons;
 using FS.Utility;

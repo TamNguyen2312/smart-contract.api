@@ -35,6 +35,18 @@ public class CustomerBizLogic : ICustomerBizLogic
         return await GetCustomerViews(response);
     }
 
+    /// <summary>
+    /// check permission of manager when access Customer information
+    /// </summary>
+    /// <param name="managerId"></param>
+    /// <param name="customerId"></param>
+    /// <returns></returns>
+    public async Task<bool> ManagerHasAccessToCustomerAsync(string managerId, long customerId)
+    {
+        var response = await _customerRepository.ManagerHasAccessToCustomerAsync(managerId, customerId);
+        return response;
+    }
+
     public async Task<CustomerViewDTO> GetCustomer(long customerId, long userId)
     {
         var user = await _identityRepository.GetByIdAsync(userId);
