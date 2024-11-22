@@ -21,6 +21,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Contract> Contracts { get; set; }
     public virtual DbSet<CustomerDocument> CustomerDocuments { get; set; }
     public virtual DbSet<CustomerDepartmentAssign> CustomerDepartmentAssigns { get; set; }
+    public virtual DbSet<EmpContract> EmpContractss { get; set; }
 
     #endregion
 
@@ -29,6 +30,12 @@ public partial class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("app");
 
+        modelBuilder.Entity<EmpContract>(ec =>
+        {
+            ec.ToTable("App_EmpContracts");
+            ec.HasKey(empContract => new {empContract.EmployeeId, empContract.ContractId});
+        });
+        
         modelBuilder.Entity<CustomerDepartmentAssign>(c =>
         {
             c.ToTable("App_CustomerDeparmentAssigns");

@@ -11,6 +11,8 @@ public class Contract : CommonDataModel
     public DateTime ExpirationDate { get; set; }
     public string KeyContent { get; set; } = null!;
     public string ContractFile { get; set; } = null!;
+    public int ContractDaysLeft { get; set; }
+    public int AppendixDaysLeft { get; set; }
     public long CustomerId { get; set; }
     public long ContractTypeId { get; set; }
 
