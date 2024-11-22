@@ -13,4 +13,7 @@ public interface ICustomerDepartmentAssignRepository
 
     Task<List<CustomerDepartmentAssign>> GetCustomerDepartmentAssignsByAdmin(CustomerDepartmentAssignGetListDTO dto,
         string userName);
+
+    Task<List<CustomerDepartmentAssign>> GetCustomerDepartmentAssignsByManager(CustomerDepartmentAssignGetListDTO dto,
+        string managerId);
 }

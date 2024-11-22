@@ -41,6 +41,14 @@ public class CustomerDepartmentAssignBizLogic : ICustomerDepartmentAssignBizLogi
         return response;
     }
 
+    public async Task<List<CustomerDepartmentAssignViewDTO>> GetCustomerDepartmentAssignsByManager(
+        CustomerDepartmentAssignGetListDTO dto, string managerId)
+    {
+        var data = await _customerDepartmentAssignRepository.GetCustomerDepartmentAssignsByManager(dto, managerId);
+        var response = await GetCustomerDepartmentAssignViews(data);
+        return response;
+    }
+
     public async Task<CustomerDepartmentAssignViewDTO> GetCustomerDepartmentAssign(long id)
     {
         var data = await _customerDepartmentAssignRepository.GetCustomerDepartmentAssign(id);
