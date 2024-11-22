@@ -99,6 +99,7 @@ namespace App.API.Controllers
             }
         }
         
+        
         [FSAuthorize(Policy = "ManagerRolePolicy")]
         [HttpPost]
         [Route("get-customer-department-assigns-by-manager")]
@@ -125,6 +126,34 @@ namespace App.API.Controllers
             catch (Exception e)
             {
                 _logger.LogError("GetCustomerDepartmentAssignsByManager {0} {1}", e.Message, e.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        [FSAuthorize(Policy = "AdminManagerPolicy")]
+        [HttpPost]
+        [Route("get-customer-department-assign-by-id/{id}")]
+        public async Task<IActionResult> GetCustomerDepartmentAssign([FromRoute] long id)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (IsManager)
+                {
+                    var hasAccess =
+                        await _customerDepartmentAssignBizLogic.ManagerHasAccessToAssignAsync(ManagerOrEmpId, id);
+                    if (!hasAccess) return GetForbidden();
+                }
+
+                var responnse = await _customerDepartmentAssignBizLogic.GetCustomerDepartmentAssign(id);
+                if (responnse == null) return GetNotFound(Constants.GetNotFound);
+                return GetSuccess(responnse);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("GetCustomerDepartmentAssign {0} {1}", e.Message, e.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
