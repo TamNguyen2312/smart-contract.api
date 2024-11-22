@@ -70,6 +70,16 @@ public class ManagerBizLogic : IManagerBizLogic
         return response;
     }
 
+    /// <summary>
+    /// Check that department has manager
+    /// </summary>
+    /// <param name="departmentId"></param>
+    /// <returns></returns>
+    public async Task<bool> HasManagerInDepartment(long departmentId)
+    {
+        return await _managerRepository.HasManagerInDepartment(departmentId);
+    }
+
     #region CONVERT
 
     /// <summary>
