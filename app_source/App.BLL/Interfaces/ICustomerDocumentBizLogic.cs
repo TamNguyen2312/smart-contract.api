@@ -11,4 +11,6 @@ public interface ICustomerDocumentBizLogic
 
     Task<List<CustomerDocumentViewDTO>> GetCustomerDocumentsByManagerAsync(CustomerDocumentGetListDTO dto,
         string managerId);
+
+    Task<bool> ManagerHasAccessToCustomerDocumentAsync(string managerId, long customerDocumentId);
 }

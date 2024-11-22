@@ -148,6 +148,33 @@ public class CustomerDocumentRepository : ICustomerDocumentRepository
         var result = await customerDocuments.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
+    
+    /// <summary>
+    /// This is used to check access of logged manager
+    /// </summary>
+    /// <param name="managerId"></param>
+    /// <param name="customerDocumentId"></param>
+    /// <returns></returns>
+    public async Task<bool> ManagerHasAccessToCustomerDocumentAsync(string managerId, long customerDocumentId)
+    {
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var baseAssignRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var baseCustomerDocumentRepo = _unitOfWork.GetRepository<CustomerDocument>();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+        var assignDbSet = baseAssignRepo.GetDbSet();
+        var documentDbSet = baseCustomerDocumentRepo.GetDbSet();
+        var hasAccess = await (from m in managerDbSet
+            join cda in assignDbSet on m.DepartmentId equals cda.DeparmentId
+            join cd in documentDbSet on cda.CustomerId equals cd.CustomerId
+            where m.Id == managerId
+                  && cd.Id == customerDocumentId
+                  && !m.IsDelete
+                  && !cda.IsDelete
+                  && !cd.IsDelete
+            select cd).AnyAsync();
+
+        return hasAccess;
+    }
 
 
     public async Task<CustomerDocument> GetCustomerDocument(long id)

@@ -54,6 +54,13 @@ public class CustomerDocumentBizLogic : ICustomerDocumentBizLogic
         return response;
     }
 
+    public async Task<bool> ManagerHasAccessToCustomerDocumentAsync(string managerId, long customerDocumentId)
+    {
+        var response =
+            await _customerDocumentRepository.ManagerHasAccessToCustomerDocumentAsync(managerId, customerDocumentId);
+        return response;
+    }
+
     #region PRIVATE
 
     private CustomerDocumentViewDTO GetCustomerDocumentView(CustomerDocument customerDocument)
