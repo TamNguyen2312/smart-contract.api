@@ -118,32 +118,35 @@ namespace App.API.Controllers
             }   
         }
         
-        // [FSAuthorize(Policy = "AdminManagerPolicy")]
-        // [HttpPost]
-        // [Route("get-customer-document-by-id/{id}")]
-        // public async Task<IActionResult> GetCustomerDocument([FromRoute]long id)
-        //
-        // {
-        //     try
-        //     {
-        //         var isInvoked = await IsTokenInvoked();
-        //         if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
-        //         
-        //         var data = await _customerDocumentBizLogic.GetCustomerDocument(id);
-        //         if (data == null) return GetNotFound(Constants.GetNotFound);
-        //         //...author manager
-        //         if (IsManager)
-        //         {
-        //             var assign = await _customerDepartmentAssignBizLogic.GetCustomerDepartmentAssign(data.)
-        //         }
-        //         
-        //         return GetSuccess(data);
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.LogError("GetCustomerDocument {0} {1}", ex.Message, ex.StackTrace);
-        //         return Error(Constants.SomeThingWentWrong);
-        //     }
-        // }
+        [FSAuthorize(Policy = "AdminManagerPolicy")]
+        [HttpGet]
+        [Route("get-customer-document-by-id/{id}")]
+        public async Task<IActionResult> GetCustomerDocument([FromRoute]long id)
+        
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+                
+                //...author manager
+                if (IsManager)
+                {
+                    var hasAccess =
+                        await _customerDocumentBizLogic.ManagerHasAccessToCustomerDocumentAsync(ManagerOrEmpId, id);
+                    if (!hasAccess) return GetForbidden();
+                }
+                
+                var data = await _customerDocumentBizLogic.GetCustomerDocument(id);
+                if (data == null) return GetNotFound(Constants.GetNotFound);
+               
+                return GetSuccess(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetCustomerDocument {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
     }
 }
