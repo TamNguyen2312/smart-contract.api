@@ -16,4 +16,6 @@ public interface ICustomerDepartmentAssignRepository
 
     Task<List<CustomerDepartmentAssign>> GetCustomerDepartmentAssignsByManager(CustomerDepartmentAssignGetListDTO dto,
         string managerId);
+
+    Task<bool> ManagerHasAccessToAssignAsync(string managerId, long id);
 }

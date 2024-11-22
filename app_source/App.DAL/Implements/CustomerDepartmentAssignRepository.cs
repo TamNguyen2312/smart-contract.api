@@ -123,6 +123,29 @@ public class CustomerDepartmentAssignRepository : ICustomerDepartmentAssignRepos
         var result = await query.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
+    
+    /// <summary>
+    /// Check access of logged manager
+    /// </summary>
+    /// <param name="managerId"></param>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public async Task<bool> ManagerHasAccessToAssignAsync(string managerId, long id)
+    {
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var baseAssignRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+        var assignDbSet = baseAssignRepo.GetDbSet();
+        var hasAccess = await (from m in managerDbSet
+            join cda in assignDbSet on m.DepartmentId equals cda.DeparmentId
+            where m.Id == managerId
+                  && cda.Id == id
+                  && !m.IsDelete
+                  && !cda.IsDelete
+            select cda).AnyAsync();
+
+        return hasAccess;
+    }
 
     /// <summary>
     /// Get assign using its id

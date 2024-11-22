@@ -14,4 +14,6 @@ public interface ICustomerDepartmentAssignBizLogic
 
     Task<List<CustomerDepartmentAssignViewDTO>> GetCustomerDepartmentAssignsByManager(
         CustomerDepartmentAssignGetListDTO dto, string managerId);
+
+    Task<bool> ManagerHasAccessToAssignAsync(string managerId, long id);
 }

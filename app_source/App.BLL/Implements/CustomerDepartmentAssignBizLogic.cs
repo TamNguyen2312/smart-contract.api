@@ -49,6 +49,13 @@ public class CustomerDepartmentAssignBizLogic : ICustomerDepartmentAssignBizLogi
         return response;
     }
 
+    public async Task<bool> ManagerHasAccessToAssignAsync(string managerId, long id)
+    {
+        var response = await _customerDepartmentAssignRepository.ManagerHasAccessToAssignAsync(managerId, id);
+        return response;
+    }
+    
+
     public async Task<CustomerDepartmentAssignViewDTO> GetCustomerDepartmentAssign(long id)
     {
         var data = await _customerDepartmentAssignRepository.GetCustomerDepartmentAssign(id);
