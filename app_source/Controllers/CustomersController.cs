@@ -86,18 +86,23 @@ namespace App.API.Controllers
             }
         }
 
-        [Authorize]
+        [FSAuthorize(Policy = "AdminManagerPolicy")]
         [HttpPost]
         [Route("get-customer-by-id/{customerId}")]
         public async Task<IActionResult> GetCustomer([FromRoute]long customerId)
-
         {
             try
             {
                 var isInvoked = await IsTokenInvoked();
                 if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
                 
-                var data = await _customerBizLogic.GetCustomer(customerId, UserId);
+                if (IsManager)
+                {
+                    var hasAccess = await _customerBizLogic.ManagerHasAccessToCustomerAsync(ManagerOrEmpId, customerId);
+                    if (!hasAccess) return GetForbidden();
+                }
+                
+                var data = await _customerBizLogic.GetCustomer(customerId);
                 if (data == null) return GetNotFound(Constants.GetNotFound);
                 return GetSuccess(data);
             }

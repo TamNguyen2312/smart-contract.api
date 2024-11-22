@@ -17,12 +17,17 @@ namespace App.API.Controllers
         private readonly ICustomerDocumentBizLogic _customerDocumentBizLogic;
         private readonly ILogger<CustomerDocumentsController> _logger;
         private readonly ICustomerBizLogic _customerBizLogic;
+        private readonly ICustomerDepartmentAssignBizLogic _customerDepartmentAssignBizLogic;
 
-        public CustomerDocumentsController(ICustomerDocumentBizLogic customerDocumentBizLogic, ILogger<CustomerDocumentsController> logger, ICustomerBizLogic customerBizLogic)
+        public CustomerDocumentsController(ICustomerDocumentBizLogic customerDocumentBizLogic,
+            ILogger<CustomerDocumentsController> logger,
+            ICustomerBizLogic customerBizLogic,
+            ICustomerDepartmentAssignBizLogic customerDepartmentAssignBizLogic)
         {
             _customerDocumentBizLogic = customerDocumentBizLogic;
             _logger = logger;
             _customerBizLogic = customerBizLogic;
+            _customerDepartmentAssignBizLogic = customerDepartmentAssignBizLogic;
         }
         
         [FSAuthorize(Policy = "AdminRolePolicy")]
@@ -53,28 +58,32 @@ namespace App.API.Controllers
             }   
         }
         
-        [FSAuthorize(Policy = "AdminManagerPolicy")]
-        [HttpPost]
-        [Route("get-customer-document-by-id/{id}")]
-        public async Task<IActionResult> GetCustomerDocument([FromRoute]long id)
-
-        {
-            try
-            {
-                var isInvoked = await IsTokenInvoked();
-                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
-
-                //...author manager
-                
-                var data = await _customerDocumentBizLogic.GetCustomerDocument(id);
-                if (data == null) return GetNotFound(Constants.GetNotFound);
-                return GetSuccess(data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("GetCustomerDocument {0} {1}", ex.Message, ex.StackTrace);
-                return Error(Constants.SomeThingWentWrong);
-            }
-        }
+        // [FSAuthorize(Policy = "AdminManagerPolicy")]
+        // [HttpPost]
+        // [Route("get-customer-document-by-id/{id}")]
+        // public async Task<IActionResult> GetCustomerDocument([FromRoute]long id)
+        //
+        // {
+        //     try
+        //     {
+        //         var isInvoked = await IsTokenInvoked();
+        //         if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+        //         
+        //         var data = await _customerDocumentBizLogic.GetCustomerDocument(id);
+        //         if (data == null) return GetNotFound(Constants.GetNotFound);
+        //         //...author manager
+        //         if (IsManager)
+        //         {
+        //             var assign = await _customerDepartmentAssignBizLogic.GetCustomerDepartmentAssign(data.)
+        //         }
+        //         
+        //         return GetSuccess(data);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError("GetCustomerDocument {0} {1}", ex.Message, ex.StackTrace);
+        //         return Error(Constants.SomeThingWentWrong);
+        //     }
+        // }
     }
 }

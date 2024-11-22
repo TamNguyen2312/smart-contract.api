@@ -48,7 +48,7 @@ public class BaseAPIController : ControllerBase
     
     protected ActionResult GetForbidden()
     {
-        return new ForbidResult(Constants.GetForbidden);
+        return new ForbidResult();
     }
 
     /// <summary>
@@ -153,6 +153,18 @@ public class BaseAPIController : ControllerBase
             var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             long.TryParse(id, out long userId);
             return userId;
+        }
+    }
+    
+    /// <summary>
+    /// Get the logged Manager or Employee
+    /// </summary>
+    protected string ManagerOrEmpId
+    {
+        get
+        {
+            var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return id;
         }
     }
 

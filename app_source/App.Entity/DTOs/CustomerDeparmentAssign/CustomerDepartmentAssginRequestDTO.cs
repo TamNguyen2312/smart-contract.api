@@ -3,7 +3,7 @@ using App.Entity.Entities;
 using FS.Commons;
 using FS.Commons.Interfaces;
 
-namespace App.Entity.DTOs.CustomerDeparmentAssgin;
+namespace App.Entity.DTOs.CustomerDeparmentAssign;
 
 public class CustomerDepartmentAssginRequestDTO : IEntity<Entities.CustomerDepartmentAssign>
 {
