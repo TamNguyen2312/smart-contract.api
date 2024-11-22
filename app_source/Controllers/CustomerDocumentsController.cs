@@ -88,6 +88,36 @@ namespace App.API.Controllers
             }   
         }
         
+        
+        [FSAuthorize(Policy = "ManagerRolePolicy")]
+        [HttpPost]
+        [Route("get-customer-documents-by-manager")]
+        public async Task<IActionResult> GetCustomerDocumentsByManager(CustomerDocumentGetListDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                var data = await _customerDocumentBizLogic.GetCustomerDocumentsByManagerAsync(dto, ManagerOrEmpId);
+                var responnse = new PagingDataModel<CustomerDocumentViewDTO>(data, dto);
+                return GetSuccess(responnse);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("GetCustomerDocumentsByManager {0} {1}", e.Message, e.StackTrace); 
+                return Error(Constants.SomeThingWentWrong);
+            }   
+        }
+        
         // [FSAuthorize(Policy = "AdminManagerPolicy")]
         // [HttpPost]
         // [Route("get-customer-document-by-id/{id}")]
