@@ -1,3 +1,4 @@
+using App.Entity.DTOs.CustomerDocument;
 using App.Entity.Entities;
 using FS.BaseModels.IdentityModels;
 using FS.Commons.Models;
@@ -8,4 +9,5 @@ public interface ICustomerDocumentRepository
 {
     Task<BaseResponse> CreateUpdateCustomerDocument(CustomerDocument customerDocument, ApplicationUser user);
     Task<CustomerDocument> GetCustomerDocument(long id);
+    Task<List<CustomerDocument>> GetAllCustomerDocuments(CustomerDocumentGetListDTO dto, string userName);
 }

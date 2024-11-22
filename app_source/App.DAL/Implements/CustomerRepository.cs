@@ -147,6 +147,8 @@ public class CustomerRepository : ICustomerRepository
             customers = customers.ApplyOrderDate(dto.OrderDate);
         }
 
+        dto.TotalRecord = await customers.CountAsync();
+
         var result = await customers.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
 
         return result;

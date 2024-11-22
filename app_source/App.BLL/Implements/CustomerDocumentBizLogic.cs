@@ -33,11 +33,23 @@ public class CustomerDocumentBizLogic : ICustomerDocumentBizLogic
         return response;
     }
 
+    public async Task<List<CustomerDocumentViewDTO>> GetAllCustomerDocuments(CustomerDocumentGetListDTO dto, string userName)
+    {
+        var data = await _customerDocumentRepository.GetAllCustomerDocuments(dto, userName);
+        var response = GetCustomerDocumentViews(data);
+        return response;
+    }
+
     #region PRIVATE
 
     private CustomerDocumentViewDTO GetCustomerDocumentView(CustomerDocument customerDocument)
     {
         return new CustomerDocumentViewDTO(customerDocument);
+    }
+
+    private List<CustomerDocumentViewDTO> GetCustomerDocumentViews(List<CustomerDocument> customerDocuments)
+    {
+        return customerDocuments.Select(x => new CustomerDocumentViewDTO(x)).ToList();
     }
 
     #endregion

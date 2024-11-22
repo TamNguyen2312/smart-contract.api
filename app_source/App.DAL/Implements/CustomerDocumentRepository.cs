@@ -1,4 +1,5 @@
 using App.DAL.Interfaces;
+using App.Entity.DTOs.CustomerDocument;
 using App.Entity.Entities;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
@@ -6,6 +7,7 @@ using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
+using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.Implements;
 
@@ -59,6 +61,42 @@ public class CustomerDocumentRepository : ICustomerDocumentRepository
 
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
     }
+
+    
+    /// <summary>
+    /// This is used to get all customer document by admin
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <param name="userName"></param>
+    /// <returns></returns>
+    public async Task<List<CustomerDocument>> GetAllCustomerDocuments(CustomerDocumentGetListDTO dto, string userName)
+    {
+        var baseRepo = _unitOfWork.GetRepository<CustomerDocument>();
+        var documents = baseRepo.Get(new QueryBuilder<CustomerDocument>()
+            .WithPredicate(x => !x.IsDelete && x.CreatedBy.Equals(userName))
+            .Build());
+
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            documents = documents.Where(x => x.Description.Contains(dto.Keyword) || x.FilePath.Contains(dto.Keyword));
+        }
+
+        if (dto.CustomerId.HasValue)
+        {
+            documents = documents.Where(x => x.CustomerId == dto.CustomerId.Value);
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            documents = documents.ApplyOrderDate(dto.OrderDate);
+        }
+
+        dto.TotalRecord = await documents.CountAsync();
+        
+        var result = await documents.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
+    }
+    
     
     public async Task<CustomerDocument> GetCustomerDocument(long id)
     {
