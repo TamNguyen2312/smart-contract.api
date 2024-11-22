@@ -4,6 +4,7 @@ using App.Entity.DTOs.Customer;
 using App.Entity.DTOs.CustomerDeparmentAssign;
 using FS.BaseAPI;
 using FS.Commons;
+using FS.Commons.Models.DTOs;
 using FS.Utility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +34,7 @@ namespace App.API.Controllers
         [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPost]
         [Route("create-update-customer-department-assign")]
-        public async Task<IActionResult> CreateUpdateCustomerDepartmentAssign(CustomerDepartmentAssginRequestDTO dto)
+        public async Task<IActionResult> CreateUpdateCustomerDepartmentAssign(CustomerDepartmentAssignRequestDTO dto)
         {
             try
             {
@@ -63,6 +64,37 @@ namespace App.API.Controllers
             catch (Exception e)
             {
                 _logger.LogError("CreateUpdateCustomerDepartmentAssign {0} {1}", e.Message, e.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPost]
+        [Route("get-customer-department-assigns-by-admin")]
+        public async Task<IActionResult> GetCustomerDepartmentAssignsByAdmin(CustomerDepartmentAssignGetListDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
+                    return ModelInvalid();
+                }
+
+                var data = await _customerDepartmentAssignBizLogic.GetCustomerDepartmentAssignsByAdmin(dto, UserName);
+                var responnse = new PagingDataModel<CustomerDepartmentAssignViewDTO>(data, dto);
+                return GetSuccess(responnse);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("GetCustomerDepartmentAssignsByAdmin {0} {1}", e.Message, e.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }

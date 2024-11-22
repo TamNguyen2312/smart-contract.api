@@ -5,7 +5,7 @@ using FS.Commons.Interfaces;
 
 namespace App.Entity.DTOs.CustomerDeparmentAssign;
 
-public class CustomerDepartmentAssginRequestDTO : IEntity<Entities.CustomerDepartmentAssign>
+public class CustomerDepartmentAssignRequestDTO : IEntity<Entities.CustomerDepartmentAssign>
 {
     public long Id { get; set; }
     

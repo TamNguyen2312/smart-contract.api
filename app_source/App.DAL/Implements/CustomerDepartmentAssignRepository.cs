@@ -1,4 +1,5 @@
 using App.DAL.Interfaces;
+using App.Entity.DTOs.CustomerDeparmentAssign;
 using App.Entity.Entities;
 using FS.BaseModels.IdentityModels;
 using FS.Commons;
@@ -6,6 +7,7 @@ using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
+using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.Implements;
 
@@ -58,6 +60,32 @@ public class CustomerDepartmentAssignRepository : ICustomerDepartmentAssignRepos
         if (!saver) return new BaseResponse { IsSuccess = false, Message = "Thêm phân công khách hàng không thành công." };
 
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
+    }
+
+    public async Task<List<CustomerDepartmentAssign>> GetCustomerDepartmentAssignsByAdmin(CustomerDepartmentAssignGetListDTO dto, string userName)
+    {
+        var baseRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var query = baseRepo.Get(new QueryBuilder<CustomerDepartmentAssign>()
+            .WithPredicate(x => !x.IsDelete && x.CreatedBy.Equals(userName))
+            .Build());
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            query = query.Where(x => x.Description.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            query = query.ApplyOrderDate(dto.OrderDate);
+        }
+
+        if (dto.CustomerOrDepartmentId.HasValue)
+        {
+            query = query.Where(x => x.CustomerId == dto.CustomerOrDepartmentId.Value || x.DeparmentId == dto.CustomerOrDepartmentId.Value);
+        }
+
+        dto.TotalRecord = await query.CountAsync();
+        var result = await query.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using App.Entity.DTOs.CustomerDeparmentAssign;
 using App.Entity.Entities;
 using FS.BaseModels.IdentityModels;
 using FS.Commons.Models;
@@ -9,4 +10,7 @@ public interface ICustomerDepartmentAssignRepository
     Task<BaseResponse> CreateUpdateCusomterDepartmentAssign(CustomerDepartmentAssign assign, ApplicationUser user);
     Task<CustomerDepartmentAssign> GetCustomerDepartmentAssign(long id);
     Task<CustomerDepartmentAssign> GetCustomerDepartmentAssign(long customerId, long departmentId);
+
+    Task<List<CustomerDepartmentAssign>> GetCustomerDepartmentAssignsByAdmin(CustomerDepartmentAssignGetListDTO dto,
+        string userName);
 }
