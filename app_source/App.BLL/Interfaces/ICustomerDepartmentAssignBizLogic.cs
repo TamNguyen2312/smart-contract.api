@@ -5,6 +5,10 @@ namespace App.BLL.Interfaces;
 
 public interface ICustomerDepartmentAssignBizLogic
 {
-    Task<BaseResponse> CreateUpdateCustomerDepartmentAssgin(CustomerDepartmentAssginRequestDTO dto, long userId);
+    Task<BaseResponse> CreateUpdateCustomerDepartmentAssgin(CustomerDepartmentAssignRequestDTO dto, long userId);
     Task<CustomerDepartmentAssignViewDTO> GetCustomerDepartmentAssign(long id);
+
+    Task<List<CustomerDepartmentAssignViewDTO>> GetCustomerDepartmentAssignsByAdmin(
+        CustomerDepartmentAssignGetListDTO dto,
+        string userName);
 }

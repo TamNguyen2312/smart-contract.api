@@ -25,11 +25,19 @@ public class CustomerDepartmentAssignBizLogic : ICustomerDepartmentAssignBizLogi
         _departmentRepository = departmentRepository;
     }
 
-    public async Task<BaseResponse> CreateUpdateCustomerDepartmentAssgin(CustomerDepartmentAssginRequestDTO dto, long userId)
+    public async Task<BaseResponse> CreateUpdateCustomerDepartmentAssgin(CustomerDepartmentAssignRequestDTO dto, long userId)
     {
         var entity = dto.GetEntity();
         var user = await _identityRepository.GetByIdAsync(userId);
         var response = await _customerDepartmentAssignRepository.CreateUpdateCusomterDepartmentAssign(entity, user);
+        return response;
+    }
+
+    public async Task<List<CustomerDepartmentAssignViewDTO>> GetCustomerDepartmentAssignsByAdmin(CustomerDepartmentAssignGetListDTO dto,
+        string userName)
+    {
+        var data = await _customerDepartmentAssignRepository.GetCustomerDepartmentAssignsByAdmin(dto, userName);
+        var response = await GetCustomerDepartmentAssignViews(data);
         return response;
     }
 
@@ -58,6 +66,19 @@ public class CustomerDepartmentAssignBizLogic : ICustomerDepartmentAssignBizLogi
 
         var view = new CustomerDepartmentAssignViewDTO(customerDepartmentAssign, customer, department);
         return view;
+    }
+
+    private async Task<List<CustomerDepartmentAssignViewDTO>> GetCustomerDepartmentAssignViews(
+        List<CustomerDepartmentAssign> customerDepartmentAssigns)
+    {
+        var response = new List<CustomerDepartmentAssignViewDTO>();
+        foreach (var item in customerDepartmentAssigns)
+        {
+            var view = await GetCustomerDepartmentAssignView(item);
+            response.Add(view);
+        }
+
+        return response;
     }
 
     #endregion
