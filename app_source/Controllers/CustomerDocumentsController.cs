@@ -4,6 +4,7 @@ using App.Entity.DTOs.Customer;
 using App.Entity.DTOs.CustomerDocument;
 using FS.BaseAPI;
 using FS.Commons;
+using FS.Commons.Models.DTOs;
 using FS.Utility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -54,6 +55,35 @@ namespace App.API.Controllers
             catch (Exception e)
             {
                 _logger.LogError("CreateUpdateCustomerDocument {0} {1}", e.Message, e.StackTrace); 
+                return Error(Constants.SomeThingWentWrong);
+            }   
+        }
+        
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPost]
+        [Route("get-customer-documents-by-admin")]
+        public async Task<IActionResult> GetCustomerDocumentsByAdmin(CustomerDocumentGetListDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                var data = await _customerDocumentBizLogic.GetAllCustomerDocuments(dto, UserName);
+                var responnse = new PagingDataModel<CustomerDocumentViewDTO>(data, dto);
+                return GetSuccess(responnse);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("GetCustomerDocumentsByAdmin {0} {1}", e.Message, e.StackTrace); 
                 return Error(Constants.SomeThingWentWrong);
             }   
         }
