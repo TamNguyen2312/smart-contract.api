@@ -59,9 +59,9 @@ namespace App.API.Controllers
             }   
         }
 
-        [Authorize]
+        [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPost]
-        [Route("get-all-customers")]
+        [Route("get-customers-by-admin")]
         public async Task<IActionResult> GetAllCustomers([FromBody]CustomerGetListDTO dto)
         {
             try
@@ -85,9 +85,38 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+        
+        
+        [FSAuthorize(Policy = "ManagerRolePolicy")]
+        [HttpPost]
+        [Route("get-customers-by-manager")]
+        public async Task<IActionResult> GetCustomersByManager([FromBody]CustomerGetListDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+                
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
+                }
+                var data = await _customerBizLogic.GetCustomersByManagerAsync(dto, ManagerOrEmpId);
+                var response = new PagingDataModel<CustomerViewDTO>(data, dto);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetCustomersByManager {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
 
         [FSAuthorize(Policy = "AdminManagerPolicy")]
-        [HttpPost]
+        [HttpGet]
         [Route("get-customer-by-id/{customerId}")]
         public async Task<IActionResult> GetCustomer([FromRoute]long customerId)
         {
@@ -108,32 +137,32 @@ namespace App.API.Controllers
             }
             catch (Exception ex)
             {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
+                _logger.LogError("GetCustomer {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
         
         
-        [Authorize]
-        [HttpPost]
-        [Route("delete-customer/{customerId}")]
-        public async Task<IActionResult> DeleteCustomer([FromRoute]long customerId)
-
-        {
-            try
-            {
-                var isInvoked = await IsTokenInvoked();
-                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
-                
-                var response = await _customerBizLogic.DeleteCustomer(customerId, UserId);
-                if (!response.IsSuccess) return SaveError(response.Message);
-                return GetSuccess(response);
-            }
-            catch (Exception ex)
-            {
-                ConsoleLog.WriteExceptionToConsoleLog(ex);
-                return Error(Constants.SomeThingWentWrong);
-            }
-        }
+        // [Authorize]
+        // [HttpPost]
+        // [Route("delete-customer/{customerId}")]
+        // public async Task<IActionResult> DeleteCustomer([FromRoute]long customerId)
+        //
+        // {
+        //     try
+        //     {
+        //         var isInvoked = await IsTokenInvoked();
+        //         if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+        //         
+        //         var response = await _customerBizLogic.DeleteCustomer(customerId, UserId);
+        //         if (!response.IsSuccess) return SaveError(response.Message);
+        //         return GetSuccess(response);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         ConsoleLog.WriteExceptionToConsoleLog(ex);
+        //         return Error(Constants.SomeThingWentWrong);
+        //     }
+        // }
     }
 }

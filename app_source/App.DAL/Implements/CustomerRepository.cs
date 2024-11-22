@@ -70,7 +70,7 @@ public class CustomerRepository : ICustomerRepository
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
         var loadedRecords = baseCustomerRepo.Get(new QueryBuilder<Customer>()
-            .WithPredicate(x => x.IsDelete == false && x.CreatedBy.Equals(user.Email))
+            .WithPredicate(x => x.IsDelete == false && x.CreatedBy.Equals(user.UserName))
             .Build());
         if (!string.IsNullOrEmpty(dto.Keyword))
         {
@@ -107,6 +107,49 @@ public class CustomerRepository : ICustomerRepository
             select cda).AnyAsync();
 
         return hasAccess;
+    }
+    
+    /// <summary>
+    /// method get all customer that manager can access
+    /// </summary>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public async Task<List<Customer>> GetCustomersByManagerAsync(CustomerGetListDTO dto, string managerId)
+    {
+        var managerBaseRepo = _unitOfWork.GetRepository<Manager>();
+        var assignBaseRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var customerBaseRepo = _unitOfWork.GetRepository<Customer>();
+        var managerDbSet = managerBaseRepo.GetDbSet();
+        var assignDbSet = assignBaseRepo.GetDbSet();
+        var customerDbSet = customerBaseRepo.GetDbSet();
+
+        var customers = (from m in managerDbSet
+                join cda in assignDbSet on m.DepartmentId equals cda.DeparmentId
+                join c in customerDbSet on cda.CustomerId equals c.Id
+                where m.Id == managerId
+                      && !m.IsDelete
+                      && !cda.IsDelete
+                      && !c.IsDelete
+                select c)
+            .AsNoTracking()
+            .Distinct();
+
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            customers = customers.Where(x => x.CompanyName.Contains(dto.Keyword)
+                                             || x.Address.Contains(dto.Keyword)
+                                             || x.Email.Contains(dto.Keyword)
+                                             || x.PhoneNumber.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            customers = customers.ApplyOrderDate(dto.OrderDate);
+        }
+
+        var result = await customers.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+
+        return result;
     }
 
     public async Task<Customer> GetCustomer(long customerId, ApplicationUser user)

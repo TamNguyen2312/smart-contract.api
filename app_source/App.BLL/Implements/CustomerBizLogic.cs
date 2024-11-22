@@ -36,6 +36,19 @@ public class CustomerBizLogic : ICustomerBizLogic
     }
 
     /// <summary>
+    /// This is used to get customers that manager has access
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public async Task<List<CustomerViewDTO>> GetCustomersByManagerAsync(CustomerGetListDTO dto, string managerId)
+    {
+        var data = await _customerRepository.GetCustomersByManagerAsync(dto, managerId);
+        var response = await GetCustomerViews(data);
+        return response;
+    }
+
+    /// <summary>
     /// check permission of manager when access Customer information
     /// </summary>
     /// <param name="managerId"></param>
