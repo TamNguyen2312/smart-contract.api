@@ -98,5 +98,35 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+        
+        [FSAuthorize(Policy = "ManagerRolePolicy")]
+        [HttpPost]
+        [Route("get-customer-department-assigns-by-manager")]
+        public async Task<IActionResult> GetCustomerDepartmentAssignsByManager(CustomerDepartmentAssignGetListDTO dto)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
+                    return ModelInvalid();
+                }
+
+                var data = await _customerDepartmentAssignBizLogic.GetCustomerDepartmentAssignsByManager(dto, ManagerOrEmpId);
+                var responnse = new PagingDataModel<CustomerDepartmentAssignViewDTO>(data, dto);
+                return GetSuccess(responnse);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("GetCustomerDepartmentAssignsByManager {0} {1}", e.Message, e.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
     }
 }

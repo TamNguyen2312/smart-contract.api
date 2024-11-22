@@ -87,6 +87,42 @@ public class CustomerDepartmentAssignRepository : ICustomerDepartmentAssignRepos
         var result = await query.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
+    
+    public async Task<List<CustomerDepartmentAssign>> GetCustomerDepartmentAssignsByManager(CustomerDepartmentAssignGetListDTO dto, string managerId)
+    {
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var baseAssignRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+        var assignDbSet = baseAssignRepo.GetDbSet();
+        
+        var query = (from m in managerDbSet
+                join cda in assignDbSet on m.DepartmentId equals cda.DeparmentId
+                where m.Id == managerId
+                      && !m.IsDelete
+                      && !cda.IsDelete
+                select cda)
+            .AsNoTracking()
+            .Distinct();
+        
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            query = query.Where(x => x.Description.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            query = query.ApplyOrderDate(dto.OrderDate);
+        }
+
+        if (dto.CustomerOrDepartmentId.HasValue)
+        {
+            query = query.Where(x => x.CustomerId == dto.CustomerOrDepartmentId.Value || x.DeparmentId == dto.CustomerOrDepartmentId.Value);
+        }
+
+        dto.TotalRecord = await query.CountAsync();
+        var result = await query.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
+    }
 
     /// <summary>
     /// Get assign using its id

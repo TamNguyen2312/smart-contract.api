@@ -11,4 +11,7 @@ public interface ICustomerDepartmentAssignBizLogic
     Task<List<CustomerDepartmentAssignViewDTO>> GetCustomerDepartmentAssignsByAdmin(
         CustomerDepartmentAssignGetListDTO dto,
         string userName);
+
+    Task<List<CustomerDepartmentAssignViewDTO>> GetCustomerDepartmentAssignsByManager(
+        CustomerDepartmentAssignGetListDTO dto, string managerId);
 }
