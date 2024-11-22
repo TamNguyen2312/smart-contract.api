@@ -40,6 +40,20 @@ public class CustomerDocumentBizLogic : ICustomerDocumentBizLogic
         return response;
     }
 
+    /// <summary>
+    /// This is used to list of customer document that manager can access
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public async Task<List<CustomerDocumentViewDTO>> GetCustomerDocumentsByManagerAsync(CustomerDocumentGetListDTO dto,
+        string managerId)
+    {
+        var data = await _customerDocumentRepository.GetCustomerDocumentsByManagerAsync(dto, managerId);
+        var response = GetCustomerDocumentViews(data);
+        return response;
+    }
+
     #region PRIVATE
 
     private CustomerDocumentViewDTO GetCustomerDocumentView(CustomerDocument customerDocument)

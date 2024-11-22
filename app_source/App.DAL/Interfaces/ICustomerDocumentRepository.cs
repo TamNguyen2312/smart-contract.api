@@ -10,4 +10,7 @@ public interface ICustomerDocumentRepository
     Task<BaseResponse> CreateUpdateCustomerDocument(CustomerDocument customerDocument, ApplicationUser user);
     Task<CustomerDocument> GetCustomerDocument(long id);
     Task<List<CustomerDocument>> GetAllCustomerDocuments(CustomerDocumentGetListDTO dto, string userName);
+
+    Task<List<CustomerDocument>> GetCustomerDocumentsByManagerAsync(CustomerDocumentGetListDTO dto,
+        string managerId);
 }

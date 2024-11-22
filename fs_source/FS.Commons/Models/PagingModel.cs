@@ -19,7 +19,6 @@ public class PagingModel
     public int TotalPages => (int)Math.Ceiling(TotalRecord * 1f / PageSize);
     public bool HasPreviousPage => PageIndex > 1;
     public bool HasNextPage => PageIndex < TotalPages;
-    public string CreatedBy { get; set; }
 
     public static PagingModel Default = new PagingModel()
     {

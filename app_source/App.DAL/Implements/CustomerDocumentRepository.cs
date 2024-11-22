@@ -19,7 +19,9 @@ public class CustomerDocumentRepository : ICustomerDocumentRepository
     {
         _unitOfWork = unitOfWork;
     }
-    public async Task<BaseResponse> CreateUpdateCustomerDocument(CustomerDocument customerDocument, ApplicationUser user)
+
+    public async Task<BaseResponse> CreateUpdateCustomerDocument(CustomerDocument customerDocument,
+        ApplicationUser user)
     {
         var baseRepo = _unitOfWork.GetRepository<CustomerDocument>();
         var any = await baseRepo.AnyAsync(new QueryBuilder<CustomerDocument>()
@@ -57,12 +59,13 @@ public class CustomerDocumentRepository : ICustomerDocumentRepository
         }
 
         var saver = await _unitOfWork.SaveAsync();
-        if (!saver) return new BaseResponse { IsSuccess = false, Message = "Thêm tài liệu của khách hàng không thành công." };
+        if (!saver)
+            return new BaseResponse { IsSuccess = false, Message = "Thêm tài liệu của khách hàng không thành công." };
 
         return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
     }
 
-    
+
     /// <summary>
     /// This is used to get all customer document by admin
     /// </summary>
@@ -92,12 +95,61 @@ public class CustomerDocumentRepository : ICustomerDocumentRepository
         }
 
         dto.TotalRecord = await documents.CountAsync();
-        
+
         var result = await documents.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
-    
-    
+
+
+    /// <summary>
+    /// This is used to get list of customer document that manager can access
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public async Task<List<CustomerDocument>> GetCustomerDocumentsByManagerAsync(CustomerDocumentGetListDTO dto,
+        string managerId)
+    {
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var baseAssignRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var baseCustomerDocumentRepo = _unitOfWork.GetRepository<CustomerDocument>();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+        var assignDbSet = baseAssignRepo.GetDbSet();
+        var documentDbSet = baseCustomerDocumentRepo.GetDbSet();
+        var customerDocuments = (from m in managerDbSet
+                join cda in assignDbSet on m.DepartmentId equals cda.DeparmentId
+                join cd in documentDbSet on cda.CustomerId equals cd.CustomerId
+                where m.Id == managerId
+                      && !m.IsDelete
+                      && !cda.IsDelete
+                      && !cd.IsDelete
+                select cd)
+            .AsNoTracking()
+            .Distinct();
+
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            customerDocuments = customerDocuments.Where(x =>
+                x.Description.Contains(dto.Keyword) || x.FilePath.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            customerDocuments = customerDocuments.ApplyOrderDate(dto.OrderDate);
+        }
+
+        if (dto.CustomerId.HasValue)
+        {
+            customerDocuments = customerDocuments.Where(x => x.CustomerId == dto.CustomerId.Value);
+        }
+
+        dto.TotalRecord = await customerDocuments.CountAsync();
+
+        var result = await customerDocuments.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
+    }
+
+
     public async Task<CustomerDocument> GetCustomerDocument(long id)
     {
         var baseRepo = _unitOfWork.GetRepository<CustomerDocument>();

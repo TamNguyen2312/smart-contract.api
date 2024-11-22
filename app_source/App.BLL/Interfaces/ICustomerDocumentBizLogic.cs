@@ -8,4 +8,7 @@ public interface ICustomerDocumentBizLogic
     Task<BaseResponse> CreateUpdateCustomerDocument(CustomerDocumentRequestDTO dto, long userId);
     Task<CustomerDocumentViewDTO> GetCustomerDocument(long id);
     Task<List<CustomerDocumentViewDTO>> GetAllCustomerDocuments(CustomerDocumentGetListDTO dto, string userName);
+
+    Task<List<CustomerDocumentViewDTO>> GetCustomerDocumentsByManagerAsync(CustomerDocumentGetListDTO dto,
+        string managerId);
 }
