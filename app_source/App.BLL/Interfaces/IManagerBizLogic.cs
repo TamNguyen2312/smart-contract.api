@@ -18,4 +18,6 @@ public interface IManagerBizLogic
     /// <param name="departmentId"></param>
     /// <returns></returns>
     Task<ManagerViewDTO> GetManagerByDepartmentId(long departmentId);
+
+    Task<bool> HasManagerInDepartment(long departmentId);
 }

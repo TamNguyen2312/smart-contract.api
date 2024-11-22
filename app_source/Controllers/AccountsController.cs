@@ -512,6 +512,9 @@ namespace App.API.Controllers
                 //<===Add to Manager===>
                 if (dto.UserType == UserType.Manager)
                 {
+                    var hasManager = await _managerBizLogic.HasManagerInDepartment(deparmentRequest.Id);
+                    if (hasManager) return SaveError($"Phòng {deparmentRequest.Name} đã có manager");
+                    
                     var managerRequestDTO = new ManagerRequestDTO
                     {
                         Id = user.Id.ToString(),

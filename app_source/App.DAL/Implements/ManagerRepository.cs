@@ -142,6 +142,20 @@ public class ManagerRepository : IManagerRepository
     }
 
     /// <summary>
+    /// Check that department has a manager ?
+    /// </summary>
+    /// <param name="departmentId"></param>
+    /// <returns></returns>
+    public async Task<bool> HasManagerInDepartment(long departmentId)
+    {
+        var baseRepo = _unitOfWork.GetRepository<Manager>();
+        var manager = await baseRepo.AnyAsync(new QueryBuilder<Manager>()
+            .WithPredicate(x => x.DepartmentId.Equals(departmentId) && x.IsDelete == false)
+            .Build());
+        return manager;
+    }
+
+    /// <summary>
     /// This is used to get manager of a department
     /// </summary>
     /// <param name="departmentId"></param>
