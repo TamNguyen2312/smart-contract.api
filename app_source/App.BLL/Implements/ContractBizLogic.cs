@@ -62,6 +62,25 @@ public class ContractBizLogic : IContractBizLogic
         return response;
     }
 
+    public async Task<ContractViewDTO> GetContract(long id)
+    {
+        var data = await _contractRepository.GetContract(id);
+        if (data == null) return null;
+        var response = await GetContractView(data);
+        return response;
+    }
+
+    public async Task<bool> HasManagerAccessToContract(string managerId, long contractId)
+    {
+        return await _contractRepository.HasManagerAccessToContract(managerId, contractId);
+    }
+
+    public async Task<bool> HasEmployeeAccessToContract(string employeeId, long contractId)
+    {
+        return await _contractRepository.HasEmployeeAccessToContract(employeeId, contractId);
+    }
+
+
     #region PRIVATE
 
     private async Task<ContractViewDTO> GetContractView(Contract contract)

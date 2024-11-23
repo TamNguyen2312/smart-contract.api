@@ -169,12 +169,7 @@ public class ContractRepository : IContractRepository
         var employeeDbSet = baseEmployeeRepo.GetDbSet();
         var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
         var empContractDbSet = baseEmpContractRepo.GetDbSet();
-   
-        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
-        var baseAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
         var baseContractRepo = _unitOfWork.GetRepository<Contract>();
-        var managerDbSet = baseManagerRepo.GetDbSet();
-        var assignDbSet = baseAssignRepo.GetDbSet();
         var contractDbSet = baseContractRepo.GetDbSet();
 
         var contracts = (from e in employeeDbSet
@@ -217,5 +212,68 @@ public class ContractRepository : IContractRepository
         dto.TotalRecord = await contracts.CountAsync();
         var result = await contracts.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
+    }
+
+    public async Task<Contract> GetContract(long id)
+    {
+        var baseRepo = _unitOfWork.GetRepository<Contract>();
+        var contract = await baseRepo.GetSingleAsync(new QueryBuilder<Contract>()
+            .WithPredicate(x => x.Id == id && !x.IsDelete)
+            .Build());
+        return contract;
+    }
+
+    /// <summary>
+    /// Check manager has access to contract
+    /// </summary>
+    /// <returns></returns>
+    public async Task<bool> HasManagerAccessToContract(string managerId, long contractId)
+    {
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var baseAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var baseContractRepo = _unitOfWork.GetRepository<Contract>();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+        var assignDbSet = baseAssignRepo.GetDbSet();
+        var contractDbSet = baseContractRepo.GetDbSet();
+        
+        var hasAccess = await (from m in managerDbSet
+                join cda in assignDbSet on m.DepartmentId equals cda.DepartmentId
+                join c in contractDbSet on cda.ContractId equals c.Id
+                where m.Id == managerId
+                      && c.Id == contractId
+                      && !m.IsDelete
+                      && !cda.IsDelete
+                      && !c.IsDelete
+                select c)
+            .AnyAsync();
+        return hasAccess;
+    }
+
+    /// <summary>
+    /// Check employee has access to contract
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="contractId"></param>
+    /// <returns></returns>
+    public async Task<bool> HasEmployeeAccessToContract(string employeeId, long contractId)
+    {
+        var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
+        var employeeDbSet = baseEmployeeRepo.GetDbSet();
+        var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+        var empContractDbSet = baseEmpContractRepo.GetDbSet();
+        var baseContractRepo = _unitOfWork.GetRepository<Contract>();
+        var contractDbSet = baseContractRepo.GetDbSet();
+
+        var hasAccess = await (from e in employeeDbSet
+                join ec in empContractDbSet on e.Id equals ec.EmployeeId
+                join c in contractDbSet on ec.ContractId equals c.Id
+                where e.Id == employeeId
+                      && c.Id == contractId
+                      && !e.IsDelete
+                      && !ec.IsDelete
+                      && !c.IsDelete
+                select c)
+            .AnyAsync();
+        return hasAccess;
     }
 }
