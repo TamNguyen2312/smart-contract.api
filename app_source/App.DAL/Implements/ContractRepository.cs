@@ -22,7 +22,7 @@ public class ContractRepository : IContractRepository
         this._unitOfWork = unitOfWork;
     }
 
-    public async Task<BaseResponse> CreateContract(Contract contract, ApplicationUser user)
+    public async Task<BaseResponse> CreateContract(Contract contract, ApplicationUser user, Employee employee)
     {
         try
         {
@@ -31,6 +31,7 @@ public class ContractRepository : IContractRepository
             var baseContractRepo = _unitOfWork.GetRepository<Contract>();
             var baseSnapshotRepo = _unitOfWork.GetRepository<SnapshotMetadata>();
             var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+            var baseContractDepartmentRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
 
             var newContract = new Contract
             {
@@ -51,6 +52,15 @@ public class ContractRepository : IContractRepository
             await baseContractRepo.CreateAsync(newContract);
             await _unitOfWork.SaveChangesAsync();
 
+            var newContractDepartment = new ContractDepartmentAssign
+            {
+                ContractId = newContract.Id,
+                DepartmentId = employee.DepartmentId,
+                CreatedBy = newContract.CreatedBy,
+                CreatedDate = newContract.CreatedDate
+            };
+            await baseContractDepartmentRepo.CreateAsync(newContractDepartment);
+            
             var newEmpContract = new EmpContract
             {
                 ContractId = newContract.Id,
