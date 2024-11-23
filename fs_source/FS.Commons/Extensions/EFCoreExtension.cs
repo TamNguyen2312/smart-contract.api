@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Reflection;
 using FS.Commons.Models;
 
@@ -32,6 +33,42 @@ public static class EfCoreExtension
             }
         }
         return source;
+    }
+    
+    public static IQueryable<TEntity> ApplyDateRangeFilter<TEntity>(
+        this IQueryable<TEntity> query,
+        DateRange range,
+        Expression<Func<TEntity, DateTime?>> dateSelector)
+    {
+        if (range.From.HasValue)
+        {
+            var fromDate = range.From.Value;
+            var greaterThanOrEqualExpr = Expression.GreaterThanOrEqual(
+                dateSelector.Body,
+                Expression.Constant(fromDate, typeof(DateTime?))
+            );
+            var lambda = Expression.Lambda<Func<TEntity, bool>>(
+                greaterThanOrEqualExpr,
+                dateSelector.Parameters
+            );
+            query = query.Where(lambda);
+        }
+
+        if (range.To.HasValue)
+        {
+            var toDate = range.To.Value;
+            var lessThanOrEqualExpr = Expression.LessThanOrEqual(
+                dateSelector.Body,
+                Expression.Constant(toDate, typeof(DateTime?))
+            );
+            var lambda = Expression.Lambda<Func<TEntity, bool>>(
+                lessThanOrEqualExpr,
+                dateSelector.Parameters
+            );
+            query = query.Where(lambda);
+        }
+
+        return query;
     }
 
     public static IEnumerable<T> ToPagedList<T>(this IEnumerable<T> list, int pageNumber, int pageSize)
