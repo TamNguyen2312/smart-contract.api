@@ -60,13 +60,41 @@ namespace App.API.Controllers
                     return ModelInvalid();
                 }
 
-                var data = await _contractBizLogic.GetContractByManager(dto, ManagerOrEmpId);
+                var data = await _contractBizLogic.GetContractsByManager(dto, ManagerOrEmpId);
                 var response = new PagingDataModel<ContractViewDTO>(data, dto);
                 return GetSuccess(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError("GetContractsByManager {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        [FSAuthorize(Policy = "EmployeeRolePolicy")]
+        [HttpPost]
+        [Route("get-contracts-by-employee")]
+        public async Task<IActionResult> GetContractsByEmployee([FromBody] ContractGetListDTO dto)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                var data = await _contractBizLogic.GetContractsByEmployee(dto, ManagerOrEmpId);
+                var response = new PagingDataModel<ContractViewDTO>(data, dto);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetContractsByEmployee {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }

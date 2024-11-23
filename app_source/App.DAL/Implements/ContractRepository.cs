@@ -9,6 +9,7 @@ using FS.Commons;
 using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
+using FS.DAL.Queries;
 using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.Implements;
@@ -99,7 +100,7 @@ public class ContractRepository : IContractRepository
     }
 
     /// <summary>
-    /// This is used to contracts that manager can access
+    /// This is used to get contracts that manager can access
     /// </summary>
     /// <param name="dto"></param>
     /// <param name="managerId"></param>
@@ -119,6 +120,69 @@ public class ContractRepository : IContractRepository
                 where m.Id == managerId
                       && !m.IsDelete
                       && !cda.IsDelete
+                      && !c.IsDelete
+                select c)
+            .AsNoTracking()
+            .Distinct();
+
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            contracts = contracts.Where(x => x.Title.Contains(dto.Keyword)
+                                                    || x.KeyContent.Contains(dto.Keyword)
+                                                    || x.ContractFile.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            contracts = contracts.ApplyOrderDate(dto.OrderDate);
+        }
+
+        if (dto.CustomerId.HasValue)
+        {
+            contracts = contracts.Where(x => x.CustomerId == dto.CustomerId.Value);
+        }
+
+        if (dto.ContractTypeId.HasValue)
+        {
+            contracts = contracts.Where(x => x.ContractTypeId == dto.ContractTypeId);
+        }
+
+        contracts = contracts.ApplyDateRangeFilter(dto.SignedDate, x => x.SignedDate);
+        contracts = contracts.ApplyDateRangeFilter(dto.EffectiveDate, x => x.EffectiveDate);
+        contracts = contracts.ApplyDateRangeFilter(dto.ExpirationDate, x => x.ExpirationDate);
+
+        dto.TotalRecord = await contracts.CountAsync();
+        var result = await contracts.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
+    }
+    
+    
+    /// <summary>
+    /// This is used to get contracts that employee can access
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <param name="employeeId"></param>
+    /// <returns></returns>
+    public async Task<List<Contract>> GetContractsByEmployee(ContractGetListDTO dto, string employeeId)
+    {
+        var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
+        var employeeDbSet = baseEmployeeRepo.GetDbSet();
+        var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+        var empContractDbSet = baseEmpContractRepo.GetDbSet();
+   
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var baseAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var baseContractRepo = _unitOfWork.GetRepository<Contract>();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+        var assignDbSet = baseAssignRepo.GetDbSet();
+        var contractDbSet = baseContractRepo.GetDbSet();
+
+        var contracts = (from e in employeeDbSet
+                join ec in empContractDbSet on e.Id equals ec.EmployeeId
+                join c in contractDbSet on ec.ContractId equals c.Id
+                where e.Id == employeeId
+                      && !e.IsDelete
+                      && !ec.IsDelete
                       && !c.IsDelete
                 select c)
             .AsNoTracking()

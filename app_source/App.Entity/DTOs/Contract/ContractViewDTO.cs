@@ -15,6 +15,10 @@ public class ContractViewDTO
     public int AppendixDaysLeft { get; set; }
     public string CustomerName { get; set; } = null!;
     public string ContractTypeName { get; set; } = null!;
+    public string? CreatedBy { get; set; }
+    public string? CreatedDate { get; set; }
+    public string? ModifiedBy { get; set; }
+    public string? ModifiedDate { get; set; }
 
     public ContractViewDTO(Entities.Contract contract, Entities.Customer customer, Entities.ContractType contractType)
     {
@@ -29,5 +33,9 @@ public class ContractViewDTO
         AppendixDaysLeft = contract.AppendixDaysLeft;
         CustomerName = customer.CompanyName;
         ContractTypeName = contractType.Name;
+        CreatedBy = contract.CreatedBy;
+        ModifiedBy = contract.ModifiedBy;
+        CreatedDate = contract.CreatedDate.HasValue ? contract.CreatedDate.Value.ToString(Constants.FormatDate) : null;
+        ModifiedDate = contract.ModifiedDate.HasValue ? contract.ModifiedDate.Value.ToString(Constants.FormatDate) : null;
     }
 }

@@ -48,9 +48,16 @@ public class ContractBizLogic : IContractBizLogic
         return response;
     }
 
-    public async Task<List<ContractViewDTO>> GetContractByManager(ContractGetListDTO dto, string managerId)
+    public async Task<List<ContractViewDTO>> GetContractsByManager(ContractGetListDTO dto, string managerId)
     {
         var data = await _contractRepository.GetContractsByManager(dto, managerId);
+        var response = await GetContractViews(data);
+        return response;
+    }
+
+    public async Task<List<ContractViewDTO>> GetContractsByEmployee(ContractGetListDTO dto, string employeeId)
+    {
+        var data = await _contractRepository.GetContractsByEmployee(dto, employeeId);
         var response = await GetContractViews(data);
         return response;
     }
