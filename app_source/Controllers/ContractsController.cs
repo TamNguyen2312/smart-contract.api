@@ -100,7 +100,7 @@ namespace App.API.Controllers
         }
         
         [FSAuthorize]
-        [HttpPost]
+        [HttpGet]
         [Route("get-contract-by-id/{id}")]
         public async Task<IActionResult> GetContract([FromRoute] long id)
         {
@@ -127,6 +127,34 @@ namespace App.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError("GetContract {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPost]
+        [Route("get-contracts-by-admin")]
+        public async Task<IActionResult> GetContractsByAdmin([FromBody] ContractGetListDTO dto)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                var data = await _contractBizLogic.GetContractsByAdmin(dto);
+                var response = new PagingDataModel<ContractViewDTO>(data, dto);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetContractsByAdmin {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }

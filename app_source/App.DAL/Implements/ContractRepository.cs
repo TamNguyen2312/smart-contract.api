@@ -276,4 +276,42 @@ public class ContractRepository : IContractRepository
             .AnyAsync();
         return hasAccess;
     }
+
+    public async Task<List<Contract>> GetContractsByAdmin(ContractGetListDTO dto)
+    {
+        var baseRepo = _unitOfWork.GetRepository<Contract>();
+        var contracts = baseRepo.Get(new QueryBuilder<Contract>()
+            .WithPredicate(x => !x.IsDelete)
+            .Build());
+        
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            contracts = contracts.Where(x => x.Title.Contains(dto.Keyword)
+                                             || x.KeyContent.Contains(dto.Keyword)
+                                             || x.ContractFile.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            contracts = contracts.ApplyOrderDate(dto.OrderDate);
+        }
+
+        if (dto.CustomerId.HasValue)
+        {
+            contracts = contracts.Where(x => x.CustomerId == dto.CustomerId.Value);
+        }
+
+        if (dto.ContractTypeId.HasValue)
+        {
+            contracts = contracts.Where(x => x.ContractTypeId == dto.ContractTypeId);
+        }
+
+        contracts = contracts.ApplyDateRangeFilter(dto.SignedDate, x => x.SignedDate);
+        contracts = contracts.ApplyDateRangeFilter(dto.EffectiveDate, x => x.EffectiveDate);
+        contracts = contracts.ApplyDateRangeFilter(dto.ExpirationDate, x => x.ExpirationDate);
+
+        dto.TotalRecord = await contracts.CountAsync();
+        var result = await contracts.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
+    }
 }

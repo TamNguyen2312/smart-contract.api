@@ -12,4 +12,5 @@ public interface IContractBizLogic
     Task<ContractViewDTO> GetContract(long id);
     Task<bool> HasEmployeeAccessToContract(string employeeId, long contractId);
     Task<bool> HasManagerAccessToContract(string managerId, long contractId);
+    Task<List<ContractViewDTO>> GetContractsByAdmin(ContractGetListDTO dto);
 }
