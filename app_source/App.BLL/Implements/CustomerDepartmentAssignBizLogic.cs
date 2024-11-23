@@ -54,6 +54,18 @@ public class CustomerDepartmentAssignBizLogic : ICustomerDepartmentAssignBizLogi
         var response = await _customerDepartmentAssignRepository.ManagerHasAccessToAssignAsync(managerId, id);
         return response;
     }
+
+    /// <summary>
+    /// This is used to check whether customer is assigned in department
+    /// </summary>
+    /// <param name="customerId"></param>
+    /// <param name="departmentId"></param>
+    /// <returns></returns>
+    public async Task<bool> IsCustomerAssignedIn(long customerId, long departmentId)
+    {
+        var response = await _customerDepartmentAssignRepository.IsCustomerAssignedIn(customerId, departmentId);
+        return response;
+    }
     
 
     public async Task<CustomerDepartmentAssignViewDTO> GetCustomerDepartmentAssign(long id)

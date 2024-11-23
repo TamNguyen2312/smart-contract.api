@@ -18,4 +18,6 @@ public interface ICustomerDepartmentAssignRepository
         string managerId);
 
     Task<bool> ManagerHasAccessToAssignAsync(string managerId, long id);
+
+    Task<bool> IsCustomerAssignedIn(long customerId, long departmentId);
 }

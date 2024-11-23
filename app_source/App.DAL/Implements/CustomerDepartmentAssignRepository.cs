@@ -123,6 +123,23 @@ public class CustomerDepartmentAssignRepository : ICustomerDepartmentAssignRepos
         var result = await query.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
+
+    /// <summary>
+    /// This is used to check whether customer is assigned in department
+    /// </summary>
+    /// <param name="customerId"></param>
+    /// <param name="departmentId"></param>
+    /// <returns></returns>
+    public async Task<bool> IsCustomerAssignedIn(long customerId, long departmentId)
+    {
+        var baseRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var any = await baseRepo.AnyAsync(new QueryBuilder<CustomerDepartmentAssign>()
+            .WithPredicate(x => x.CustomerId == customerId && x.DeparmentId == departmentId)
+            .Build());
+        if (!any) return false;
+        return true;
+    }
+    
     
     /// <summary>
     /// Check access of logged manager

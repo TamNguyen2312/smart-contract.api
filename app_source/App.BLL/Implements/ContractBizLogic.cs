@@ -14,23 +14,37 @@ public class ContractBizLogic : IContractBizLogic
     private readonly IIdentityRepository _identityRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IContractTypeRepository _contractTypeRepository;
+    private readonly IEmployeeRepository _employeeRepository;
+    private readonly ICustomerDepartmentAssignRepository _customerDepartmentAssignRepository;
 
     public ContractBizLogic(IContractRepository contractRepository,
         IIdentityRepository identityRepository,
         ICustomerRepository customerRepository,
-        IContractTypeRepository contractTypeRepository)
+        IContractTypeRepository contractTypeRepository,
+        IEmployeeRepository employeeRepository,
+        ICustomerDepartmentAssignRepository customerDepartmentAssignRepository)
     {
         _contractRepository = contractRepository;
         _identityRepository = identityRepository;
         _customerRepository = customerRepository;
         _contractTypeRepository = contractTypeRepository;
+        _employeeRepository = employeeRepository;
+        _customerDepartmentAssignRepository = customerDepartmentAssignRepository;
     }
 
     public async Task<BaseResponse> CreateContract(ContractRequestDTO dto, long userId)
     {
         var entity = dto.GetEntity();
         var user = await _identityRepository.GetByIdAsync(userId);
-        var response = await _contractRepository.CreateContract(entity, user);
+        var employee = await _employeeRepository.GetEmployee(userId);
+        
+        var isAssigned =
+            await _customerDepartmentAssignRepository.IsCustomerAssignedIn(dto.CustomerId, employee.DepartmentId);
+        if (!isAssigned)
+            return new BaseResponse
+                { IsSuccess = false, Message = "Khách hàng không thuộc quyền quản lý của phòng ban" };
+        
+        var response = await _contractRepository.CreateContract(entity, user, employee);
         return response;
     }
 
