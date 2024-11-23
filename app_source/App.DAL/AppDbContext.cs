@@ -1,4 +1,5 @@
 using App.Entity.Entities;
+using App.Entity.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL;
@@ -22,6 +23,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<CustomerDocument> CustomerDocuments { get; set; }
     public virtual DbSet<CustomerDepartmentAssign> CustomerDepartmentAssigns { get; set; }
     public virtual DbSet<EmpContract> EmpContractss { get; set; }
+    public virtual DbSet<SnapshotMetadata> SnapshotMetadatas { get; set; }
 
     #endregion
 
@@ -29,6 +31,12 @@ public partial class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("app");
+        
+        modelBuilder.Entity<SnapshotMetadata>(sm =>
+        {
+            sm.ToTable("App_SnapshotMetadata");
+            sm.HasKey(metadata => metadata.Id);
+        });
 
         modelBuilder.Entity<EmpContract>(ec =>
         {
