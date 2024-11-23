@@ -7,5 +7,6 @@ namespace App.BLL.Interfaces;
 public interface IContractBizLogic
 {
     Task<BaseResponse> CreateContract(ContractRequestDTO dto, long userId);
-    Task<List<ContractViewDTO>> GetContractByManager(ContractGetListDTO dto, string managerId);
+    Task<List<ContractViewDTO>> GetContractsByManager(ContractGetListDTO dto, string managerId);
+    Task<List<ContractViewDTO>> GetContractsByEmployee(ContractGetListDTO dto, string employeeId);
 }
