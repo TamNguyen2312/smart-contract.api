@@ -107,15 +107,15 @@ public class ContractRepository : IContractRepository
     public async Task<List<Contract>> GetContractsByManager(ContractGetListDTO dto, string managerId)
     {
         var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
-        var baseAssignRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var baseAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
         var baseContractRepo = _unitOfWork.GetRepository<Contract>();
         var managerDbSet = baseManagerRepo.GetDbSet();
         var assignDbSet = baseAssignRepo.GetDbSet();
         var contractDbSet = baseContractRepo.GetDbSet();
         
         var contracts = (from m in managerDbSet
-                join cda in assignDbSet on m.DepartmentId equals cda.DeparmentId
-                join c in contractDbSet on cda.CustomerId equals c.CustomerId
+                join cda in assignDbSet on m.DepartmentId equals cda.DepartmentId
+                join c in contractDbSet on cda.ContractId equals c.Id
                 where m.Id == managerId
                       && !m.IsDelete
                       && !cda.IsDelete
