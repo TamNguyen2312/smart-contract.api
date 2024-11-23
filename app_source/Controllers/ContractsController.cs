@@ -98,5 +98,37 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+        
+        [FSAuthorize]
+        [HttpPost]
+        [Route("get-contract-by-id/{id}")]
+        public async Task<IActionResult> GetContract([FromRoute] long id)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (IsManager)
+                {
+                    var hasAccess = await _contractBizLogic.HasManagerAccessToContract(ManagerOrEmpId, id);
+                    if (!hasAccess) return GetForbidden();
+                }
+                
+                if (IsEmployee)
+                {
+                    var hasAccess = await _contractBizLogic.HasEmployeeAccessToContract(ManagerOrEmpId, id);
+                    if (!hasAccess) return GetForbidden();
+                }
+                
+                var response = await _contractBizLogic.GetContract(id);
+                if (response == null) return GetNotFound(Constants.GetNotFound);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetContract {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
     }
 }

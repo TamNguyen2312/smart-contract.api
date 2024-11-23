@@ -11,4 +11,8 @@ public interface IContractRepository
     Task<BaseResponse> CreateContract(Entity.Entities.Contract contract, ApplicationUser user, Employee employee);
     Task<List<Contract>> GetContractsByManager(ContractGetListDTO dto, string managerId);
     Task<List<Contract>> GetContractsByEmployee(ContractGetListDTO dto, string employeeId);
+    Task<Contract> GetContract(long id);
+    Task<bool> HasEmployeeAccessToContract(string employeeId, long contractId);
+    Task<bool> HasManagerAccessToContract(string managerId, long contractId);
+
 }
