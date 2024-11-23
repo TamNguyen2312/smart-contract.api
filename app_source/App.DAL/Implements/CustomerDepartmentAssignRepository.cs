@@ -28,19 +28,19 @@ public class CustomerDepartmentAssignRepository : ICustomerDepartmentAssignRepos
 
         if (any)
         {
-            var existedCustomer = await baseRepo.GetSingleAsync(new QueryBuilder<CustomerDepartmentAssign>()
+            var existedAssign = await baseRepo.GetSingleAsync(new QueryBuilder<CustomerDepartmentAssign>()
                 .WithPredicate(x => x.Id == assign.Id &&
                                     assign.IsDelete == false)
                 .Build());
-            if (existedCustomer == null)
-                return new BaseResponse { IsSuccess = false, Message = "Không tìm phân công khách hàng" };
-            if (!existedCustomer.CreatedBy.Equals(user.UserName))
+            if (existedAssign == null)
+                return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy phân công khách hàng" };
+            if (!existedAssign.CreatedBy.Equals(user.UserName))
                 return new BaseResponse { IsSuccess = false, Message = Constants.UserNotSame };
-            assign.UpdateNonDefaultProperties(existedCustomer);
-            existedCustomer.ModifiedDate = DateTime.Now;
-            existedCustomer.ModifiedBy = user.UserName;
+            assign.UpdateNonDefaultProperties(existedAssign);
+            existedAssign.ModifiedDate = DateTime.Now;
+            existedAssign.ModifiedBy = user.UserName;
 
-            await baseRepo.UpdateAsync(existedCustomer);
+            await baseRepo.UpdateAsync(existedAssign);
         }
         else
         {

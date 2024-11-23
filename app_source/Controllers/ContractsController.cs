@@ -43,6 +43,34 @@ namespace App.API.Controllers
             }
         }
         
+        [FSAuthorize(Policy = "AdminManagerPolicy")]
+        [HttpPut]
+        [Route("update-contract")]
+        public async Task<IActionResult> UpdateContract([FromBody] ContractUpdateDTO dto)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+                
+                if (IsManager)
+                {
+                    var hasAccess = await _contractBizLogic.HasManagerAccessToContract(ManagerOrEmpId, dto.Id);
+                    if (!hasAccess) return GetForbidden();
+                }
+
+                var response = await _contractBizLogic.UpdateContract(dto, UserId);
+                if (!response.IsSuccess) return SaveError(response.Message);
+                return SaveSuccess(response.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("UpdateContract {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
         [FSAuthorize(Policy = "ManagerRolePolicy")]
         [HttpPost]
         [Route("get-contracts-by-manager")]

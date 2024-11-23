@@ -47,6 +47,14 @@ public class ContractBizLogic : IContractBizLogic
         var response = await _contractRepository.CreateContract(entity, user, employee);
         return response;
     }
+    
+    public async Task<BaseResponse> UpdateContract(ContractUpdateDTO dto, long userId)
+    {
+        var entity = dto.GetEntity();
+        var user = await _identityRepository.GetByIdAsync(userId);
+        var response = await _contractRepository.UpdateContract(entity, user);
+        return response;
+    }
 
     public async Task<List<ContractViewDTO>> GetContractsByManager(ContractGetListDTO dto, string managerId)
     {

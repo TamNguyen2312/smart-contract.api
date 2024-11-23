@@ -9,6 +9,7 @@ namespace App.DAL.Interfaces;
 public interface IContractRepository
 {
     Task<BaseResponse> CreateContract(Entity.Entities.Contract contract, ApplicationUser user, Employee employee);
+    Task<BaseResponse> UpdateContract(Contract contract, ApplicationUser user);
     Task<List<Contract>> GetContractsByManager(ContractGetListDTO dto, string managerId);
     Task<List<Contract>> GetContractsByEmployee(ContractGetListDTO dto, string employeeId);
     Task<Contract> GetContract(long id);

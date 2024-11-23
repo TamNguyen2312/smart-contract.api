@@ -61,7 +61,7 @@ public class ContractRepository : IContractRepository
                 CreatedDate = newContract.CreatedDate
             };
             await baseContractDepartmentRepo.CreateAsync(newContractDepartment);
-            
+
             var newEmpContract = new EmpContract
             {
                 ContractId = newContract.Id,
@@ -82,15 +82,70 @@ public class ContractRepository : IContractRepository
                 Action = SnapshotMetadataAction.Create.ToString(),
                 IsDelete = false
             };
-            newSnapshot.Name = $"{newSnapshot.Category}_{newSnapshot.Action}_{newSnapshot.CreatedBy}_{newSnapshot.CreatedDate}";
+            newSnapshot.Name =
+                $"{newContract.Id}_{newSnapshot.Action}_{newSnapshot.CreatedBy}_{newSnapshot.CreatedDate}";
             newSnapshot.StoredData = JsonSerializer.Serialize(newContract);
             await baseSnapshotRepo.CreateAsync(newSnapshot);
 
             var saver = await _unitOfWork.SaveAsync();
             await _unitOfWork.CommitTransactionAsync();
-            
+
             if (!saver) return new BaseResponse { IsSuccess = false, Message = Constants.SaveDataFailed };
             return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollBackAsync();
+            throw;
+        }
+    }
+
+    public async Task<BaseResponse> UpdateContract(Contract contract, ApplicationUser user)
+    {
+        try
+        {
+            var baseContractRepo = _unitOfWork.GetRepository<Contract>();
+            var baseSnapshotRepo = _unitOfWork.GetRepository<SnapshotMetadata>();
+            var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+            var baseContractDepartmentRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+
+            var anyContract = await baseContractRepo.AnyAsync(new QueryBuilder<Contract>()
+                .WithPredicate(x => x.Id == contract.Id && !x.IsDelete)
+                .Build());
+
+            if (anyContract)
+            {
+                await _unitOfWork.BeginTransactionAsync();
+
+                var existedContract = await baseContractRepo.GetSingleAsync(new QueryBuilder<Contract>()
+                    .WithPredicate(x => x.Id == contract.Id && !x.IsDelete)
+                    .Build());
+                contract.UpdateNonDefaultProperties(existedContract);
+                existedContract.ModifiedBy = user.UserName;
+                existedContract.ModifiedDate = DateTime.Now;
+                await baseContractRepo.UpdateAsync(existedContract);
+
+                var newSnapshot = new SnapshotMetadata
+                {
+                    Category = SnapshotMetadataType.Contract.ToString(),
+                    CreatedDate = existedContract.ModifiedDate,
+                    CreatedBy = existedContract.ModifiedBy,
+                    Action = SnapshotMetadataAction.Update.ToString(),
+                    IsDelete = false
+                };
+                newSnapshot.Name =
+                    $"{existedContract.Id}_{newSnapshot.Action}_{newSnapshot.CreatedBy}_{newSnapshot.CreatedDate}";
+                newSnapshot.StoredData = JsonSerializer.Serialize(existedContract);
+                await baseSnapshotRepo.CreateAsync(newSnapshot);
+
+                var saver = await _unitOfWork.SaveAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                if (!saver) return new BaseResponse { IsSuccess = false, Message = Constants.SaveDataFailed };
+                return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
+            }
+
+            return new BaseResponse { IsSuccess = false, Message = "Hợp đồng không tồn tại." };
         }
         catch (Exception)
         {
@@ -113,7 +168,7 @@ public class ContractRepository : IContractRepository
         var managerDbSet = baseManagerRepo.GetDbSet();
         var assignDbSet = baseAssignRepo.GetDbSet();
         var contractDbSet = baseContractRepo.GetDbSet();
-        
+
         var contracts = (from m in managerDbSet
                 join cda in assignDbSet on m.DepartmentId equals cda.DepartmentId
                 join c in contractDbSet on cda.ContractId equals c.Id
@@ -128,8 +183,8 @@ public class ContractRepository : IContractRepository
         if (!string.IsNullOrEmpty(dto.Keyword))
         {
             contracts = contracts.Where(x => x.Title.Contains(dto.Keyword)
-                                                    || x.KeyContent.Contains(dto.Keyword)
-                                                    || x.ContractFile.Contains(dto.Keyword));
+                                             || x.KeyContent.Contains(dto.Keyword)
+                                             || x.ContractFile.Contains(dto.Keyword));
         }
 
         if (dto.OrderDate.HasValue)
@@ -155,8 +210,8 @@ public class ContractRepository : IContractRepository
         var result = await contracts.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
-    
-    
+
+
     /// <summary>
     /// This is used to get contracts that employee can access
     /// </summary>
@@ -186,8 +241,8 @@ public class ContractRepository : IContractRepository
         if (!string.IsNullOrEmpty(dto.Keyword))
         {
             contracts = contracts.Where(x => x.Title.Contains(dto.Keyword)
-                                                    || x.KeyContent.Contains(dto.Keyword)
-                                                    || x.ContractFile.Contains(dto.Keyword));
+                                             || x.KeyContent.Contains(dto.Keyword)
+                                             || x.ContractFile.Contains(dto.Keyword));
         }
 
         if (dto.OrderDate.HasValue)
@@ -235,7 +290,7 @@ public class ContractRepository : IContractRepository
         var managerDbSet = baseManagerRepo.GetDbSet();
         var assignDbSet = baseAssignRepo.GetDbSet();
         var contractDbSet = baseContractRepo.GetDbSet();
-        
+
         var hasAccess = await (from m in managerDbSet
                 join cda in assignDbSet on m.DepartmentId equals cda.DepartmentId
                 join c in contractDbSet on cda.ContractId equals c.Id
@@ -283,7 +338,7 @@ public class ContractRepository : IContractRepository
         var contracts = baseRepo.Get(new QueryBuilder<Contract>()
             .WithPredicate(x => !x.IsDelete)
             .Build());
-        
+
         if (!string.IsNullOrEmpty(dto.Keyword))
         {
             contracts = contracts.Where(x => x.Title.Contains(dto.Keyword)
