@@ -81,6 +81,13 @@ public class ContractBizLogic : IContractBizLogic
     }
 
 
+    public async Task<List<ContractViewDTO>> GetContractsByAdmin(ContractGetListDTO dto)
+    {
+        var data = await _contractRepository.GetContractsByAdmin(dto);
+        var response = await GetContractViews(data);
+        return response;
+    }
+
     #region PRIVATE
 
     private async Task<ContractViewDTO> GetContractView(Contract contract)
