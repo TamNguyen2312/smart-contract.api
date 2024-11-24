@@ -8,4 +8,5 @@ public class CustomerDepartmentAssign : CommonDataModel
     public long CustomerId { get; set; }
     public long DeparmentId { get; set; }
     public string? Description { get; set; }
+    public DateTime? EndDate { get; set; }
 }
