@@ -9,6 +9,7 @@ public interface ICustomerBizLogic
     Task<List<CustomerViewDTO>> GetAllCustomers(CustomerGetListDTO dto, long userId);
     Task<List<CustomerViewDTO>> GetCustomersByManagerAsync(CustomerGetListDTO dto, string managerId);
     Task<bool> ManagerHasAccessToCustomerAsync(string managerId, long customerId);
+    Task<List<CustomerViewDTO>> GetDropdownCustomersByManagerOrEmployee(string id, bool isManager);
     Task<CustomerViewDTO> GetCustomer(long customerId, long userId);
     Task<CustomerViewDTO> GetCustomer(long customerId);
     Task<CustomerViewDTO> GetCustomerByEmail(string email);

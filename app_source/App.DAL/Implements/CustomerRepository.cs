@@ -79,12 +79,12 @@ public class CustomerRepository : ICustomerRepository
         }
 
         loadedRecords = loadedRecords.ApplyOrderDate(dto.OrderDate);
-        
+
         dto.TotalRecord = await loadedRecords.CountAsync();
         var response = await loadedRecords.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return response;
     }
-    
+
     /// <summary>
     /// method check permission of manager when access customer information
     /// </summary>
@@ -97,7 +97,7 @@ public class CustomerRepository : ICustomerRepository
         var assignBaseRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
         var managerDbSet = managerBaseRepo.GetDbSet();
         var assignDbSet = assignBaseRepo.GetDbSet();
-        
+
         var hasAccess = await (from cda in assignDbSet
             join m in managerDbSet on cda.DeparmentId equals m.DepartmentId
             where cda.CustomerId == customerId
@@ -108,7 +108,7 @@ public class CustomerRepository : ICustomerRepository
 
         return hasAccess;
     }
-    
+
     /// <summary>
     /// method get all customer that manager can access
     /// </summary>
@@ -154,6 +154,94 @@ public class CustomerRepository : ICustomerRepository
         return result;
     }
 
+
+    /// <summary>
+    /// This is used to get dropdown list customer by Admin using department id
+    /// </summary>
+    /// <param name="departmentId"></param>
+    /// <returns></returns>
+    public async Task<List<Customer>> GetDropdownCustomerByAdmin(long departmentId)
+    {
+        var baseCustomerAssignRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
+        var customerAssignDbSet = baseCustomerAssignRepo.GetDbSet();
+        var customerDbSet = baseCustomerRepo.GetDbSet();
+
+        var customers = await (from cda in customerAssignDbSet
+            join c in customerDbSet on cda.CustomerId equals c.Id
+            where cda.DeparmentId == departmentId
+                  && !cda.IsDelete
+                  && !c.IsDelete
+            select new Customer
+            {
+                Id = c.Id,
+                CompanyName = c.CompanyName
+            }).AsNoTracking().Distinct().ToListAsync();
+        return customers;
+    }
+
+    /// <summary>
+    /// This is used to get dropdown list customer by Manager or Employee using department id
+    /// </summary>
+    /// <param name="departmentId"></param>
+    /// <param name="id"></param>
+    /// <param name="isManager"></param>
+    /// <returns></returns>
+    public async Task<List<Customer>> GetDropdownCustomerByManagerOrEmployee(string id,
+        bool isManager)
+    {
+        var baseCustomerAssignRepo = _unitOfWork.GetRepository<CustomerDepartmentAssign>();
+        var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
+        var customerAssignDbSet = baseCustomerAssignRepo.GetDbSet();
+        var customerDbSet = baseCustomerRepo.GetDbSet();
+
+        if (isManager)
+        {
+            var managerBaseRepo = _unitOfWork.GetRepository<Manager>();
+            var managerDbSet = managerBaseRepo.GetDbSet();
+
+            var customers = await (from m in managerDbSet
+                    join cda in customerAssignDbSet on m.DepartmentId equals cda.DeparmentId
+                    join c in customerDbSet on cda.CustomerId equals c.Id
+                    where m.Id == id
+                          && !m.IsDelete
+                          && !cda.IsDelete
+                          && !c.IsDelete
+                    select new Customer
+                    {
+                        Id = c.Id,
+                        CompanyName = c.CompanyName
+                    })
+                .AsNoTracking()
+                .Distinct()
+                .ToListAsync();
+            return customers;
+        }
+        else
+        {
+            var employeeBaseRepo = _unitOfWork.GetRepository<Employee>();
+            var employeeDbSet = employeeBaseRepo.GetDbSet();
+
+            var customers = await (from e in employeeDbSet
+                    join cda in customerAssignDbSet on e.DepartmentId equals cda.DeparmentId
+                    join c in customerDbSet on cda.CustomerId equals c.Id
+                    where e.Id == id
+                          && !e.IsDelete
+                          && !cda.IsDelete
+                          && !c.IsDelete
+                    select new Customer
+                    {
+                        Id = c.Id,
+                        CompanyName = c.CompanyName
+                    })
+                .AsNoTracking()
+                .Distinct()
+                .ToListAsync();
+            return customers;
+        }
+    }
+
+
     public async Task<Customer> GetCustomer(long customerId, ApplicationUser user)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
@@ -164,7 +252,7 @@ public class CustomerRepository : ICustomerRepository
             .Build());
         return customer;
     }
-    
+
     public async Task<Customer> GetCustomer(long customerId)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
@@ -173,7 +261,7 @@ public class CustomerRepository : ICustomerRepository
             .Build());
         return customer;
     }
-    
+
     public async Task<Customer> GetCustomerByEmail(string email)
     {
         var baseCustomerRepo = _unitOfWork.GetRepository<Customer>();
@@ -191,8 +279,10 @@ public class CustomerRepository : ICustomerRepository
                                         && x.IsDelete == false)
                     .Build());
             }
+
             return customer;
         }
+
         return null;
     }
 

@@ -13,12 +13,18 @@ public class CustomerBizLogic : ICustomerBizLogic
 {
     private readonly ICustomerRepository _customerRepository;
     private readonly IIdentityRepository _identityRepository;
+    private readonly IManagerRepository _managerRepository;
+    private readonly IEmployeeRepository _employeeRepository;
 
-    public CustomerBizLogic(ICustomerRepository customerRepository, IIdentityRepository identityRepository)
+    public CustomerBizLogic(ICustomerRepository customerRepository, IIdentityRepository identityRepository,
+        IManagerRepository managerRepository, IEmployeeRepository employeeRepository)
     {
         _customerRepository = customerRepository;
         _identityRepository = identityRepository;
+        _managerRepository = managerRepository;
+        _employeeRepository = employeeRepository;
     }
+
     public async Task<BaseResponse> CreateUpdateCustomer(CustomerRequestDto dto, long userId)
     {
         var entity = dto.GetEntity();
@@ -57,6 +63,30 @@ public class CustomerBizLogic : ICustomerBizLogic
     public async Task<bool> ManagerHasAccessToCustomerAsync(string managerId, long customerId)
     {
         var response = await _customerRepository.ManagerHasAccessToCustomerAsync(managerId, customerId);
+        return response;
+    }
+
+    /// <summary>
+    /// Get dropdown list of customer by department id for Admin
+    /// </summary>
+    /// <param name="departmentId"></param>
+    /// <returns></returns>
+    public async Task<List<CustomerViewDTO>> GetDropdownCustomerByDepartmentId(long departmentId)
+    {
+        var data = await _customerRepository.GetDropdownCustomerByAdmin(departmentId);
+        var response = await GetCustomerViews(data);
+        return response;
+    }
+
+    /// <summary>
+    /// Get dropdown list of customer by department id for Manager or Employee
+    /// </summary>
+    /// <param name="departmentId"></param>
+    /// <returns></returns>
+    public async Task<List<CustomerViewDTO>> GetDropdownCustomersByManagerOrEmployee(string id, bool isManager)
+    {
+        var data = await _customerRepository.GetDropdownCustomerByManagerOrEmployee(id, isManager);
+        var response = await GetCustomerViews(data);
         return response;
     }
 
@@ -109,7 +139,7 @@ public class CustomerBizLogic : ICustomerBizLogic
         return userView;
     }
 
-    
+
     /// <summary>
     /// This is used to convert a customer to customer view
     /// </summary>
@@ -121,7 +151,7 @@ public class CustomerBizLogic : ICustomerBizLogic
         return customerView;
     }
 
-    
+
     /// <summary>
     /// This is used to convert a collection of customer to a collection of customer views
     /// </summary>
