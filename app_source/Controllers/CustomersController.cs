@@ -143,7 +143,7 @@ namespace App.API.Controllers
         }
         
         [FSAuthorize(Policy = "ManagerEmployeePolicy")]
-        [HttpPost]
+        [HttpGet]
         [Route("get-dropdown-customers-by-manager-or-employee")]
         public async Task<IActionResult> GetDropdownCustomersByManagerOrEmployee()
         {
@@ -168,6 +168,26 @@ namespace App.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError("GetDropdownCustomersByManagerOrEmployee {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpGet]
+        [Route("get-dropdown-customers-by-admin/{departmentId}")]
+        public async Task<IActionResult> GetDropdownCustomersByAdmin([FromRoute]long departmentId)
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                var response = await _customerBizLogic.GetDropdownCustomersByAdmin(departmentId);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetDropdownCustomersByAdmin {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }

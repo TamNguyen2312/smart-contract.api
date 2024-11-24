@@ -12,10 +12,6 @@ public class PagingModel
     public OrderDate? OrderDate { get; set; }
     [OutputParam]
     public int TotalRecord { get; set; }
-    public int Day { get; set; }
-    public int Week { get; set; }
-    public int Month { get; set; }
-    public int Year { get; set; }
     public int TotalPages => (int)Math.Ceiling(TotalRecord * 1f / PageSize);
     public bool HasPreviousPage => PageIndex > 1;
     public bool HasNextPage => PageIndex < TotalPages;

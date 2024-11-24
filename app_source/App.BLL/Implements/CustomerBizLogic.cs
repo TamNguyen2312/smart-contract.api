@@ -89,6 +89,19 @@ public class CustomerBizLogic : ICustomerBizLogic
         var response = await GetCustomerViews(data);
         return response;
     }
+    
+    
+    /// <summary>
+    /// Get dropdown list of customer by department id for Admin
+    /// </summary>
+    /// <param name="departmentId"></param>
+    /// <returns></returns>
+    public async Task<List<CustomerViewDTO>> GetDropdownCustomersByAdmin(long departmentId)
+    {
+        var data = await _customerRepository.GetDropdownCustomerByAdmin(departmentId);
+        var response = await GetCustomerViews(data);
+        return response;
+    }
 
     public async Task<CustomerViewDTO> GetCustomer(long customerId, long userId)
     {
