@@ -131,7 +131,7 @@ namespace App.API.Controllers
         }
         
         [FSAuthorize(Policy = "AdminManagerPolicy")]
-        [HttpPost]
+        [HttpGet]
         [Route("get-customer-department-assign-by-id/{id}")]
         public async Task<IActionResult> GetCustomerDepartmentAssign([FromRoute] long id)
         {

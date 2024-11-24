@@ -6,4 +6,6 @@ public class ContractDepartmentAssign : CommonDataModel
 {
     public long ContractId { get; set; }
     public long DepartmentId { get; set; }
+
+    public DateTime? EndDate { get; set; }
 }
