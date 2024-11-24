@@ -142,6 +142,36 @@ namespace App.API.Controllers
             }
         }
         
+        [FSAuthorize(Policy = "ManagerEmployeePolicy")]
+        [HttpPost]
+        [Route("get-dropdown-customers-by-manager-or-employee")]
+        public async Task<IActionResult> GetDropdownCustomersByManagerOrEmployee()
+        {
+            try
+            {
+                var isInvoked = await IsTokenInvoked();
+                if (isInvoked) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                var response = new List<CustomerViewDTO>();
+
+                if (IsManager)
+                {
+                    response = await _customerBizLogic.GetDropdownCustomersByManagerOrEmployee(ManagerOrEmpId, true);
+                }
+                else
+                {
+                    response = await _customerBizLogic.GetDropdownCustomersByManagerOrEmployee(ManagerOrEmpId, false);
+                }
+                
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetDropdownCustomersByManagerOrEmployee {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
         
         // [Authorize]
         // [HttpPost]

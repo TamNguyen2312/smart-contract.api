@@ -15,4 +15,8 @@ public interface ICustomerRepository
     Task<Customer> GetCustomer(long customerId);
     Task<BaseResponse> DeleteCustomer(long customerId, ApplicationUser user);
     Task<Customer> GetCustomerByEmail(string email);
+    Task<List<Customer>> GetDropdownCustomerByAdmin(long departmentId);
+
+    Task<List<Customer>> GetDropdownCustomerByManagerOrEmployee(string id,
+        bool isManager);
 }
