@@ -3,6 +3,7 @@ using App.BLL.Interfaces;
 using App.DAL.Interfaces;
 using App.Entity.DTOs.Contract;
 using App.Entity.Entities;
+using FS.BaseModels.IdentityModels;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 
@@ -68,6 +69,22 @@ public class ContractBizLogic : IContractBizLogic
         var entity = dto.GetEntity();
         var user = await _identityRepository.GetByIdAsync(userId);
         var response = await _contractRepository.UpdateContract(entity, user);
+        return response;
+    }
+
+    public async Task<BaseResponse> AssignContractToDepartment(ContractAssignRequestDTO dto, long userId)
+    {
+        var entity = dto.GetEntity();
+        var user = await _identityRepository.GetByIdAsync(userId);
+        var response = await _contractRepository.CreateUpdateContractDepartmentAssign(entity, user);
+        return response;
+    }
+
+    public async Task<BaseResponse> UpdateContractAssign(ContractAssignUpdateDTO dto, long userId)
+    {
+        var entity = dto.GetEntity();
+        var user = await _identityRepository.GetByIdAsync(userId);
+        var response = await _contractRepository.CreateUpdateContractDepartmentAssign(entity, user);
         return response;
     }
 

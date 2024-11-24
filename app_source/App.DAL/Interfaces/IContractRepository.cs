@@ -18,4 +18,7 @@ public interface IContractRepository
     Task<List<Contract>> GetContractsByAdmin(ContractGetListDTO dto);
     Task<List<long>> IsContractManagedByWhichDepartment(long contractId);
 
+    Task<BaseResponse> CreateUpdateContractDepartmentAssign(ContractDepartmentAssign contractDepartmentAssign,
+        ApplicationUser user);
+
 }

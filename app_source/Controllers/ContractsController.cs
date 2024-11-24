@@ -71,6 +71,50 @@ namespace App.API.Controllers
             }
         }
         
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPost]
+        [Route("assign-contract-to-department")]
+        public async Task<IActionResult> AssignContractToDepartment ([FromBody] ContractAssignRequestDTO dto)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+                
+                var response = await _contractBizLogic.AssignContractToDepartment(dto, UserId);
+                if (!response.IsSuccess) return SaveError(response.Message);
+                return SaveSuccess(response.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("AssignContractToDepartment {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        [FSAuthorize(Policy = "AdminRolePolicy")]
+        [HttpPut]
+        [Route("update-contract-assign")]
+        public async Task<IActionResult> UpdateContractAssign ([FromBody] ContractAssignUpdateDTO dto)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+                
+                var response = await _contractBizLogic.UpdateContractAssign(dto, UserId);
+                if (!response.IsSuccess) return SaveError(response.Message);
+                return SaveSuccess(response.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("UpdateContractAssign {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
         [FSAuthorize(Policy = "ManagerRolePolicy")]
         [HttpPost]
         [Route("get-contracts-by-manager")]
