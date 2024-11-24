@@ -50,6 +50,21 @@ public class ContractBizLogic : IContractBizLogic
     
     public async Task<BaseResponse> UpdateContract(ContractUpdateDTO dto, long userId)
     {
+        var departmentIds = await _contractRepository.IsContractManagedByWhichDepartment(dto.Id);
+        var flag = 0;
+        foreach (var departmentId in departmentIds)
+        {
+            var isAssigned =
+                await _customerDepartmentAssignRepository.IsCustomerAssignedIn(dto.CustomerId, departmentId);
+            if (isAssigned) flag = 1;
+            else continue;
+        }
+
+        if (flag != 1)
+        {
+            return new BaseResponse
+                { IsSuccess = false, Message = "Khách hàng không thuộc quyền quản lý của phòng ban" };
+        }
         var entity = dto.GetEntity();
         var user = await _identityRepository.GetByIdAsync(userId);
         var response = await _contractRepository.UpdateContract(entity, user);

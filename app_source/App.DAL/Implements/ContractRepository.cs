@@ -369,4 +369,20 @@ public class ContractRepository : IContractRepository
         var result = await contracts.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
+
+    /// <summary>
+    /// This is used to get a list of departmentId that manage a specific contract
+    /// </summary>
+    /// <param name="contractId"></param>
+    /// <returns></returns>
+    public async Task<List<long>> IsContractManagedByWhichDepartment(long contractId)
+    {
+        var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var listDepartmentId = await baseContractAssignRepo.Get(new QueryBuilder<ContractDepartmentAssign>()
+            .WithPredicate(x => x.ContractId == contractId && !x.IsDelete)
+            .Build())
+            .Select(x => x.DepartmentId)
+            .ToListAsync();
+        return listDepartmentId;
+    }
 }

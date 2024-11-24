@@ -16,5 +16,6 @@ public interface IContractRepository
     Task<bool> HasEmployeeAccessToContract(string employeeId, long contractId);
     Task<bool> HasManagerAccessToContract(string managerId, long contractId);
     Task<List<Contract>> GetContractsByAdmin(ContractGetListDTO dto);
+    Task<List<long>> IsContractManagedByWhichDepartment(long contractId);
 
 }
