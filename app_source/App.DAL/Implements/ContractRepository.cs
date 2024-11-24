@@ -176,6 +176,8 @@ public class ContractRepository : IContractRepository
                       && !m.IsDelete
                       && !cda.IsDelete
                       && !c.IsDelete
+                      && cda.CreatedDate <= DateTime.Now
+                      && (cda.EndDate == null || cda.EndDate >= DateTime.Now)
                 select c)
             .AsNoTracking()
             .Distinct();
@@ -200,6 +202,16 @@ public class ContractRepository : IContractRepository
         if (dto.ContractTypeId.HasValue)
         {
             contracts = contracts.Where(x => x.ContractTypeId == dto.ContractTypeId);
+        }
+
+        if (dto.ExpiredDayLeft.HasValue)
+        {
+            contracts = contracts.Where(x => (x.ExpirationDate - DateTime.Now).Days == dto.ExpiredDayLeft.Value);
+        }
+
+        if (dto.IsExpired)
+        {
+            contracts = contracts.Where(x => x.ExpirationDate < DateTime.Now);
         }
 
         contracts = contracts.ApplyDateRangeFilter(dto.SignedDate, x => x.SignedDate);
@@ -234,6 +246,8 @@ public class ContractRepository : IContractRepository
                       && !e.IsDelete
                       && !ec.IsDelete
                       && !c.IsDelete
+                      && ec.CreatedDate <= DateTime.Now
+                      && (ec.EndDate == null || ec.EndDate >= DateTime.Now)
                 select c)
             .AsNoTracking()
             .Distinct();
@@ -258,6 +272,16 @@ public class ContractRepository : IContractRepository
         if (dto.ContractTypeId.HasValue)
         {
             contracts = contracts.Where(x => x.ContractTypeId == dto.ContractTypeId);
+        }
+
+        if (dto.ExpiredDayLeft.HasValue)
+        {
+            contracts = contracts.Where(x => (x.ExpirationDate - DateTime.Now).Days == dto.ExpiredDayLeft.Value);
+        }
+
+        if (dto.IsExpired)
+        {
+            contracts = contracts.Where(x => x.ExpirationDate < DateTime.Now);
         }
 
         contracts = contracts.ApplyDateRangeFilter(dto.SignedDate, x => x.SignedDate);
@@ -291,6 +315,8 @@ public class ContractRepository : IContractRepository
         var assignDbSet = baseAssignRepo.GetDbSet();
         var contractDbSet = baseContractRepo.GetDbSet();
 
+        var now = DateTime.Now;
+
         var hasAccess = await (from m in managerDbSet
                 join cda in assignDbSet on m.DepartmentId equals cda.DepartmentId
                 join c in contractDbSet on cda.ContractId equals c.Id
@@ -299,6 +325,8 @@ public class ContractRepository : IContractRepository
                       && !m.IsDelete
                       && !cda.IsDelete
                       && !c.IsDelete
+                      && cda.CreatedDate <= now
+                      && (cda.EndDate == null || cda.EndDate >= now)
                 select c)
             .AnyAsync();
         return hasAccess;
@@ -319,6 +347,8 @@ public class ContractRepository : IContractRepository
         var baseContractRepo = _unitOfWork.GetRepository<Contract>();
         var contractDbSet = baseContractRepo.GetDbSet();
 
+        var now = DateTime.Now;
+
         var hasAccess = await (from e in employeeDbSet
                 join ec in empContractDbSet on e.Id equals ec.EmployeeId
                 join c in contractDbSet on ec.ContractId equals c.Id
@@ -327,6 +357,8 @@ public class ContractRepository : IContractRepository
                       && !e.IsDelete
                       && !ec.IsDelete
                       && !c.IsDelete
+                      && ec.CreatedDate <= now
+                      && (ec.EndDate == null || ec.EndDate >= now)
                 select c)
             .AnyAsync();
         return hasAccess;
@@ -361,6 +393,16 @@ public class ContractRepository : IContractRepository
             contracts = contracts.Where(x => x.ContractTypeId == dto.ContractTypeId);
         }
 
+        if (dto.ExpiredDayLeft.HasValue)
+        {
+            contracts = contracts.Where(x => (x.ExpirationDate - DateTime.Now).Days == dto.ExpiredDayLeft.Value);
+        }
+
+        if (dto.IsExpired)
+        {
+            contracts = contracts.Where(x => x.ExpirationDate < DateTime.Now);
+        }
+
         contracts = contracts.ApplyDateRangeFilter(dto.SignedDate, x => x.SignedDate);
         contracts = contracts.ApplyDateRangeFilter(dto.EffectiveDate, x => x.EffectiveDate);
         contracts = contracts.ApplyDateRangeFilter(dto.ExpirationDate, x => x.ExpirationDate);
@@ -379,10 +421,107 @@ public class ContractRepository : IContractRepository
     {
         var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
         var listDepartmentId = await baseContractAssignRepo.Get(new QueryBuilder<ContractDepartmentAssign>()
-            .WithPredicate(x => x.ContractId == contractId && !x.IsDelete)
-            .Build())
+                .WithPredicate(x => x.ContractId == contractId && !x.IsDelete)
+                .Build())
             .Select(x => x.DepartmentId)
             .ToListAsync();
         return listDepartmentId;
+    }
+
+    public async Task<BaseResponse> CreateUpdateContractDepartmentAssign(ContractDepartmentAssign contractDepartmentAssign, ApplicationUser user)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            var baseContractRepo = _unitOfWork.GetRepository<Contract>();
+            var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+            var baseDepartmentRepo = _unitOfWork.GetRepository<Department>();
+            var baseSnapshotRepo = _unitOfWork.GetRepository<SnapshotMetadata>();
+            
+            var anyContract = await baseContractRepo.AnyAsync(new QueryBuilder<Contract>()
+                .WithPredicate(x => x.Id == contractDepartmentAssign.ContractId && !x.IsDelete)
+                .Build());
+            if (!anyContract) return new BaseResponse { IsSuccess = false, Message = "Hợp đồng không tồn tại" };
+
+            var anyDepartment = await baseDepartmentRepo.AnyAsync(new QueryBuilder<Department>()
+                .WithPredicate(x => x.Id == contractDepartmentAssign.DepartmentId
+                                    && !x.IsDelete)
+                .Build());
+            if(!anyDepartment) return new BaseResponse { IsSuccess = false, Message = "Phòng ban không tồn tại" };
+            
+            var anyAssign = await baseContractAssignRepo.AnyAsync(new QueryBuilder<ContractDepartmentAssign>()
+                .WithPredicate(x => x.ContractId == contractDepartmentAssign.ContractId
+                                    && x.DepartmentId == contractDepartmentAssign.DepartmentId
+                                    && !x.IsDelete)
+                .Build());
+            if (anyAssign)
+            {
+                var existedAssign = await baseContractAssignRepo.GetSingleAsync(
+                    new QueryBuilder<ContractDepartmentAssign>()
+                        .WithPredicate(x =>
+                            x.ContractId == contractDepartmentAssign.ContractId &&
+                            x.DepartmentId == contractDepartmentAssign.DepartmentId && !x.IsDelete)
+                        .Build());
+                existedAssign.EndDate = contractDepartmentAssign.EndDate;
+                existedAssign.ModifiedDate = DateTime.Now;
+                existedAssign.ModifiedBy = user.UserName;
+                await baseContractAssignRepo.UpdateAsync(existedAssign);
+                
+                var newUpdateSnapshot = new SnapshotMetadata
+                {
+                    Category = SnapshotMetadataType.Contract.ToString(),
+                    CreatedDate = existedAssign.ModifiedDate,
+                    CreatedBy = user.UserName,
+                    Action = SnapshotMetadataAction.Assign.ToString(),
+                    IsDelete = false
+                };
+            
+                newUpdateSnapshot.Name =
+                    $"{existedAssign.ContractId}_{existedAssign.DepartmentId}_{newUpdateSnapshot.Action}_{newUpdateSnapshot.CreatedBy}_{newUpdateSnapshot.CreatedDate}";
+                newUpdateSnapshot.StoredData = JsonSerializer.Serialize(existedAssign);
+                await baseSnapshotRepo.CreateAsync(newUpdateSnapshot);
+            }
+            else
+            {
+                var newAssign = new ContractDepartmentAssign
+                {
+                    ContractId = contractDepartmentAssign.ContractId,
+                    DepartmentId = contractDepartmentAssign.DepartmentId,
+                    CreatedDate = DateTime.Now,
+                    CreatedBy = user.UserName,
+                    EndDate = contractDepartmentAssign.EndDate,
+                    IsDelete = false
+                };
+                await baseContractAssignRepo.CreateAsync(newAssign);
+                await _unitOfWork.SaveChangesAsync();
+            
+                var newSnapshot = new SnapshotMetadata
+                {
+                    Category = SnapshotMetadataType.Contract.ToString(),
+                    CreatedDate = newAssign.CreatedDate,
+                    CreatedBy = newAssign.CreatedBy,
+                    Action = SnapshotMetadataAction.Assign.ToString(),
+                    IsDelete = false
+                };
+            
+                newSnapshot.Name =
+                    $"{newAssign.ContractId}_{newAssign.DepartmentId}_{newSnapshot.Action}_{newSnapshot.CreatedBy}_{newSnapshot.CreatedDate}";
+                newSnapshot.StoredData = JsonSerializer.Serialize(newAssign);
+                await baseSnapshotRepo.CreateAsync(newSnapshot);
+            }
+                // return new BaseResponse
+                //     { IsSuccess = false, Message = "Hợp đồng đã được phân công cho phòng ban rồi." };
+
+            var saver = await _unitOfWork.SaveAsync();
+            await _unitOfWork.CommitTransactionAsync();
+
+            if (!saver) return new BaseResponse { IsSuccess = false, Message = Constants.SaveDataFailed };
+            return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollBackAsync();
+            throw;
+        }
     }
 }

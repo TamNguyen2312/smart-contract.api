@@ -14,4 +14,6 @@ public interface IContractBizLogic
     Task<bool> HasEmployeeAccessToContract(string employeeId, long contractId);
     Task<bool> HasManagerAccessToContract(string managerId, long contractId);
     Task<List<ContractViewDTO>> GetContractsByAdmin(ContractGetListDTO dto);
+    Task<BaseResponse> AssignContractToDepartment(ContractAssignRequestDTO dto, long userId);
+    Task<BaseResponse> UpdateContractAssign(ContractAssignUpdateDTO dto, long userId);
 }
