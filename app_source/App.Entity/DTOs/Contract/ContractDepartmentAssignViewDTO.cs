@@ -8,9 +8,10 @@ public class ContractDepartmentAssignViewDTO
     public long ContractId { get; set; }
     public long DepartmentId { get; set; }
     public string DepartmentName { get; set; }
-    public string? EndDate { get; set; }
     public string? CreatedDate { get; set; }
     public string CreatedBy { get; set; }
+    public string? EndDate { get; set; }
+    
 
     public ContractDepartmentAssignViewDTO(ContractDepartmentAssign contractDepartmentAssign,
         Entities.Department department)

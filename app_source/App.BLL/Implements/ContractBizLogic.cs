@@ -107,6 +107,20 @@ public class ContractBizLogic : IContractBizLogic
         return response;
     }
 
+    public async Task<bool> HasManagerAccessToContractDepartmetnAssign(long contractId, long departmentId, string managerId)
+    {
+        return await _contractRepository.HasManagerAccessToContractDepartmetnAssign(contractId, departmentId,
+            managerId);
+    }
+    
+    public async Task<ContractDepartmentAssignViewDTO> GetContractDepartmentAssign(long contractId, long departmentId)
+    {
+        var data = await _contractRepository.GetContractDepartmentAssign(contractId, departmentId);
+        if (data == null) return null;
+        var response = await GetContractDeparmentAssignView(data);
+        return response;
+    }
+
     public async Task<BaseResponse> AssignContractToEmployee(EmpContractRequestDTO dto, long userId)
     {
         var entity = dto.GetEntity();
