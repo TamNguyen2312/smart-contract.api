@@ -91,18 +91,18 @@ public class ContractBizLogic : IContractBizLogic
         return response;
     }
 
-    public async Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignByManager(
+    public async Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignsByManager(
         ContractDepartmentAssignGetListDTO dto, string managerId)
     {
-        var data = await _contractRepository.GetContractDepartmentAssignByManager(dto, managerId);
+        var data = await _contractRepository.GetContractDepartmentAssignsByManager(dto, managerId);
         var response = await GetContractDeparmentAssignViews(data);
         return response;
     }
 
-    public async Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignByAdmin(
+    public async Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignsByAdmin(
         ContractDepartmentAssignGetListDTO dto)
     {
-        var data = await _contractRepository.GetContractDepartmentAssignByAdmin(dto);
+        var data = await _contractRepository.GetContractDepartmentAssignsByAdmin(dto);
         var response = await GetContractDeparmentAssignViews(data);
         return response;
     }
@@ -112,6 +112,13 @@ public class ContractBizLogic : IContractBizLogic
         var entity = dto.GetEntity();
         var user = await _identityRepository.GetByIdAsync(userId);
         var response = await _contractRepository.CreateUpdateEmpContract(entity, user);
+        return response;
+    }
+
+    public async Task<List<EmpContractViewDTO>> GetEmpContractsByEmployee(EmpContractGetListDTO dto, string employeeId)
+    {
+        var data = await _contractRepository.GetEmpContractsByEmployee(dto, employeeId);
+        var response = GetEmpContractViews(data);
         return response;
     }
 
@@ -199,6 +206,17 @@ public class ContractBizLogic : IContractBizLogic
         }
 
         return response;
+    }
+    
+    private EmpContractViewDTO GetEmpContractView(EmpContract empContract)
+    {
+        var view = new EmpContractViewDTO(empContract);
+        return view;
+    }
+
+    private List<EmpContractViewDTO> GetEmpContractViews(List<EmpContract> empContracts)
+    {
+        return empContracts.Select(x => new EmpContractViewDTO(x)).ToList();
     }
 
     #endregion

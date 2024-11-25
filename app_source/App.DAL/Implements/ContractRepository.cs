@@ -540,7 +540,7 @@ public class ContractRepository : IContractRepository
     /// <param name="dto"></param>
     /// <param name="managerId"></param>
     /// <returns></returns>
-    public async Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignByManager(ContractDepartmentAssignGetListDTO dto, string managerId)
+    public async Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignsByManager(ContractDepartmentAssignGetListDTO dto, string managerId)
     {
         var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
         var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
@@ -584,7 +584,7 @@ public class ContractRepository : IContractRepository
     /// </summary>
     /// <param name="dto"></param>
     /// <returns></returns>
-    public async Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignByAdmin(ContractDepartmentAssignGetListDTO dto)
+    public async Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignsByAdmin(ContractDepartmentAssignGetListDTO dto)
     {
         var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
         var assigns = baseContractAssignRepo.Get(new QueryBuilder<ContractDepartmentAssign>()
@@ -678,5 +678,61 @@ public class ContractRepository : IContractRepository
             await _unitOfWork.RollBackAsync();
             throw;
         }
+    }
+    
+    
+    /// <summary>
+    /// This is used to get contract assigns to employee for Employee
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <param name="employeeId"></param>
+    /// <returns></returns>
+    public async Task<List<EmpContract>> GetEmpContractsByEmployee(EmpContractGetListDTO dto, string employeeId)
+    {
+        var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+
+        var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+        var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
+        var empContractDbSet = baseEmpContractRepo.GetDbSet();
+        var employeeDbSet = baseEmployeeRepo.GetDbSet();
+        
+        var empContracts = (from ec in empContractDbSet
+                join e in employeeDbSet on ec.EmployeeId equals e.Id
+                join cda in contractAssignDbSet on ec.ContractId equals cda.ContractId
+                where e.Id == employeeId
+                      && !ec.IsDelete
+                      && !e.IsDelete
+                      && !cda.IsDelete
+                      && cda.DepartmentId == e.DepartmentId
+                      && cda.CreatedDate <= DateTime.Now
+                      && (cda.EndDate == null || cda.EndDate >= DateTime.Now)
+                select ec)
+            .AsNoTracking()
+            .Distinct();
+
+        if (dto.OrderDate.HasValue)
+        {
+            empContracts = empContracts.ApplyOrderDate(dto.OrderDate);
+        }
+
+        if (!string.IsNullOrEmpty(dto.EmployeeId))
+        {
+            empContracts = empContracts.Where(x => x.EmployeeId == dto.EmployeeId);
+        }
+
+        if (dto.ContractId.HasValue)
+        {
+            empContracts = empContracts.Where(x => x.ContractId == dto.ContractId);
+
+        }
+
+        empContracts = empContracts.ApplyDateRangeFilter(dto.CreatedDate, x => x.CreatedDate);
+
+        dto.TotalRecord = await empContracts.CountAsync();
+        var result = await empContracts.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
     }
 }

@@ -132,7 +132,7 @@ namespace App.API.Controllers
                     return ModelInvalid();
                 }
 
-                var data = await _contractBizLogic.GetContractDepartmentAssignByManager(dto, ManagerOrEmpId);
+                var data = await _contractBizLogic.GetContractDepartmentAssignsByManager(dto, ManagerOrEmpId);
                 var response = new PagingDataModel<ContractDepartmentAssignViewDTO>(data, dto);
                 return GetSuccess(response);
             }
@@ -160,7 +160,7 @@ namespace App.API.Controllers
                     return ModelInvalid();
                 }
 
-                var data = await _contractBizLogic.GetContractDepartmentAssignByAdmin(dto);
+                var data = await _contractBizLogic.GetContractDepartmentAssignsByAdmin(dto);
                 var response = new PagingDataModel<ContractDepartmentAssignViewDTO>(data, dto);
                 return GetSuccess(response);
             }
@@ -193,6 +193,37 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+        
+        
+        [FSAuthorize(Policy = "EmployeeRolePolicy")]
+        [HttpPost]
+        [Route("get-contracts-employee-assign-by-employee")]
+        public async Task<IActionResult> GetContractEmployeeAssignsByEmployee([FromBody] EmpContractGetListDTO dto)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                var data = await _contractBizLogic.GetEmpContractsByEmployee(dto, ManagerOrEmpId);
+                var response = new PagingDataModel<EmpContractViewDTO>(data, dto);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetContractEmployeeAssignsByEmployee {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        
         
         [FSAuthorize(Policy = "ManagerRolePolicy")]
         [HttpPost]
