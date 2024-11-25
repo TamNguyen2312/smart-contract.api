@@ -25,4 +25,5 @@ public interface IContractBizLogic
         ContractDepartmentAssignGetListDTO dto);
 
     Task<List<EmpContractViewDTO>> GetEmpContractsByEmployee(EmpContractGetListDTO dto, string employeeId);
+    Task<List<EmpContractViewDTO>> GetEmpContractsByManager(EmpContractGetListDTO dto, string managerId);
 }

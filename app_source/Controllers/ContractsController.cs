@@ -224,6 +224,34 @@ namespace App.API.Controllers
         }
         
         
+        [FSAuthorize(Policy = "ManagerRolePolicy")]
+        [HttpPost]
+        [Route("get-contracts-employee-assign-by-manager")]
+        public async Task<IActionResult> GetContractEmployeeAssignsByManager([FromBody] EmpContractGetListDTO dto)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+
+                if (!dto.IsValidOrderDate())
+                {
+                    ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ");
+                    return ModelInvalid();
+                }
+
+                var data = await _contractBizLogic.GetEmpContractsByManager(dto, ManagerOrEmpId);
+                var response = new PagingDataModel<EmpContractViewDTO>(data, dto);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetContractEmployeeAssignsByManager {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
         
         [FSAuthorize(Policy = "ManagerRolePolicy")]
         [HttpPost]
