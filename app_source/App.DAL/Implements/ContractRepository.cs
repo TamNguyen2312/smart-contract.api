@@ -552,11 +552,44 @@ public class ContractRepository : IContractRepository
                 where m.Id == managerId
                       && !m.IsDelete
                       && !cda.IsDelete
-                      && cda.CreatedDate <= DateTime.Now
-                      && (cda.EndDate == null || cda.EndDate >= DateTime.Now)
                 select cda)
             .AsNoTracking()
             .Distinct();
+
+        if (dto.OrderDate.HasValue)
+        {
+            assigns = assigns.ApplyOrderDate(dto.OrderDate);
+        }
+
+        if (dto.ExpirationDaysLeft.HasValue)
+        {
+            assigns = assigns.Where(x => (x.EndDate.Value - DateTime.Now).Days == dto.ExpirationDaysLeft.Value);
+        }
+        
+        if (dto.IsExpried)
+        {
+            assigns = assigns.Where(x => x.EndDate.Value < DateTime.Now);
+        }
+        
+        assigns = assigns.ApplyDateRangeFilter(dto.CreatedDate, x => x.CreatedDate);
+        assigns = assigns.ApplyDateRangeFilter(dto.EndDate, x => x.EndDate);
+
+        dto.TotalRecord = await assigns.CountAsync();
+        var result = await assigns.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
+    }
+    
+    /// <summary>
+    /// This is used to get contract department assign for admin
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
+    public async Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignByAdmin(ContractDepartmentAssignGetListDTO dto)
+    {
+        var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var assigns = baseContractAssignRepo.Get(new QueryBuilder<ContractDepartmentAssign>()
+            .WithPredicate(x => !x.IsDelete)
+            .Build());
 
         if (dto.OrderDate.HasValue)
         {

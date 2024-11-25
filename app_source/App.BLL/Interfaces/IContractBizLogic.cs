@@ -20,4 +20,7 @@ public interface IContractBizLogic
 
     Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignByManager(
         ContractDepartmentAssignGetListDTO dto, string managerId);
+
+    Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignByAdmin(
+        ContractDepartmentAssignGetListDTO dto);
 }
