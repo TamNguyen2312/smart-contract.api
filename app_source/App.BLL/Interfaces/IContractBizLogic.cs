@@ -18,9 +18,11 @@ public interface IContractBizLogic
     Task<BaseResponse> UpdateContractDepartmentAssign(ContractAssignUpdateDTO dto, long userId);
     Task<BaseResponse> AssignContractToEmployee(EmpContractRequestDTO dto, long userId);
 
-    Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignByManager(
+    Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignsByManager(
         ContractDepartmentAssignGetListDTO dto, string managerId);
 
-    Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignByAdmin(
+    Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignsByAdmin(
         ContractDepartmentAssignGetListDTO dto);
+
+    Task<List<EmpContractViewDTO>> GetEmpContractsByEmployee(EmpContractGetListDTO dto, string employeeId);
 }
