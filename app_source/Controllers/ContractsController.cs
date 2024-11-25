@@ -95,8 +95,8 @@ namespace App.API.Controllers
         
         [FSAuthorize(Policy = "AdminRolePolicy")]
         [HttpPut]
-        [Route("update-contract-assign")]
-        public async Task<IActionResult> UpdateContractAssign ([FromBody] ContractAssignUpdateDTO dto)
+        [Route("update-contract-department-assign")]
+        public async Task<IActionResult> UpdateContractDepartmentAssign ([FromBody] ContractAssignUpdateDTO dto)
         {
             try
             {
@@ -104,13 +104,35 @@ namespace App.API.Controllers
 
                 if (!ModelState.IsValid) return ModelInvalid();
                 
-                var response = await _contractBizLogic.UpdateContractAssign(dto, UserId);
+                var response = await _contractBizLogic.UpdateContractDepartmentAssign(dto, UserId);
                 if (!response.IsSuccess) return SaveError(response.Message);
                 return SaveSuccess(response.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError("UpdateContractAssign {0} {1}", ex.Message, ex.StackTrace);
+                _logger.LogError("UpdateContractDepartmentAssign {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        [FSAuthorize(Policy = "ManagerRolePolicy")]
+        [HttpPost]
+        [Route("assign-contract-to-employee")]
+        public async Task<IActionResult> AssignContractToEmployee ([FromBody] EmpContractRequestDTO dto)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (!ModelState.IsValid) return ModelInvalid();
+                
+                var response = await _contractBizLogic.AssignContractToEmployee(dto, UserId);
+                if (!response.IsSuccess) return SaveError(response.Message);
+                return SaveSuccess(response.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("AssignContractToEmployee {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }

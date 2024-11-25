@@ -80,11 +80,19 @@ public class ContractBizLogic : IContractBizLogic
         return response;
     }
 
-    public async Task<BaseResponse> UpdateContractAssign(ContractAssignUpdateDTO dto, long userId)
+    public async Task<BaseResponse> UpdateContractDepartmentAssign(ContractAssignUpdateDTO dto, long userId)
     {
         var entity = dto.GetEntity();
         var user = await _identityRepository.GetByIdAsync(userId);
         var response = await _contractRepository.CreateUpdateContractDepartmentAssign(entity, user);
+        return response;
+    }
+
+    public async Task<BaseResponse> AssignContractToEmployee(EmpContractRequestDTO dto, long userId)
+    {
+        var entity = dto.GetEntity();
+        var user = await _identityRepository.GetByIdAsync(userId);
+        var response = await _contractRepository.CreateUpdateEmpContract(entity, user);
         return response;
     }
 
