@@ -429,7 +429,7 @@ public class ContractRepository : IContractRepository
         var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
         var listDepartmentId = await baseContractAssignRepo.Get(new QueryBuilder<ContractDepartmentAssign>()
                 .WithPredicate(x => x.ContractId == contractId
-                                                        && x.CreatedDate >= DateTime.Now
+                                                        && x.CreatedDate <= DateTime.Now
                                                         && (x.EndDate == null || x.EndDate >= DateTime.Now)
                                                         && !x.IsDelete)
                 .Build())
@@ -532,6 +532,53 @@ public class ContractRepository : IContractRepository
             await _unitOfWork.RollBackAsync();
             throw;
         }
+    }
+
+    /// <summary>
+    /// This is used to get contracts assign by manager
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public async Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignByManager(ContractDepartmentAssignGetListDTO dto, string managerId)
+    {
+        var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+
+        var assigns = (from m in managerDbSet
+                join cda in contractAssignDbSet on m.DepartmentId equals cda.DepartmentId
+                where m.Id == managerId
+                      && !m.IsDelete
+                      && !cda.IsDelete
+                      && cda.CreatedDate <= DateTime.Now
+                      && (cda.EndDate == null || cda.EndDate >= DateTime.Now)
+                select cda)
+            .AsNoTracking()
+            .Distinct();
+
+        if (dto.OrderDate.HasValue)
+        {
+            assigns = assigns.ApplyOrderDate(dto.OrderDate);
+        }
+
+        if (dto.ExpirationDaysLeft.HasValue)
+        {
+            assigns = assigns.Where(x => (x.EndDate.Value - DateTime.Now).Days == dto.ExpirationDaysLeft.Value);
+        }
+        
+        if (dto.IsExpried)
+        {
+            assigns = assigns.Where(x => x.EndDate.Value < DateTime.Now);
+        }
+        
+        assigns = assigns.ApplyDateRangeFilter(dto.CreatedDate, x => x.CreatedDate);
+        assigns = assigns.ApplyDateRangeFilter(dto.EndDate, x => x.EndDate);
+
+        dto.TotalRecord = await assigns.CountAsync();
+        var result = await assigns.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
     }
 
     public async Task<BaseResponse> CreateUpdateEmpContract(EmpContract empContract, ApplicationUser user)
