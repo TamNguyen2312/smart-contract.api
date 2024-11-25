@@ -21,4 +21,5 @@ public interface IContractRepository
     Task<BaseResponse> CreateUpdateContractDepartmentAssign(ContractDepartmentAssign contractDepartmentAssign,
         ApplicationUser user);
 
+    Task<BaseResponse> CreateUpdateEmpContract(EmpContract empContract, ApplicationUser user);
 }

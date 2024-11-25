@@ -4,6 +4,9 @@ public enum SnapshotMetadataAction
 {
     Create = 1,
     Update = 2,
-    Assign = 3,
-    UpdateAssign = 4
+    AssignDepartment = 3,
+    UpdateAssignDeapartment = 4,
+    AssignEmployee = 5,
+    UpdateAssignEmployee = 6
+    
 }

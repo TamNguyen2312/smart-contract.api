@@ -10,6 +10,7 @@ using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.Implements;
@@ -427,7 +428,10 @@ public class ContractRepository : IContractRepository
     {
         var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
         var listDepartmentId = await baseContractAssignRepo.Get(new QueryBuilder<ContractDepartmentAssign>()
-                .WithPredicate(x => x.ContractId == contractId && !x.IsDelete)
+                .WithPredicate(x => x.ContractId == contractId
+                                                        && x.CreatedDate >= DateTime.Now
+                                                        && (x.EndDate == null || x.EndDate >= DateTime.Now)
+                                                        && !x.IsDelete)
                 .Build())
             .Select(x => x.DepartmentId)
             .ToListAsync();
@@ -459,8 +463,7 @@ public class ContractRepository : IContractRepository
             
             var anyAssign = await baseContractAssignRepo.AnyAsync(new QueryBuilder<ContractDepartmentAssign>()
                 .WithPredicate(x => x.ContractId == contractDepartmentAssign.ContractId
-                                    && x.DepartmentId == contractDepartmentAssign.DepartmentId
-                                    && !x.IsDelete)
+                                    && x.DepartmentId == contractDepartmentAssign.DepartmentId)
                 .Build());
             if (anyAssign)
             {
@@ -480,7 +483,7 @@ public class ContractRepository : IContractRepository
                     Category = SnapshotMetadataType.Contract.ToString(),
                     CreatedDate = existedAssign.ModifiedDate,
                     CreatedBy = user.UserName,
-                    Action = SnapshotMetadataAction.UpdateAssign.ToString(),
+                    Action = SnapshotMetadataAction.UpdateAssignDeapartment.ToString(),
                     IsDelete = false
                 };
             
@@ -508,7 +511,7 @@ public class ContractRepository : IContractRepository
                     Category = SnapshotMetadataType.Contract.ToString(),
                     CreatedDate = newAssign.CreatedDate,
                     CreatedBy = newAssign.CreatedBy,
-                    Action = SnapshotMetadataAction.Assign.ToString(),
+                    Action = SnapshotMetadataAction.UpdateAssignDeapartment.ToString(),
                     IsDelete = false
                 };
             
@@ -517,6 +520,72 @@ public class ContractRepository : IContractRepository
                 newSnapshot.StoredData = JsonSerializer.Serialize(newAssign);
                 await baseSnapshotRepo.CreateAsync(newSnapshot);
             }
+
+            var saver = await _unitOfWork.SaveAsync();
+            await _unitOfWork.CommitTransactionAsync();
+
+            if (!saver) return new BaseResponse { IsSuccess = false, Message = Constants.SaveDataFailed };
+            return new BaseResponse { IsSuccess = true, Message = Constants.SaveDataSuccess };
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollBackAsync();
+            throw;
+        }
+    }
+
+    public async Task<BaseResponse> CreateUpdateEmpContract(EmpContract empContract, ApplicationUser user)
+    {
+        var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+        var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
+        var baseContractRepo = _unitOfWork.GetRepository<Contract>();
+        var baseSnapshotRepo = _unitOfWork.GetRepository<SnapshotMetadata>();
+
+        var anyEmployee = await baseEmployeeRepo.AnyAsync(new QueryBuilder<Employee>()
+            .WithPredicate(x => x.Id == empContract.EmployeeId && !x.IsDelete)
+            .Build());
+
+        if (!anyEmployee) return new BaseResponse { IsSuccess = false, Message = "Nhân viên không tồn tại." };
+
+        var anyContract = await baseContractRepo.AnyAsync(new QueryBuilder<Contract>()
+            .WithPredicate(x => x.Id == empContract.ContractId && !x.IsDelete)
+            .Build());
+        if (!anyContract) return new BaseResponse { IsSuccess = false, Message = "Hợp đồng không tồn tại" };
+
+        var anyEmpContract = await baseEmpContractRepo.AnyAsync(new QueryBuilder<EmpContract>()
+            .WithPredicate(x => x.EmployeeId == empContract.EmployeeId
+                                && x.ContractId == empContract.ContractId)
+            .Build());
+
+        if (anyEmpContract) return new BaseResponse {IsSuccess = false, Message = "Nhân viên đã được phân công cho hợp đồng."};
+
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            var newEmpContract = new EmpContract
+            {
+                EmployeeId = empContract.EmployeeId,
+                ContractId = empContract.ContractId,
+                CreatedDate = DateTime.Now,
+                CreatedBy = user.UserName,
+                IsDelete = false,
+            };
+            await baseEmpContractRepo.CreateAsync(newEmpContract);
+        
+            var newSnapshot = new SnapshotMetadata
+            {
+                Category = SnapshotMetadataType.Contract.ToString(),
+                CreatedDate = newEmpContract.CreatedDate,
+                CreatedBy = newEmpContract.CreatedBy,
+                Action = SnapshotMetadataAction.AssignEmployee.ToString(),
+                IsDelete = false
+            };
+            
+            newSnapshot.Name =
+                $"{newEmpContract.ContractId}_{newEmpContract.EmployeeId}_{newSnapshot.Action}_{newSnapshot.CreatedBy}_{newSnapshot.CreatedDate}";
+            newSnapshot.StoredData = JsonSerializer.Serialize(newEmpContract);
+            await baseSnapshotRepo.CreateAsync(newSnapshot);
 
             var saver = await _unitOfWork.SaveAsync();
             await _unitOfWork.CommitTransactionAsync();
