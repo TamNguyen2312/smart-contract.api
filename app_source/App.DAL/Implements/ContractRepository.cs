@@ -690,10 +690,7 @@ public class ContractRepository : IContractRepository
     public async Task<List<EmpContract>> GetEmpContractsByEmployee(EmpContractGetListDTO dto, string employeeId)
     {
         var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
-        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
         var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
-        var managerDbSet = baseManagerRepo.GetDbSet();
-
         var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
         var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
         var empContractDbSet = baseEmpContractRepo.GetDbSet();
@@ -713,6 +710,56 @@ public class ContractRepository : IContractRepository
             .AsNoTracking()
             .Distinct();
 
+        if (dto.OrderDate.HasValue)
+        {
+            empContracts = empContracts.ApplyOrderDate(dto.OrderDate);
+        }
+
+        if (!string.IsNullOrEmpty(dto.EmployeeId))
+        {
+            empContracts = empContracts.Where(x => x.EmployeeId == dto.EmployeeId);
+        }
+
+        if (dto.ContractId.HasValue)
+        {
+            empContracts = empContracts.Where(x => x.ContractId == dto.ContractId);
+
+        }
+
+        empContracts = empContracts.ApplyDateRangeFilter(dto.CreatedDate, x => x.CreatedDate);
+
+        dto.TotalRecord = await empContracts.CountAsync();
+        var result = await empContracts.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
+    }
+
+    /// <summary>
+    /// This is used to get contract employee assigns by mananger
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public async Task<List<EmpContract>> GetEmpContractsByManager(EmpContractGetListDTO dto, string managerId)
+    {
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+        var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
+        var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+        var empContractDbSet = baseEmpContractRepo.GetDbSet();
+
+        var empContracts = (from ec in empContractDbSet
+                join cda in contractAssignDbSet on ec.ContractId equals cda.ContractId
+                join m in managerDbSet on cda.DepartmentId equals m.DepartmentId
+                where m.Id == managerId
+                      && !ec.IsDelete
+                      && !cda.IsDelete
+                      && !m.IsDelete
+                      && cda.CreatedDate <= DateTime.Now
+                      && (cda.EndDate == null || cda.EndDate >= DateTime.Now)
+                select ec)
+            .AsNoTracking()
+            .Distinct();
         if (dto.OrderDate.HasValue)
         {
             empContracts = empContracts.ApplyOrderDate(dto.OrderDate);
