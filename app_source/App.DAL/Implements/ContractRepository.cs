@@ -238,16 +238,19 @@ public class ContractRepository : IContractRepository
         var empContractDbSet = baseEmpContractRepo.GetDbSet();
         var baseContractRepo = _unitOfWork.GetRepository<Contract>();
         var contractDbSet = baseContractRepo.GetDbSet();
+        var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
 
         var contracts = (from e in employeeDbSet
+                join cda in contractAssignDbSet on e.DepartmentId equals cda.DepartmentId
                 join ec in empContractDbSet on e.Id equals ec.EmployeeId
                 join c in contractDbSet on ec.ContractId equals c.Id
                 where e.Id == employeeId
                       && !e.IsDelete
                       && !ec.IsDelete
                       && !c.IsDelete
-                      && ec.CreatedDate <= DateTime.Now
-                      && (ec.EndDate == null || ec.EndDate >= DateTime.Now)
+                      && cda.CreatedDate <= DateTime.Now
+                      && (cda.EndDate == null || cda.EndDate >= DateTime.Now)
                 select c)
             .AsNoTracking()
             .Distinct();
@@ -346,10 +349,13 @@ public class ContractRepository : IContractRepository
         var empContractDbSet = baseEmpContractRepo.GetDbSet();
         var baseContractRepo = _unitOfWork.GetRepository<Contract>();
         var contractDbSet = baseContractRepo.GetDbSet();
+        var contractAssignBaseRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var contractAssignDbSet = contractAssignBaseRepo.GetDbSet();
 
         var now = DateTime.Now;
 
         var hasAccess = await (from e in employeeDbSet
+                join cda in contractAssignDbSet on e.DepartmentId equals cda.DepartmentId
                 join ec in empContractDbSet on e.Id equals ec.EmployeeId
                 join c in contractDbSet on ec.ContractId equals c.Id
                 where e.Id == employeeId
@@ -357,8 +363,8 @@ public class ContractRepository : IContractRepository
                       && !e.IsDelete
                       && !ec.IsDelete
                       && !c.IsDelete
-                      && ec.CreatedDate <= now
-                      && (ec.EndDate == null || ec.EndDate >= now)
+                      && cda.CreatedDate <= now
+                      && (cda.EndDate == null || cda.EndDate >= now)
                 select c)
             .AnyAsync();
         return hasAccess;
@@ -437,6 +443,8 @@ public class ContractRepository : IContractRepository
             var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
             var baseDepartmentRepo = _unitOfWork.GetRepository<Department>();
             var baseSnapshotRepo = _unitOfWork.GetRepository<SnapshotMetadata>();
+            var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
+            var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
             
             var anyContract = await baseContractRepo.AnyAsync(new QueryBuilder<Contract>()
                 .WithPredicate(x => x.Id == contractDepartmentAssign.ContractId && !x.IsDelete)
@@ -472,7 +480,7 @@ public class ContractRepository : IContractRepository
                     Category = SnapshotMetadataType.Contract.ToString(),
                     CreatedDate = existedAssign.ModifiedDate,
                     CreatedBy = user.UserName,
-                    Action = SnapshotMetadataAction.Assign.ToString(),
+                    Action = SnapshotMetadataAction.UpdateAssign.ToString(),
                     IsDelete = false
                 };
             
@@ -480,6 +488,7 @@ public class ContractRepository : IContractRepository
                     $"{existedAssign.ContractId}_{existedAssign.DepartmentId}_{newUpdateSnapshot.Action}_{newUpdateSnapshot.CreatedBy}_{newUpdateSnapshot.CreatedDate}";
                 newUpdateSnapshot.StoredData = JsonSerializer.Serialize(existedAssign);
                 await baseSnapshotRepo.CreateAsync(newUpdateSnapshot);
+                
             }
             else
             {
@@ -493,7 +502,6 @@ public class ContractRepository : IContractRepository
                     IsDelete = false
                 };
                 await baseContractAssignRepo.CreateAsync(newAssign);
-                await _unitOfWork.SaveChangesAsync();
             
                 var newSnapshot = new SnapshotMetadata
                 {
@@ -509,8 +517,6 @@ public class ContractRepository : IContractRepository
                 newSnapshot.StoredData = JsonSerializer.Serialize(newAssign);
                 await baseSnapshotRepo.CreateAsync(newSnapshot);
             }
-                // return new BaseResponse
-                //     { IsSuccess = false, Message = "Hợp đồng đã được phân công cho phòng ban rồi." };
 
             var saver = await _unitOfWork.SaveAsync();
             await _unitOfWork.CommitTransactionAsync();
