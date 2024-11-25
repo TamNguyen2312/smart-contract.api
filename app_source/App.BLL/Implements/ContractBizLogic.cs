@@ -17,13 +17,15 @@ public class ContractBizLogic : IContractBizLogic
     private readonly IContractTypeRepository _contractTypeRepository;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly ICustomerDepartmentAssignRepository _customerDepartmentAssignRepository;
+    private readonly IDepartmentRepository _departmentRepository;
 
     public ContractBizLogic(IContractRepository contractRepository,
         IIdentityRepository identityRepository,
         ICustomerRepository customerRepository,
         IContractTypeRepository contractTypeRepository,
         IEmployeeRepository employeeRepository,
-        ICustomerDepartmentAssignRepository customerDepartmentAssignRepository)
+        ICustomerDepartmentAssignRepository customerDepartmentAssignRepository,
+        IDepartmentRepository departmentRepository)
     {
         _contractRepository = contractRepository;
         _identityRepository = identityRepository;
@@ -31,6 +33,7 @@ public class ContractBizLogic : IContractBizLogic
         _contractTypeRepository = contractTypeRepository;
         _employeeRepository = employeeRepository;
         _customerDepartmentAssignRepository = customerDepartmentAssignRepository;
+        _departmentRepository = departmentRepository;
     }
 
     public async Task<BaseResponse> CreateContract(ContractRequestDTO dto, long userId)
@@ -85,6 +88,14 @@ public class ContractBizLogic : IContractBizLogic
         var entity = dto.GetEntity();
         var user = await _identityRepository.GetByIdAsync(userId);
         var response = await _contractRepository.CreateUpdateContractDepartmentAssign(entity, user);
+        return response;
+    }
+
+    public async Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignByManager(
+        ContractDepartmentAssignGetListDTO dto, string managerId)
+    {
+        var data = await _contractRepository.GetContractDepartmentAssignByManager(dto, managerId);
+        var response = await GetContractDeparmentAssignViews(data);
         return response;
     }
 
@@ -160,6 +171,26 @@ public class ContractBizLogic : IContractBizLogic
         }
 
         return views;
+    }
+
+    private async Task<ContractDepartmentAssignViewDTO> GetContractDeparmentAssignView(ContractDepartmentAssign contractDepartmentAssign)
+    {
+        var department = await _departmentRepository.GetDepartment(contractDepartmentAssign.DepartmentId);
+        if (department == null) return null;
+        var view = new ContractDepartmentAssignViewDTO(contractDepartmentAssign, department);
+        return view;
+    }
+    
+    private async Task<List<ContractDepartmentAssignViewDTO>> GetContractDeparmentAssignViews(List<ContractDepartmentAssign> contractDepartmentAssigns)
+    {
+        var response = new List<ContractDepartmentAssignViewDTO>();
+        foreach (var item in contractDepartmentAssigns)
+        {
+            var view = await GetContractDeparmentAssignView(item);
+            response.Add(view);
+        }
+
+        return response;
     }
 
     #endregion
