@@ -7,5 +7,4 @@ public class EmpContract : CommonDataModel
     public string EmployeeId { get; set; } = null!;
     public long ContractId { get; set; }
     public string? Description { get; set; }
-    public DateTime? EndDate { get; set; }
 }
