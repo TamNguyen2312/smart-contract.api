@@ -614,6 +614,42 @@ public class ContractRepository : IContractRepository
         return result;
     }
 
+    /// <summary>
+    /// check manager has access to get contract deparment assign
+    /// </summary>
+    /// <param name="contractId"></param>
+    /// <param name="departmentId"></param>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public async Task<bool> HasManagerAccessToContractDepartmetnAssign(long contractId, long departmentId, string managerId)
+    {
+        var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+
+        var hasAccess = await (from cda in contractAssignDbSet
+            join m in managerDbSet on cda.DepartmentId equals m.DepartmentId
+            where m.Id == managerId
+                  && cda.ContractId == contractId
+                  && cda.DepartmentId == departmentId
+                  && !m.IsDelete
+                  && !cda.IsDelete
+            select cda).AnyAsync();
+        return false;
+    }
+
+    public async Task<ContractDepartmentAssign> GetContractDepartmentAssign(long contractId, long departmentId)
+    {
+        var baseContractDepartmentRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var contractAssign = await baseContractDepartmentRepo.GetSingleAsync(
+            new QueryBuilder<ContractDepartmentAssign>()
+                .WithPredicate(x => x.ContractId == contractId && x.DepartmentId == departmentId)
+                .Build());
+        return contractAssign;
+    }
+    
+    
     public async Task<BaseResponse> CreateUpdateEmpContract(EmpContract empContract, ApplicationUser user)
     {
         var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();

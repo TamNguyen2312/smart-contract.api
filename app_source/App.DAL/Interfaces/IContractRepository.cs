@@ -23,8 +23,12 @@ public interface IContractRepository
 
     Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignsByManager(ContractDepartmentAssignGetListDTO dto,
         string managerId);
-    Task<BaseResponse> CreateUpdateEmpContract(EmpContract empContract, ApplicationUser user);
+   
     Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignsByAdmin(ContractDepartmentAssignGetListDTO dto);
+    Task<bool> HasManagerAccessToContractDepartmetnAssign(long contractId, long departmentId, string managerId);
+    Task<ContractDepartmentAssign> GetContractDepartmentAssign(long contractId, long departmentId);
+    Task<BaseResponse> CreateUpdateEmpContract(EmpContract empContract, ApplicationUser user);
     Task<List<EmpContract>> GetEmpContractsByEmployee(EmpContractGetListDTO dto, string employeeId);
     Task<List<EmpContract>> GetEmpContractsByManager(EmpContractGetListDTO dto, string managerId);
+    
 }
