@@ -99,6 +99,14 @@ public class ContractBizLogic : IContractBizLogic
         return response;
     }
 
+    public async Task<List<ContractDepartmentAssignViewDTO>> GetContractDepartmentAssignByAdmin(
+        ContractDepartmentAssignGetListDTO dto)
+    {
+        var data = await _contractRepository.GetContractDepartmentAssignByAdmin(dto);
+        var response = await GetContractDeparmentAssignViews(data);
+        return response;
+    }
+
     public async Task<BaseResponse> AssignContractToEmployee(EmpContractRequestDTO dto, long userId)
     {
         var entity = dto.GetEntity();

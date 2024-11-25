@@ -24,4 +24,5 @@ public interface IContractRepository
     Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignByManager(ContractDepartmentAssignGetListDTO dto,
         string managerId);
     Task<BaseResponse> CreateUpdateEmpContract(EmpContract empContract, ApplicationUser user);
+    Task<List<ContractDepartmentAssign>> GetContractDepartmentAssignByAdmin(ContractDepartmentAssignGetListDTO dto);
 }
