@@ -76,14 +76,14 @@ namespace App.API.Controllers
                 {
                     var managerAccess =
                         await _contractBizLogic.HasManagerAccessToContract(ManagerOrEmpId, contractId);
-                    if (!managerAccess) return SaveError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
+                    if (!managerAccess) return GetError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
                 }
                 
                 if (IsEmployee)
                 {
                     var employeeAccess =
                         await _contractBizLogic.HasEmployeeAccessToContract(ManagerOrEmpId, contractId);
-                    if (!employeeAccess) return SaveError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
+                    if (!employeeAccess) return GetError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
                 }
 
                 if (!ModelState.IsValid) return ModelInvalid();
@@ -102,6 +102,40 @@ namespace App.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError("GetContractDocumentsByContract {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        [FSAuthorize(Policy = "ManagerEmployeePolicy")]
+        [HttpPost]
+        [Route("get-contract-document/{contractId}/{contractDocumentId}")]
+        public async Task<IActionResult> GetContractDocument([FromRoute] long contractId, [FromRoute] long contractDocumentId)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (IsManager)
+                {
+                    var managerAccess =
+                        await _contractBizLogic.HasManagerAccessToContract(ManagerOrEmpId, contractId);
+                    if (!managerAccess) return GetError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
+                }
+                
+                if (IsEmployee)
+                {
+                    var employeeAccess =
+                        await _contractBizLogic.HasEmployeeAccessToContract(ManagerOrEmpId, contractId);
+                    if (!employeeAccess) return GetError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
+                }
+                
+                var response = await _contractDocumentBizLogic.GetContractDocument(contractId, contractDocumentId);
+                if (response == null) return GetNotFound(Constants.GetNotFound);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetContractDocument {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
