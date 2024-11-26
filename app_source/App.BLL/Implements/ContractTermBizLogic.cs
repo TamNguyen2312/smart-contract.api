@@ -26,4 +26,10 @@ public class ContractTermBizLogic : IContractTermBizLogic
         var response = await _contractTermRepository.CreateUpdateContractTerm(entity, user);
         return response;
     }
+
+    public async Task<List<ContractTermViewDTO>> GetContractTermsByContract(ContractTermGetListDTO dto, long contractId)
+    {
+        var data = await _contractTermRepository.GetContractTermsByContract(dto, contractId);
+        return data.Select(x => new ContractTermViewDTO(x)).ToList();
+    }
 }

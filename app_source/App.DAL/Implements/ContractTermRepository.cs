@@ -1,5 +1,6 @@
 using System.Text.Json;
 using App.DAL.Interfaces;
+using App.Entity.DTOs.ContractTerm;
 using App.Entity.Entities;
 using App.Entity.Enums;
 using FS.BaseModels.IdentityModels;
@@ -8,6 +9,7 @@ using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
+using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.Implements;
 
@@ -99,5 +101,31 @@ public class ContractTermRepository : IContractTermRepository
             await _unitOfWork.RollBackAsync();
             throw;
         }
+    }
+    
+    public async Task<List<ContractTerm>> GetContractTermsByContract(ContractTermGetListDTO dto, long contractId)
+    {
+        var baseContractTermRepo = _unitOfWork.GetRepository<ContractTerm>();
+        var contractTerms = baseContractTermRepo.Get(new QueryBuilder<ContractTerm>()
+            .WithPredicate(x => x.ContractId == contractId && !x.IsDelete)
+            .Build());
+
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            contractTerms = contractTerms.Where(x => x.Name.Contains(dto.Keyword)
+                                                             || x.Description.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            contractTerms = contractTerms.ApplyOrderDate(dto.OrderDate);
+        }
+
+        contractTerms = contractTerms.ApplyDateRangeFilter(dto.CreatedDate, x => x.CreatedDate);
+        contractTerms = contractTerms.ApplyDateRangeFilter(dto.ModifiedDate, x => x.ModifiedDate);
+
+        dto.TotalRecord = await contractTerms.CountAsync();
+        var result = await contractTerms.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
     }
 }
