@@ -1,5 +1,6 @@
 using System.Text.Json;
 using App.DAL.Interfaces;
+using App.Entity.DTOs.ContractDocument;
 using App.Entity.Entities;
 using App.Entity.Enums;
 using FS.BaseModels.IdentityModels;
@@ -9,6 +10,7 @@ using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.Implements;
 
@@ -36,16 +38,17 @@ public class ContractDocumentRepository : IContractDocumentRepository
                 .Build());
             if (anyDocument)
             {
-                var existedContractDocument = await baseContractDocumentRepo.GetSingleAsync(new QueryBuilder<ContractDocument>()
-                    .WithPredicate(x => x.Id == contractDocument.Id
-                                        && !x.IsDelete)
-                    .Build());
+                var existedContractDocument = await baseContractDocumentRepo.GetSingleAsync(
+                    new QueryBuilder<ContractDocument>()
+                        .WithPredicate(x => x.Id == contractDocument.Id
+                                            && !x.IsDelete)
+                        .Build());
 
                 contractDocument.UpdateNonDefaultProperties(existedContractDocument);
                 existedContractDocument.ModifiedDate = DateTime.Now;
                 existedContractDocument.ModifiedBy = user.UserName;
                 await baseContractDocumentRepo.UpdateAsync(existedContractDocument);
-                
+
                 var newSnapshot = new SnapshotMetadata
                 {
                     Category = SnapshotMetadataType.ContractDocument.ToString(),
@@ -89,7 +92,7 @@ public class ContractDocumentRepository : IContractDocumentRepository
                 newSnapshot.StoredData = JsonSerializer.Serialize(newContractDocument);
                 await baseSnapshotRepo.CreateAsync(newSnapshot);
             }
-            
+
             var saver = await _unitOfWork.SaveAsync();
             await _unitOfWork.CommitTransactionAsync();
 
@@ -101,5 +104,32 @@ public class ContractDocumentRepository : IContractDocumentRepository
             await _unitOfWork.RollBackAsync();
             throw;
         }
+    }
+    
+    public async Task<List<ContractDocument>> GetContractDocumentsByContract(ContractDocumentGetListDTO dto, long contractId)
+    {
+        var baseContractDocumentRepo = _unitOfWork.GetRepository<ContractDocument>();
+        var contractDocuments = baseContractDocumentRepo.Get(new QueryBuilder<ContractDocument>()
+            .WithPredicate(x => x.ContractId == contractId && !x.IsDelete)
+            .Build());
+
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            contractDocuments = contractDocuments.Where(x => x.Name.Contains(dto.Keyword)
+                                                             || x.Description.Contains(dto.Keyword)
+                                                             || x.FileName.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            contractDocuments = contractDocuments.ApplyOrderDate(dto.OrderDate);
+        }
+
+        contractDocuments = contractDocuments.ApplyDateRangeFilter(dto.CreatedDate, x => x.CreatedDate);
+        contractDocuments = contractDocuments.ApplyDateRangeFilter(dto.ModifiedDate, x => x.ModifiedDate);
+
+        dto.TotalRecord = await contractDocuments.CountAsync();
+        var result = await contractDocuments.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
     }
 }

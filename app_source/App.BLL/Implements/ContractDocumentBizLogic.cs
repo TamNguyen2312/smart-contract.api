@@ -30,4 +30,11 @@ public class ContractDocumentBizLogic : IContractDocumentBizLogic
         var response = await _contractDocumentRepository.CreateUpdateContractDocument(entity, user);
         return response;
     }
+
+    public async Task<List<ContractDocumentViewDTO>> GetContractDocumentsByContract(ContractDocumentGetListDTO dto, long contractId)
+    {
+        var data = await _contractDocumentRepository.GetContractDocumentsByContract(dto, contractId);
+        var response = data.Select(x => new ContractDocumentViewDTO(x)).ToList();
+        return response;
+    }
 }
