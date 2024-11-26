@@ -6,4 +6,5 @@ namespace App.BLL.Interfaces;
 public interface IContractDocumentBizLogic
 {
     Task<BaseResponse> CreateUpdateContractDocument(ContractDocumentRequestDTO dto, long userId);
+    Task<List<ContractDocumentViewDTO>> GetContractDocumentsByContract(ContractDocumentGetListDTO dto, long contractId);
 }
