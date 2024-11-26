@@ -243,13 +243,14 @@ public class ContractRepository : IContractRepository
         var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
 
         var contracts = (from e in employeeDbSet
-                join cda in contractAssignDbSet on e.DepartmentId equals cda.DepartmentId
                 join ec in empContractDbSet on e.Id equals ec.EmployeeId
                 join c in contractDbSet on ec.ContractId equals c.Id
+                join cda in contractAssignDbSet on new { ContractId = c.Id, DepartmentId = e.DepartmentId } equals new { cda.ContractId, cda.DepartmentId }
                 where e.Id == employeeId
                       && !e.IsDelete
                       && !ec.IsDelete
                       && !c.IsDelete
+                      && !cda.IsDelete
                       && cda.CreatedDate <= DateTime.Now
                       && (cda.EndDate == null || cda.EndDate >= DateTime.Now)
                 select c)
@@ -356,14 +357,15 @@ public class ContractRepository : IContractRepository
         var now = DateTime.Now;
 
         var hasAccess = await (from e in employeeDbSet
-                join cda in contractAssignDbSet on e.DepartmentId equals cda.DepartmentId
                 join ec in empContractDbSet on e.Id equals ec.EmployeeId
                 join c in contractDbSet on ec.ContractId equals c.Id
+                join cda in contractAssignDbSet on new { ContractId = c.Id, DepartmentId = e.DepartmentId } equals new { cda.ContractId, cda.DepartmentId }
                 where e.Id == employeeId
                       && c.Id == contractId
                       && !e.IsDelete
                       && !ec.IsDelete
                       && !c.IsDelete
+                      && !cda.IsDelete
                       && cda.CreatedDate <= now
                       && (cda.EndDate == null || cda.EndDate >= now)
                 select c)
