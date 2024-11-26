@@ -783,14 +783,19 @@ public class ContractRepository : IContractRepository
         var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
         var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
         var empContractDbSet = baseEmpContractRepo.GetDbSet();
+        var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
+        var employeeDbSet = baseEmployeeRepo.GetDbSet();
 
         var empContracts = (from ec in empContractDbSet
+                join e in employeeDbSet on ec.EmployeeId equals e.Id
                 join cda in contractAssignDbSet on ec.ContractId equals cda.ContractId
                 join m in managerDbSet on cda.DepartmentId equals m.DepartmentId
                 where m.Id == managerId
                       && !ec.IsDelete
                       && !cda.IsDelete
                       && !m.IsDelete
+                      && !e.IsDelete
+                      && e.DepartmentId == m.DepartmentId
                       && cda.CreatedDate <= DateTime.Now
                       && (cda.EndDate == null || cda.EndDate >= DateTime.Now)
                 select ec)
@@ -817,5 +822,79 @@ public class ContractRepository : IContractRepository
         dto.TotalRecord = await empContracts.CountAsync();
         var result = await empContracts.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
+    }
+
+    public async Task<EmpContract> GetEmpContract(string employeeId, long contractId)
+    {
+        var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+        var empContract = await baseEmpContractRepo.GetSingleAsync(new QueryBuilder<EmpContract>()
+            .WithPredicate(x => x.EmployeeId == employeeId && x.ContractId == contractId)
+            .Build());
+        return empContract;
+    }
+
+    /// <summary>
+    /// This is used to check whether employee has access to get emp contract
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="contractId"></param>
+    /// <param name="loggedEmp"></param>
+    /// <returns></returns>
+    public async Task<bool> HasEmployeeAccessToEmpContract(string employeeId, long contractId, string loggedEmp)
+    {
+        var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
+        var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+        var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
+        var empContractDbSet = baseEmpContractRepo.GetDbSet();
+        var employeeDbSet = baseEmployeeRepo.GetDbSet();
+        
+        var hasAccess = await (from ec in empContractDbSet
+                join e in employeeDbSet on ec.EmployeeId equals e.Id
+                join cda in contractAssignDbSet on ec.ContractId equals cda.ContractId
+                where e.Id == loggedEmp
+                      && !ec.IsDelete
+                      && ec.EmployeeId == employeeId
+                      && ec.ContractId == contractId
+                      && !e.IsDelete
+                      && !cda.IsDelete
+                      && cda.DepartmentId == e.DepartmentId
+                select ec).AnyAsync();
+
+        return hasAccess;
+    }
+
+    
+    /// <summary>
+    /// This is used to check whether manager has access to emp contract
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="contractId"></param>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public async Task<bool> HasManagerAccessToEmpContract(string employeeId, long contractId, string managerId)
+    {
+        var baseContractAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+        var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var contractAssignDbSet = baseContractAssignRepo.GetDbSet();
+        var empContractDbSet = baseEmpContractRepo.GetDbSet();
+        var employeeDbSet = baseEmployeeRepo.GetDbSet();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+        
+        var hasAccess = await (from ec in empContractDbSet
+                join e in employeeDbSet on ec.EmployeeId equals e.Id
+                join cda in contractAssignDbSet on ec.ContractId equals cda.ContractId
+                join m in managerDbSet on cda.DepartmentId equals m.DepartmentId
+                where m.Id == managerId
+                      && !ec.IsDelete
+                      && !cda.IsDelete
+                      && !m.IsDelete
+                      && !e.IsDelete
+                      && e.DepartmentId == m.DepartmentId
+                select ec).AnyAsync();
+
+        return hasAccess;
     }
 }

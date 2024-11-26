@@ -30,5 +30,7 @@ public interface IContractRepository
     Task<BaseResponse> CreateUpdateEmpContract(EmpContract empContract, ApplicationUser user);
     Task<List<EmpContract>> GetEmpContractsByEmployee(EmpContractGetListDTO dto, string employeeId);
     Task<List<EmpContract>> GetEmpContractsByManager(EmpContractGetListDTO dto, string managerId);
-    
+    Task<EmpContract> GetEmpContract(string employeeId, long contractId);
+    Task<bool> HasEmployeeAccessToEmpContract(string employeeId, long contractId, string loggedEmp);
+    Task<bool> HasManagerAccessToEmpContract(string employeeId, long contractId, string managerId);
 }

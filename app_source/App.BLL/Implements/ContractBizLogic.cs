@@ -142,6 +142,26 @@ public class ContractBizLogic : IContractBizLogic
         var response = GetEmpContractViews(data);
         return response;
     }
+    
+
+    public async Task<EmpContractViewDTO> GetEmpContract(string employeeId, long contractId)
+    {
+        var data = await _contractRepository.GetEmpContract(employeeId, contractId);
+        if (data == null) return null;
+        var response = GetEmpContractView(data);
+        return response;
+    }
+
+    public async Task<bool> HasEmployeeAccessToEmpContract(string employeeId, long contractId, string loggedEmp)
+    {
+        return await _contractRepository.HasEmployeeAccessToEmpContract(employeeId, contractId, loggedEmp);
+    }
+
+    public async Task<bool> HasManagerAccessToEmpContract(string employeeId, long contractId, string managerId)
+    {
+        return await _contractRepository.HasManagerAccessToEmpContract(employeeId, contractId, managerId);
+    }
+    
 
     public async Task<List<ContractViewDTO>> GetContractsByManager(ContractGetListDTO dto, string managerId)
     {
