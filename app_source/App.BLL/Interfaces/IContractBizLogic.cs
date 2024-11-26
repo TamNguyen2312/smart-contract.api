@@ -29,4 +29,7 @@ public interface IContractBizLogic
 
     Task<List<EmpContractViewDTO>> GetEmpContractsByEmployee(EmpContractGetListDTO dto, string employeeId);
     Task<List<EmpContractViewDTO>> GetEmpContractsByManager(EmpContractGetListDTO dto, string managerId);
+    Task<EmpContractViewDTO> GetEmpContract(string employeeId, long contractId);
+    Task<bool> HasEmployeeAccessToEmpContract(string employeeId, long contractId, string loggedEmp);
+    Task<bool> HasManagerAccessToEmpContract(string employeeId, long contractId, string managerId);
 }

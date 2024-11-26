@@ -226,7 +226,7 @@ namespace App.API.Controllers
         
         [FSAuthorize(Policy = "EmployeeRolePolicy")]
         [HttpPost]
-        [Route("get-contracts-employee-assign-by-employee")]
+        [Route("get-contract-employee-assigns-by-employee")]
         public async Task<IActionResult> GetContractEmployeeAssignsByEmployee([FromBody] EmpContractGetListDTO dto)
         {
             try
@@ -255,7 +255,7 @@ namespace App.API.Controllers
         
         [FSAuthorize(Policy = "ManagerRolePolicy")]
         [HttpPost]
-        [Route("get-contracts-employee-assign-by-manager")]
+        [Route("get-contract-employee-assigns-by-manager")]
         public async Task<IActionResult> GetContractEmployeeAssignsByManager([FromBody] EmpContractGetListDTO dto)
         {
             try
@@ -277,6 +277,41 @@ namespace App.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError("GetContractEmployeeAssignsByManager {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
+        
+        
+        [FSAuthorize(Policy = "ManagerEmployeePolicy")]
+        [HttpPost]
+        [Route("get-contract-employee-assign/{employeeId}/{contractId}")]
+        public async Task<IActionResult> GetContractEmployeeAssign([FromRoute] string employeeId, [FromRoute]long contractId)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (IsManager)
+                {
+                    var managerAccess =
+                        await _contractBizLogic.HasManagerAccessToEmpContract(employeeId, contractId, ManagerOrEmpId);
+                    if (!managerAccess) return GetForbidden();
+                }
+                
+                if (IsEmployee)
+                {
+                    var employeeAccess =
+                        await _contractBizLogic.HasEmployeeAccessToEmpContract(employeeId, contractId, ManagerOrEmpId);
+                    if (!employeeAccess) return GetForbidden();
+                }
+
+                var response = await _contractBizLogic.GetEmpContract(employeeId, contractId);
+                if (response == null) return GetNotFound(Constants.GetNotFound);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetContractEmployeeAssign {0} {1}", ex.Message, ex.StackTrace);
                 return Error(Constants.SomeThingWentWrong);
             }
         }
