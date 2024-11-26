@@ -6,4 +6,5 @@ namespace App.BLL.Interfaces;
 public interface IContractTermBizLogic
 {
     Task<BaseResponse> CreateUpdateContractTerm(ContractTermRequestDTO dto, long userId);
+    Task<List<ContractTermViewDTO>> GetContractTermsByContract(ContractTermGetListDTO dto, long contractId);
 }
