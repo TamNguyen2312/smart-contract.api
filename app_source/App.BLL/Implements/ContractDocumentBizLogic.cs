@@ -37,4 +37,11 @@ public class ContractDocumentBizLogic : IContractDocumentBizLogic
         var response = data.Select(x => new ContractDocumentViewDTO(x)).ToList();
         return response;
     }
+
+    public async Task<ContractDocumentViewDTO> GetContractDocument(long contractId, long contractDocumentId)
+    {
+        var data = await _contractDocumentRepository.GetContractDocument(contractId, contractDocumentId);
+        if (data == null) return null;
+        return new ContractDocumentViewDTO(data);
+    }
 }

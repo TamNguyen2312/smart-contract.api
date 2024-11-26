@@ -9,4 +9,5 @@ public interface IContractDocumentRepository
 {
     Task<BaseResponse> CreateUpdateContractDocument(ContractDocument contractDocument, ApplicationUser user);
     Task<List<ContractDocument>> GetContractDocumentsByContract(ContractDocumentGetListDTO dto, long contractId);
+    Task<ContractDocument> GetContractDocument(long contractId, long contractDocumentId);
 }

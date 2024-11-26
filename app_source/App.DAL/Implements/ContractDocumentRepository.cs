@@ -132,4 +132,15 @@ public class ContractDocumentRepository : IContractDocumentRepository
         var result = await contractDocuments.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
+
+    public async Task<ContractDocument> GetContractDocument(long contractId, long contractDocumentId)
+    {
+        var baseContractDocumentRepo = _unitOfWork.GetRepository<ContractDocument>();
+        var contractDocument = await baseContractDocumentRepo.GetSingleAsync(new QueryBuilder<ContractDocument>()
+            .WithPredicate(x => x.Id == contractDocumentId
+                                                && x.ContractId == contractId
+                                                && !x.IsDelete)
+            .Build());
+        return contractDocument;
+    }
 }
