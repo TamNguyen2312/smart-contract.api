@@ -26,6 +26,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<SnapshotMetadata> SnapshotMetadatas { get; set; }
     public virtual DbSet<ContractDepartmentAssign> ContractDepartmentAssigns { get; set; }
     public virtual DbSet<ContractDocument> ContractDocuments { get; set; }
+    public virtual DbSet<ContractTerm> ContractTerms { get; set; }
 
     #endregion
 
@@ -33,6 +34,12 @@ public partial class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("app");
+
+        modelBuilder.Entity<ContractTerm>(cd =>
+        {
+            cd.ToTable("App_ContractTerms");
+            cd.HasKey(contractTerm => contractTerm.Id);
+        });
         
         modelBuilder.Entity<ContractDocument>(cd =>
         {
