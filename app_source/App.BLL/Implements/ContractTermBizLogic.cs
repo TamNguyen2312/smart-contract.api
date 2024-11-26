@@ -32,4 +32,11 @@ public class ContractTermBizLogic : IContractTermBizLogic
         var data = await _contractTermRepository.GetContractTermsByContract(dto, contractId);
         return data.Select(x => new ContractTermViewDTO(x)).ToList();
     }
+
+    public async Task<ContractTermViewDTO> GetContractTerm(long contractId, long contractTermId)
+    {
+        var data = await _contractTermRepository.GetContractTerm(contractId, contractTermId);
+        if (data == null) return null;
+        return new ContractTermViewDTO(data);
+    }
 }

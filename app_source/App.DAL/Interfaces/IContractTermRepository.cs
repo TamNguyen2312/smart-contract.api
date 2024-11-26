@@ -9,4 +9,5 @@ public interface IContractTermRepository
 {
     Task<BaseResponse> CreateUpdateContractTerm(ContractTerm contractTerm, ApplicationUser user);
     Task<List<ContractTerm>> GetContractTermsByContract(ContractTermGetListDTO dto, long contractId);
+    Task<ContractTerm> GetContractTerm(long contractId, long contractTermId);
 }
