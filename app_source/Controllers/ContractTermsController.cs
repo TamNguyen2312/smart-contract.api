@@ -104,5 +104,40 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+        
+        [FSAuthorize(Policy = "ManagerEmployeePolicy")]
+        [HttpGet]
+        [Route("get-contract-term/{contractId}/{contractTermId}")]
+        public async Task<IActionResult> GetContractTerm([FromRoute] long contractId, [FromRoute] long contractTermId)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (IsManager)
+                {
+                    var managerAccess =
+                        await _contractBizLogic.HasManagerAccessToContract(ManagerOrEmpId, contractId);
+                    if (!managerAccess) return GetError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
+                }
+                
+                if (IsEmployee)
+                {
+                    var employeeAccess =
+                        await _contractBizLogic.HasEmployeeAccessToContract(ManagerOrEmpId, contractId);
+                    if (!employeeAccess) return GetError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
+                }
+                
+
+                var response = await _contractTermBizLogic.GetContractTerm(contractId, contractTermId);
+                if (response == null) return GetNotFound(Constants.GetNotFound);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetContractTerm {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
     }
 }

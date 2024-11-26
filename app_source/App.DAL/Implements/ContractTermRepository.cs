@@ -128,4 +128,15 @@ public class ContractTermRepository : IContractTermRepository
         var result = await contractTerms.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
+    
+    public async Task<ContractTerm> GetContractTerm(long contractId, long contractTermId)
+    {
+        var baseContractTermRepo = _unitOfWork.GetRepository<ContractTerm>();
+        var contractTerm = await baseContractTermRepo.GetSingleAsync(new QueryBuilder<ContractTerm>()
+            .WithPredicate(x => x.Id == contractTermId
+                                && x.ContractId == contractId
+                                && !x.IsDelete)
+            .Build());
+        return contractTerm;
+    }
 }

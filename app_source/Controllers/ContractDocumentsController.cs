@@ -107,7 +107,7 @@ namespace App.API.Controllers
         }
         
         [FSAuthorize(Policy = "ManagerEmployeePolicy")]
-        [HttpPost]
+        [HttpGet]
         [Route("get-contract-document/{contractId}/{contractDocumentId}")]
         public async Task<IActionResult> GetContractDocument([FromRoute] long contractId, [FromRoute] long contractDocumentId)
         {
