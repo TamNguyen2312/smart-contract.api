@@ -1,6 +1,9 @@
+using App.Entity.DTOs.ContractDocument;
+using FS.Commons.Models;
+
 namespace App.BLL.Interfaces;
 
-public interface IContractDocumentBizLogic 
+public interface IContractDocumentBizLogic
 {
-    
+    Task<BaseResponse> CreateUpdateContractDocument(ContractDocumentRequestDTO dto, long userId);
 }
