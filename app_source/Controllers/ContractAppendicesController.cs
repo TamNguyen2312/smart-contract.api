@@ -105,5 +105,41 @@ namespace App.API.Controllers
                 return Error(Constants.SomeThingWentWrong);
             }
         }
+        
+        
+        [FSAuthorize(Policy = "ManagerEmployeePolicy")]
+        [HttpGet]
+        [Route("get-contract-appendix/{contractId}/{contractAppendixId}")]
+        public async Task<IActionResult> GetContractAppendix([FromRoute] long contractId, [FromRoute] long contractAppendixId)
+        {
+            try
+            {
+                if (await IsTokenInvoked()) return GetUnAuthorized(Constants.GetUnAuthorized);
+
+                if (IsManager)
+                {
+                    var managerAccess =
+                        await _contractBizLogic.HasManagerAccessToContract(ManagerOrEmpId, contractId);
+                    if (!managerAccess) return GetError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
+                }
+                
+                if (IsEmployee)
+                {
+                    var employeeAccess =
+                        await _contractBizLogic.HasEmployeeAccessToContract(ManagerOrEmpId, contractId);
+                    if (!employeeAccess) return GetError($"Bạn không đủ quyền hạn truy cập hợp đồng {contractId}");
+                }
+                
+
+                var response = await _contractAppendixBizLogic.GetContractAppendix(contractId, contractAppendixId);
+                if (response == null) return GetNotFound(Constants.GetNotFound);
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("GetContractAppendix {0} {1}", ex.Message, ex.StackTrace);
+                return Error(Constants.SomeThingWentWrong);
+            }
+        }
     }
 }
