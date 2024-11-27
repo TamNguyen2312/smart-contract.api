@@ -28,6 +28,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<ContractDocument> ContractDocuments { get; set; }
     public virtual DbSet<ContractTerm> ContractTerms { get; set; }
     public virtual DbSet<ContractAppendix> ContractAppendices { get; set; }
+    public virtual DbSet<AppendixDocument> AppendicDocuments { get; set; }
 
     #endregion
 
@@ -35,6 +36,12 @@ public partial class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("app");
+        
+        modelBuilder.Entity<AppendixDocument>(ad =>
+        {
+            ad.ToTable("App_AppendixDocument");
+            ad.HasKey(appendixDocument => appendixDocument.Id);
+        });
         
         modelBuilder.Entity<ContractAppendix>(ca =>
         {
