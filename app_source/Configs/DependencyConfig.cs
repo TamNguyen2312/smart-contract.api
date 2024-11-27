@@ -38,6 +38,7 @@ public class DependencyConfig
         services.AddTransient<IContractDocumentRepository, ContractDocumentRepository>();
         services.AddTransient<IContractTermRepository, ContractTermRepository>();
         services.AddTransient<IContractAppendixRepository, ContractAppendixRepository>();
+        services.AddTransient<IAppendixDocumentRepository, AppendixDocumentRepository>();
 
 
         //App.BLL
@@ -54,6 +55,7 @@ public class DependencyConfig
         services.AddTransient<IContractDocumentBizLogic, ContractDocumentBizLogic>();
         services.AddTransient<IContractTermBizLogic, ContractTermBizLogic>();
         services.AddTransient<IContractAppendixBizLogic, ContractAppendixBizLogic>();
+        services.AddTransient<IAppendixDocumentBizLogic, AppendixDocumentBizLogic>();
 
 
         //AutoMapper
