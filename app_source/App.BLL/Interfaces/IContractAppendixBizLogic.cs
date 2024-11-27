@@ -11,4 +11,6 @@ public interface IContractAppendixBizLogic
         GetContractAppendicesByContract(ContractAppendixGetListDTO dto, long contractId);
 
     Task<ContractAppendixViewDTO> GetContractAppendix(long contractId, long contractAppendixId);
+    Task<bool> HasManagerAccessToAppendix(string managerId, long appendixId);
+    Task<bool> HasEmployeeAccessToAppendix(string employeeId, long appendixId);
 }

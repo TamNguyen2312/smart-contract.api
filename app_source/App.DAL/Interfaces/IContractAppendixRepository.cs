@@ -10,4 +10,6 @@ public interface IContractAppendixRepository
     Task<BaseResponse> CreateUpdateContractAppendix(ContractAppendix contractAppendix, ApplicationUser user);
     Task<List<ContractAppendix>> GetContractAppendicesByContract(ContractAppendixGetListDTO dto, long contractId);
     Task<ContractAppendix> GetContractAppendix(long contractId, long contractAppendixId);
+    Task<bool> HasManagerAccessToAppendix(string managerId, long appendixId);
+    Task<bool> HasEmployeeAccessToAppendix(string employeeId, long appendixId);
 }
