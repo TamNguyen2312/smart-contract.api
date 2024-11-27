@@ -147,4 +147,79 @@ public class ContractAppendixRepository : IContractAppendixRepository
             .Build());
         return contractAppendix;
     }
+
+    
+    /// <summary>
+    /// This is used to check whether manager has access to appendix
+    /// </summary>
+    /// <param name="managerId"></param>
+    /// <param name="appendixId"></param>
+    /// <returns></returns>
+    public async Task<bool> HasManagerAccessToAppendix(string managerId, long appendixId)
+    {
+        var baseManagerRepo = _unitOfWork.GetRepository<Manager>();
+        var baseAssignRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var baseContractRepo = _unitOfWork.GetRepository<Contract>();
+        var baseAppendixRepo = _unitOfWork.GetRepository<ContractAppendix>();
+        var managerDbSet = baseManagerRepo.GetDbSet();
+        var assignDbSet = baseAssignRepo.GetDbSet();
+        var contractDbSet = baseContractRepo.GetDbSet();
+        var appendixDbSet = baseAppendixRepo.GetDbSet();
+
+        var now = DateTime.Now;
+
+        var hasAccess = await (from m in managerDbSet
+                join cda in assignDbSet on m.DepartmentId equals cda.DepartmentId
+                join c in contractDbSet on cda.ContractId equals c.Id
+                join ca in appendixDbSet on c.Id equals ca.ContractId
+                where m.Id == managerId
+                      && ca.Id == appendixId
+                      && !m.IsDelete
+                      && !cda.IsDelete
+                      && !c.IsDelete
+                      && cda.CreatedDate <= now
+                      && (cda.EndDate == null || cda.EndDate >= now)
+                select c)
+            .AnyAsync();
+        return hasAccess;
+    }
+
+    /// <summary>
+    /// This is used to check whether employee has access to appendix
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="appendixId"></param>
+    /// <returns></returns>
+    public async Task<bool> HasEmployeeAccessToAppendix(string employeeId, long appendixId)
+    {
+        var baseEmployeeRepo = _unitOfWork.GetRepository<Employee>();
+        var employeeDbSet = baseEmployeeRepo.GetDbSet();
+        var baseEmpContractRepo = _unitOfWork.GetRepository<EmpContract>();
+        var empContractDbSet = baseEmpContractRepo.GetDbSet();
+        var baseContractRepo = _unitOfWork.GetRepository<Contract>();
+        var contractDbSet = baseContractRepo.GetDbSet();
+        var contractAssignBaseRepo = _unitOfWork.GetRepository<ContractDepartmentAssign>();
+        var contractAssignDbSet = contractAssignBaseRepo.GetDbSet();
+        var baseAppendixRepo = _unitOfWork.GetRepository<ContractAppendix>();
+        var appendixDbSet = baseAppendixRepo.GetDbSet();
+
+        var now = DateTime.Now;
+
+        var hasAccess = await (from e in employeeDbSet
+                join ec in empContractDbSet on e.Id equals ec.EmployeeId
+                join c in contractDbSet on ec.ContractId equals c.Id
+                join cda in contractAssignDbSet on new { ContractId = c.Id, DepartmentId = e.DepartmentId } equals new { cda.ContractId, cda.DepartmentId }
+                join a in appendixDbSet on c.Id equals a.ContractId
+                where e.Id == employeeId
+                      && a.Id == appendixId
+                      && !e.IsDelete
+                      && !ec.IsDelete
+                      && !c.IsDelete
+                      && !cda.IsDelete
+                      && cda.CreatedDate <= now
+                      && (cda.EndDate == null || cda.EndDate >= now)
+                select c)
+            .AnyAsync();
+        return hasAccess;
+    }
 }

@@ -39,4 +39,14 @@ public class ContractAppendixBizLogic : IContractAppendixBizLogic
         var data = await _contractAppendix.GetContractAppendix(contractId, contractAppendixId);
         return new ContractAppendixViewDTO(data);
     }
+
+    public async Task<bool> HasManagerAccessToAppendix(string managerId, long appendixId)
+    {
+        return await _contractAppendix.HasManagerAccessToAppendix(managerId, appendixId);
+    }
+
+    public async Task<bool> HasEmployeeAccessToAppendix(string employeeId, long appendixId)
+    {
+        return await _contractAppendix.HasEmployeeAccessToAppendix(employeeId, appendixId);
+    }
 }
