@@ -1,7 +1,10 @@
+using System.Text.Json;
 using App.DAL.Interfaces;
 using App.Entity.Entities;
 using App.Entity.Enums;
 using FS.BaseModels.IdentityModels;
+using FS.Commons;
+using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
@@ -31,57 +34,61 @@ public class ContractAppendixRepository : IContractAppendixRepository
                 .Build());
             if (anyAppendix)
             {
-                var existedContractTerm = await baseContractAppendixRepo.GetSingleAsync(
+                var existedContractAppendix = await baseContractAppendixRepo.GetSingleAsync(
                     new QueryBuilder<ContractAppendix>()
                         .WithPredicate(x => x.Id == contractAppendix.Id
                                             && !x.IsDelete)
                         .Build());
 
-                contractTerm.UpdateNonDefaultProperties(existedContractTerm);
-                existedContractTerm.ModifiedDate = DateTime.Now;
-                existedContractTerm.ModifiedBy = user.UserName;
-                await baseContractAppendixRepo.UpdateAsync(existedContractTerm);
+                contractAppendix.UpdateNonDefaultProperties(existedContractAppendix);
+                existedContractAppendix.ModifiedDate = DateTime.Now;
+                existedContractAppendix.ModifiedBy = user.UserName;
+                await baseContractAppendixRepo.UpdateAsync(existedContractAppendix);
 
                 var newSnapshot = new SnapshotMetadata
                 {
-                    Category = SnapshotMetadataType.ContractTerm.ToString(),
-                    CreatedDate = existedContractTerm.ModifiedDate,
-                    CreatedBy = existedContractTerm.ModifiedBy,
+                    Category = SnapshotMetadataType.Appendix.ToString(),
+                    CreatedDate = existedContractAppendix.ModifiedDate,
+                    CreatedBy = existedContractAppendix.ModifiedBy,
                     Action = SnapshotMetadataAction.Update.ToString(),
                     IsDelete = false
                 };
                 newSnapshot.Name =
-                    $"{existedContractTerm.Id}_{existedContractTerm.ContractId}_{newSnapshot.Action}_{newSnapshot.CreatedBy}_{newSnapshot.CreatedDate}";
-                newSnapshot.StoredData = JsonSerializer.Serialize(existedContractTerm);
+                    $"{existedContractAppendix.Id}_{existedContractAppendix.ContractId}_{newSnapshot.Action}_{newSnapshot.CreatedBy}_{newSnapshot.CreatedDate}";
+                newSnapshot.StoredData = JsonSerializer.Serialize(existedContractAppendix);
                 await baseSnapshotRepo.CreateAsync(newSnapshot);
             }
             else
             {
-                var newContractTerm = new ContractTerm
+                var newContractAppendix = new ContractAppendix
                 {
-                    Name = contractTerm.Name,
-                    Description = contractTerm.Description,
-                    ContractId = contractTerm.ContractId,
+                    Title = contractAppendix.Title,
+                    Content = contractAppendix.Content,
+                    ContractId = contractAppendix.ContractId,
+                    SignedDate = contractAppendix.SignedDate,
+                    EffectiveDate = contractAppendix.EffectiveDate,
+                    ExpirationDate = contractAppendix.ExpirationDate,
+                    FileName = contractAppendix.FileName,
                     CreatedDate = DateTime.Now,
                     CreatedBy = user.UserName,
                     IsDelete = false
                 };
 
-                await baseContractAppendixRepo.CreateAsync(newContractTerm);
+                await baseContractAppendixRepo.CreateAsync(newContractAppendix);
                 await _unitOfWork.SaveChangesAsync();
 
 
                 var newSnapshot = new SnapshotMetadata
                 {
-                    Category = SnapshotMetadataType.ContractTerm.ToString(),
-                    CreatedDate = newContractTerm.CreatedDate,
-                    CreatedBy = newContractTerm.CreatedBy,
+                    Category = SnapshotMetadataType.Appendix.ToString(),
+                    CreatedDate = newContractAppendix.CreatedDate,
+                    CreatedBy = newContractAppendix.CreatedBy,
                     Action = SnapshotMetadataAction.Create.ToString(),
                     IsDelete = false
                 };
                 newSnapshot.Name =
-                    $"{newContractTerm.Id}_{newContractTerm.ContractId}_{newSnapshot.Action}_{newSnapshot.CreatedBy}_{newSnapshot.CreatedDate}";
-                newSnapshot.StoredData = JsonSerializer.Serialize(newContractTerm);
+                    $"{newContractAppendix.Id}_{newContractAppendix.ContractId}_{newSnapshot.Action}_{newSnapshot.CreatedBy}_{newSnapshot.CreatedDate}";
+                newSnapshot.StoredData = JsonSerializer.Serialize(newContractAppendix);
                 await baseSnapshotRepo.CreateAsync(newSnapshot);
             }
 

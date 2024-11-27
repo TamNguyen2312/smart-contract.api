@@ -12,4 +12,5 @@ public class ContractAppendix : CommonDataModel
     public DateTime ExpirationDate { get; set; }
     public string Content { get; set; } = null!;
     public string? FileName { get; set; }
+    public long ContractId { get; set; }
 }
