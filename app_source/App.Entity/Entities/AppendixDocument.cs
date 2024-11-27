@@ -8,4 +8,5 @@ public class AppendixDocument : CommonDataModel
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
     public string? FileName { get; set; }
+    public long AppendixId { get; set; }
 }
