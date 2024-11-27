@@ -26,4 +26,11 @@ public class ContractAppendixBizLogic : IContractAppendixBizLogic
         var response = await _contractAppendix.CreateUpdateContractAppendix(entity, user);
         return response;
     }
+
+    public async Task<List<ContractAppendixViewDTO>> GetContractAppendicesByContract(ContractAppendixGetListDTO dto, long contractId)
+    {
+        var data = await _contractAppendix.GetContractAppendicesByContract(dto, contractId);
+        var response = data.Select(x => new ContractAppendixViewDTO(x)).ToList();
+        return response;
+    }
 }
