@@ -136,4 +136,15 @@ public class ContractAppendixRepository : IContractAppendixRepository
         var result = await contractAppendices.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
         return result;
     }
+    
+    public async Task<ContractAppendix> GetContractAppendix(long contractId, long contractAppendixId)
+    {
+        var baseContractAppendixRepo = _unitOfWork.GetRepository<ContractAppendix>();
+        var contractAppendix = await baseContractAppendixRepo.GetSingleAsync(new QueryBuilder<ContractAppendix>()
+            .WithPredicate(x => x.Id == contractAppendixId
+                                && x.ContractId == contractId
+                                && !x.IsDelete)
+            .Build());
+        return contractAppendix;
+    }
 }
