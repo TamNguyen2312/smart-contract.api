@@ -1,5 +1,6 @@
 using System.Text.Json;
 using App.DAL.Interfaces;
+using App.Entity.DTOs.ContractAppendix;
 using App.Entity.Entities;
 using App.Entity.Enums;
 using FS.BaseModels.IdentityModels;
@@ -8,6 +9,7 @@ using FS.Commons.Extensions;
 using FS.Commons.Models;
 using FS.DAL.Interfaces;
 using FS.DAL.Queries;
+using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.Implements;
 
@@ -103,5 +105,35 @@ public class ContractAppendixRepository : IContractAppendixRepository
             await _unitOfWork.RollBackAsync();
             throw;
         }
+    }
+    
+    public async Task<List<ContractAppendix>> GetContractAppendicesByContract(ContractAppendixGetListDTO dto, long contractId)
+    {
+        var baseContractAppendixRepo = _unitOfWork.GetRepository<ContractAppendix>();
+        var contractAppendices = baseContractAppendixRepo.Get(new QueryBuilder<ContractAppendix>()
+            .WithPredicate(x => x.ContractId == contractId && !x.IsDelete)
+            .Build());
+
+        if (!string.IsNullOrEmpty(dto.Keyword))
+        {
+            contractAppendices = contractAppendices.Where(x => x.Title.Contains(dto.Keyword)
+                                                     || x.Content.Contains(dto.Keyword)
+                                                     || x.FileName.Contains(dto.Keyword));
+        }
+
+        if (dto.OrderDate.HasValue)
+        {
+            contractAppendices = contractAppendices.ApplyOrderDate(dto.OrderDate);
+        }
+
+        contractAppendices = contractAppendices.ApplyDateRangeFilter(dto.SignedDate, x => x.SignedDate);
+        contractAppendices = contractAppendices.ApplyDateRangeFilter(dto.EffectiveDate, x => x.EffectiveDate);
+        contractAppendices = contractAppendices.ApplyDateRangeFilter(dto.ExpirationDate, x => x.ExpirationDate);
+        contractAppendices = contractAppendices.ApplyDateRangeFilter(dto.CreatedDate, x => x.CreatedDate);
+        contractAppendices = contractAppendices.ApplyDateRangeFilter(dto.ModifiedDate, x => x.ModifiedDate);
+
+        dto.TotalRecord = await contractAppendices.CountAsync();
+        var result = await contractAppendices.ToPagedList(dto.PageIndex, dto.PageSize).ToListAsync();
+        return result;
     }
 }
