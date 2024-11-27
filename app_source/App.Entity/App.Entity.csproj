@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="DTOs\ContractAppendix\" />
       <Folder Include="DTOs\ContractService\" />
     </ItemGroup>
 
